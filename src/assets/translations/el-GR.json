@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Άνοιγμα Φακέλου Δεδομένων Παιχνιδιού",
   "gameControls_button_openExtractedAssetsFolder": "Άνοιγμα Φακέλου Εξαχθέντων Αντικειμένων",
   "gameControls_button_openSavesFolder": "Άνοιγμα Φακέλου Αποθηκεύσεων",
-  "gameControls_button_shareVanillaSaves": "Κοινή χρήση αποθηκεύσεων βασικού παιχνιδιού",
-  "gameControls_button_shareVanillaSaves_helpText": "Χρήση του φακέλου αποθηκεύσεων vanilla αντί για απομονωμένες αποθηκεύσεις του mod",
   "gameControls_button_openSettingsFolder": "Άνοιγμα Φακέλου Ρυθμίσεων",
   "gameControls_button_install": "Εγκατάσταση",
   "gameControls_button_play": "Εκκίνηση",

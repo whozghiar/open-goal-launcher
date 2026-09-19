@@ -186,7 +186,6 @@ fn main() {
       commands::config::set_hide_beta_alerts,
       commands::config::set_hide_gamename,
       commands::config::set_hide_playtime,
-      commands::config::set_mod_share_vanilla_saves,
       commands::download::download_file,
       commands::features::mods::base_game_iso_exists,
       commands::features::mods::compile_for_mod_install,

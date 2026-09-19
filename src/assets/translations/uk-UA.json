@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Open Game Data Folder",
   "gameControls_button_openExtractedAssetsFolder": "Open Extracted Assets Folder",
   "gameControls_button_openSavesFolder": "Відкрити теку збережень",
-  "gameControls_button_shareVanillaSaves": "Спільні збереження основної гри",
-  "gameControls_button_shareVanillaSaves_helpText": "Використовувати теку збережень vanilla замість ізольованих збережень мода",
   "gameControls_button_openSettingsFolder": "Відкрити теку налаштувань",
   "gameControls_button_install": "Install",
   "gameControls_button_play": "Грати",

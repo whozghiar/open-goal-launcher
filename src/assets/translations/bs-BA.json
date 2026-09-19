@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Folder sa fajlovima igre",
   "gameControls_button_openExtractedAssetsFolder": "Folder sa raspakovanim resursima",
   "gameControls_button_openSavesFolder": "Folder sa snimljenim pozicijama",
-  "gameControls_button_shareVanillaSaves": "Dijeli snimljene pozicije osnovne igre",
-  "gameControls_button_shareVanillaSaves_helpText": "Koristi direktorijum vanilla snimljenih pozicija umjesto izolovanih mod snimaka",
   "gameControls_button_openSettingsFolder": "Folder sa postavkama",
   "gameControls_button_install": "Instaliraj",
   "gameControls_button_play": "Igraj",

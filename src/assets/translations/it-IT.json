@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Apri la cartella dei dati di gioco",
   "gameControls_button_openExtractedAssetsFolder": "Apri la cartella degli asset di gioco estratti",
   "gameControls_button_openSavesFolder": "Apri la cartella dei salvataggi",
-  "gameControls_button_shareVanillaSaves": "Condividi i salvataggi del gioco base",
-  "gameControls_button_shareVanillaSaves_helpText": "Usa la cartella dei salvataggi vanilla invece dei salvataggi isolati del mod",
   "gameControls_button_openSettingsFolder": "Apri la cartella delle impostazioni",
   "gameControls_button_install": "Installa",
   "gameControls_button_play": "Gioca",

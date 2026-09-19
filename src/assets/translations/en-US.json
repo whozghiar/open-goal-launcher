@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Open Game Data Folder",
   "gameControls_button_openExtractedAssetsFolder": "Open Extracted Assets Folder",
   "gameControls_button_openSavesFolder": "Open Saves Folder",
-  "gameControls_button_shareVanillaSaves": "Share Base Game Saves",
-  "gameControls_button_shareVanillaSaves_helpText": "Use the vanilla saves directory instead of mod-isolated saves",
   "gameControls_button_openSettingsFolder": "Open Settings Folder",
   "gameControls_button_saveManager": "Save Data Manager",
   "gameControls_button_install": "Install",
@@ -292,5 +290,18 @@
   "saveManager_moveSuccess": "Save moved successfully!",
   "saveManager_deleteSuccess": "Save deleted successfully!",
   "saveManager_refresh": "Refresh",
-  "saveManager_back": "Back"
+  "saveManager_back": "Back",
+  "saveManager_game": "Game",
+  "saveManager_folders": "Save Folders & Regions",
+  "saveManager_allFolders": "All Folders",
+  "saveManager_selectFolder": "Select a folder to view its save slots",
+  "saveManager_folderRegion": "Region",
+  "saveManager_deletePermanentWarning": "This action cannot be undone. If you might need this save later, please create a backup first.",
+  "saveManager_tooltip_back": "Return to game view",
+  "saveManager_tooltip_refresh": "Reload save files from disk",
+  "saveManager_tooltip_openFolder": "Open current save directory in file explorer",
+  "saveManager_tooltip_copy": "Copy or move this save slot to another installation",
+  "saveManager_tooltip_backup": "Create a timestamped backup copy of this save",
+  "saveManager_tooltip_delete": "Permanently delete this save file"
 }
+

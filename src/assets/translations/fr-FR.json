@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Parcourir les fichiers locaux",
   "gameControls_button_openExtractedAssetsFolder": "Ouvrir le dossier des ressources extraites",
   "gameControls_button_openSavesFolder": "Ouvrir le dossier des sauvegardes",
-  "gameControls_button_shareVanillaSaves": "Partager les sauvegardes du jeu de base",
-  "gameControls_button_shareVanillaSaves_helpText": "Utiliser le dossier de sauvegardes vanilla au lieu du dossier isolé du mod",
   "gameControls_button_openSettingsFolder": "Ouvrir le dossier des paramètres",
   "gameControls_button_install": "Installer",
   "gameControls_button_play": "Jouer",

@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Открыть папку с данными игры",
   "gameControls_button_openExtractedAssetsFolder": "Открыть папку извлеченных ресурсов",
   "gameControls_button_openSavesFolder": "Открыть папку сохранений",
-  "gameControls_button_shareVanillaSaves": "Использовать сохранения основной игры",
-  "gameControls_button_shareVanillaSaves_helpText": "Использовать папку сохранений vanilla вместо изолированных сохранений мода",
   "gameControls_button_openSettingsFolder": "Открыть папку настроек",
   "gameControls_button_install": "Установить",
   "gameControls_button_play": "Играть",

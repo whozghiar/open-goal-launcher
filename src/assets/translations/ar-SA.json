@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "فتح مجلد بيانات العبة",
   "gameControls_button_openExtractedAssetsFolder": "فتح مجلد Assests مستخرجة",
   "gameControls_button_openSavesFolder": "فتح مجلد الحفظ",
-  "gameControls_button_shareVanillaSaves": "مشاركة ملفات حفظ اللعبة الأساسية",
-  "gameControls_button_shareVanillaSaves_helpText": "استخدم مجلد حفظ اللعبة الأصلية بدلاً من ملفات الحفظ المعزولة للمود",
   "gameControls_button_openSettingsFolder": "فتح مجلد الإعدادات",
   "gameControls_button_install": "تثبيت",
   "gameControls_button_play": "لعب",

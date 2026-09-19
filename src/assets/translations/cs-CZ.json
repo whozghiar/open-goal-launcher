@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Otevřít složku s herními daty",
   "gameControls_button_openExtractedAssetsFolder": "Open Extracted Assets Folder",
   "gameControls_button_openSavesFolder": "Otevřít složku se savy",
-  "gameControls_button_shareVanillaSaves": "Sdílet savy základní hry",
-  "gameControls_button_shareVanillaSaves_helpText": "Použít složku se savy z původní hry namísto izolovaných savů módu",
   "gameControls_button_openSettingsFolder": "Otevřít složku nastavení",
   "gameControls_button_install": "Nainstalovat",
   "gameControls_button_play": "Hrát",
