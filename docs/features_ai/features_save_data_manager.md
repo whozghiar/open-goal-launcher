@@ -21,28 +21,30 @@
 
 ## 1. What This Feature Brings
 
-The **Save Data Manager** introduces a comprehensive, safe interface to inspect, copy, move, backup, and delete game saves across all installations of a supported game (the vanilla release and every installed community mod).
+The **Saves Manager** introduces a comprehensive, safe, and intuitive interface to inspect, copy, move, backup, and delete game saves across all installations of supported OpenGOAL games (vanilla base games and every installed community mod).
 
 ### Key Highlights
 
-- **Multi-Install Visibility**: Displays all save slots and active save files for both the vanilla game and installed mods in a single unified dashboard.
-- **Milestone & Progress Badging**: Recognizes furthest completed tasks and in-game milestones (e.g. Geyser Rock, Forbidden Jungle) directly on the save cards.
-- **Safe Transfers & Automatic Backups**: Allows users to transfer saves between installs with automatic `.bak` creation whenever a file is overwritten.
-- **Mod Compatibility Guard ("Big Warning")**: Detects mods known to alter the binary save format (such as _Fishing Legacy_). When selected, a prominent warning alert is displayed, and transfers to/from the vanilla game are strictly blocked to prevent save corruption and crash loops.
+- **Multi-Game Selection**: Switch seamlessly between Jak 1, Jak 2, and Jak 3 directly inside the Saves Manager interface via a top selector bar.
+- **Regional Save Folders & Subdirectories**: Supports OpenGOAL's regional folder structure (e.g. `BASCUS-97265AYBABTU!`, `BESCES-51608AYBABTU!`). Users can browse regional folders and inspect slot cards within each folder.
+- **Multi-Install Visibility**: Displays save slots for both the vanilla game and installed mods with dedicated status indicators and badges.
+- **Milestone & Progress Recognition**: Displays furthest completed tasks and in-game milestones (e.g. Geyser Rock, Forbidden Jungle) directly on the save slot cards.
+- **Safe Transfers & Automatic Backups**: Allows copying or moving saves between installations, automatically generating timestamped `.bak` files upon overwrite.
+- **Accidental Deletion Protection**: Includes a confirmation modal before deleting any save file to prevent data loss.
+- **Action Tooltips & Unified Styling**: Rich tooltips on hover for every button and consistent amber/orange styling (`bg-amber-500 hover:bg-amber-600`) across all confirmation and action buttons.
 
 ```
 +-------------------------------------------------------------------------+
-| Save Data Manager                                   [Refresh] [Open Folder] |
-| Install: [Jak 1 (Vanilla)] [Fishing Legacy (Custom)] [Practice Mod]    |
+| Saves Manager                                       [Refresh] [Open Folder] |
+| Game: [Jak & Daxter] [Jak II] [Jak 3]                                   |
+| Install: [Vanilla Game] [Blue Krimzon Guard (Mod)]                      |
 +-------------------------------------------------------------------------+
-| [!] WARNING: Custom Save Format Detected                                |
-| This mod alters save file structures. Transfers to/from vanilla are     |
-| disabled to protect your save files from corruption.                   |
+| Folders: [ BASCUS-97265AYBABTU! ]  [ BESCES-51608AYBABTU! ]             |
 +-------------------------------------------------------------------------+
 | [ Slot 1: Active ]   [ Slot 2: Active ]   [ Slot 3: Empty ]  [ Slot 4 ] |
 | Progress: GEYSER     Progress: JUNGLE     (No save file)                |
 | Size: 45.2 KB        Size: 45.2 KB                                      |
-| [Copy To] [Bk] [Del] [Copy To] [Bk] [Del]                               |
+| [Copy/Move] [Bk] [Del]                                                  |
 +-------------------------------------------------------------------------+
 ```
 
@@ -50,20 +52,21 @@ The **Save Data Manager** introduces a comprehensive, safe interface to inspect,
 
 ## 2. How the Feature Works
 
-### Save Inspection Lifecycle
+### Save Inspection & Folder Lifecycle
 
-1. When opening `/:game_name/saves`, the frontend requests all installation directories for the active game via Tauri IPC (`list_game_save_installs`).
+1. When opening the Saves Manager (`/:game_name/saves`), the frontend queries installations for the selected game via `list_game_save_installs`.
 2. The Rust backend inspects:
    - Vanilla save directory (`%APPDATA%/OpenGOAL/<game>/saves` on Windows or `~/.config/OpenGOAL/<game>/saves` on Linux).
    - Mod save directories (`<install_dir>/features/<game>/mods/<source>/_settings/<mod>/...`).
-3. Save files (`.bin`) are scanned and parsed to determine file size, modification timestamps, slot indices, and completed milestones.
-4. Each mod is checked against compatibility rules: if a mod modifies the save structure, it is marked with `hasCustomSaveFormat = true`.
+3. Discovered directories are scanned for regional folders (`BASCUS-*`, `BESCES-*`, `default`).
+4. Save files (`.bin`) within each folder are parsed to determine file size, modification timestamps, slot indices, and completed milestones.
 
-### Transfer & Protection Lifecycle
+### Transfer, Backup & Deletion Lifecycle
 
-1. When a user clicks **Copy To...**, a modal allows selecting a destination install and a target slot.
-2. If either the source or destination is an incompatible mod and the other is vanilla, the transfer action is **disabled** and an explicit error explanation is presented.
-3. If the transfer is valid and the destination slot is occupied, an automatic timestamped backup (`.bak-<timestamp>`) is created before copying the new file.
+1. **Copy / Move**: When clicking **Copy To...**, a modal lets users select the destination install, target folder, and target slot. Users can toggle whether to move (delete source) or copy. If the destination slot is occupied, an automatic timestamped backup (`.bak-<timestamp>`) is created.
+2. **Backup**: Creates a standalone timestamped backup of the selected save slot.
+3. **Delete**: Triggers a safety confirmation modal to confirm deletion before invoking `delete_save`.
+4. **Open Folder**: Launches the native file explorer to inspect the current save folder via `open_save_folder`.
 
 ---
 
@@ -72,8 +75,8 @@ The **Save Data Manager** introduces a comprehensive, safe interface to inspect,
 ```mermaid
 flowchart TD
     subgraph Frontend ["Frontend (Svelte 5)"]
-        GC["GameControls.svelte"] -->|"Features > Save Manager"| SDM["SaveDataManager.svelte (/:game_name/saves)"]
-        GCM["GameControlsMod.svelte"] -->|"Cog > Save Manager"| SDM
+        GC["GameControls.svelte"] -->|"Advanced > Open Saves Manager"| SDM["SaveDataManager.svelte (/:game_name/saves)"]
+        GCM["GameControlsMod.svelte"] -->|"Advanced > Open Saves Manager"| SDM
         SDM --> RPC["rpc/saves.ts"]
     end
 
@@ -81,41 +84,44 @@ flowchart TD
         RPC -->|"list_game_save_installs"| CMD_LIST["commands::saves::list_game_save_installs"]
         RPC -->|"copy_save / move_save"| CMD_CP["commands::saves::copy_save / move_save"]
         RPC -->|"backup_save / delete_save"| CMD_OPS["commands::saves::backup_save / delete_save"]
+        RPC -->|"open_save_folder"| CMD_OPEN["commands::saves::open_save_folder"]
         CMD_LIST --> VANILLA_DIR["%APPDATA%/OpenGOAL/<game>/saves"]
         CMD_LIST --> MOD_DIR["<install>/features/<game>/mods/<source>/_settings/<mod>/saves"]
     end
 ```
 
-- **Frontend Navigation ([src/router.ts](../../src/router.ts))**: Exposes the `/:game_name/saves` route.
+- **Frontend Navigation ([src/router.ts](../../src/router.ts))**: Exposes routes `/:game_name/saves` and `/:game_name/mods/:source_name/:mod_name/saves`.
 - **Entry Points**:
-  - Vanilla: Added to the "Features" dropdown menu in [src/components/games/GameControls.svelte](../../src/components/games/GameControls.svelte).
-  - Mods: Added to the settings dropdown menu in [src/components/games/GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte).
-- **Backend Handlers ([src-tauri/src/commands/saves.rs](../../src-tauri/src/commands/saves.rs))**: Implements filesystem scanning, milestone parsing, backup generation, and compatibility guards.
+  - Vanilla: Added to the "Advanced" dropdown menu in [src/components/games/GameControls.svelte](../../src/components/games/GameControls.svelte) as "Open Saves Manager".
+  - Mods: Added to the "Advanced" dropdown menu in [src/components/games/GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte) as "Open Saves Manager".
+- **Backend Handlers ([src-tauri/src/commands/saves.rs](../../src-tauri/src/commands/saves.rs))**: Implements save directory scanning, regional subfolder discovery, milestone calculation, backup generation, copying, moving, and deletion.
 
 ---
 
 ## 4. New Files Created
 
 1. **`src-tauri/src/commands/saves.rs`**:
-   Rust backend module providing save enumeration, slot mapping, milestone calculation, copying, moving, backing up, and deletion.
+   Rust backend module providing save enumeration, regional folder hierarchy resolution, milestone parsing, backup generation, and file operations.
 2. **`src/lib/rpc/saves.ts`**:
    TypeScript wrapper handling typed Tauri command invocations for save operations.
 3. **`src/components/saves/SaveDataManager.svelte`**:
-   Svelte 5 view rendering the save slots grid, multi-install selector, compatibility warnings, and transfer modals.
-4. **`src/lib/rpc/bindings/SaveInstallInfo.ts` & `SaveSlotInfo.ts`**:
+   Svelte 5 view rendering the game switcher bar, regional folders, save slots grid, action tooltips, and transfer/delete modals.
+4. **`src/lib/rpc/bindings/SaveInstallInfo.ts`**, **`SaveFolderInfo.ts`** & **`SaveSlotInfo.ts`**:
    TypeScript bindings automatically generated by `ts-rs`.
 
 ---
 
 ## 5. Overview of Changes from the Original Project
 
-- **Removed Unsafe CLI Overrides**:
-  - Removed the `--disable_save_location_override` CLI injection and `share_vanilla_saves` setting from [src-tauri/src/commands/features/mods.rs](../../src-tauri/src/commands/features/mods.rs) and [src-tauri/src/config.rs](../../src-tauri/src/config.rs).
-- **Route & UI Integration**:
-  - Registered `/:game_name/saves` in [src/router.ts](../../src/router.ts).
-  - Added save manager entry points in [GameControls.svelte](../../src/components/games/GameControls.svelte) and [GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte).
+- **Access Point Migration**:
+  - Moved entry points from "Features" / Cog into the "Advanced" dropdown menu under the name "Open Saves Manager" for both base games and mods.
+- **Regional Folders & Game Switcher**:
+  - Replaced the single-directory view with a two-level hierarchy supporting multiple regional folders (`BASCUS-*`, `BESCES-*`) and in-screen game switching.
+- **Safety & UX**:
+  - Added delete confirmation popups and informative tooltips across all interactive actions.
+  - Unified color scheme with amber/orange action buttons.
 - **Localization Policy (Crowdin)**:
-  - Restricted new translation keys strictly to English ([src/assets/translations/en-US.json](../../src/assets/translations/en-US.json)). Cleaned manual entries from the other 34 language files.
+  - Added new strings exclusively to [src/assets/translations/en-US.json](../../src/assets/translations/en-US.json). Kept other language files clean for Crowdin synchronization.
 
 ---
 
@@ -123,65 +129,70 @@ flowchart TD
 
 ## 1. Qu'est-ce qu'elle apporte
 
-Le **Gestionnaire de Sauvegardes (_Save Data Manager_)** apporte une interface centralisée, claire et sécurisée permettant de visualiser, copier, déplacer, sauvegarder et supprimer les sauvegardes de jeu entre toutes les installations d'un même jeu (le jeu de base vanilla et l'ensemble des mods communautaires installés).
+Le **Gestionnaire de Sauvegardes (_Saves Manager_)** apporte une interface centralisée, intuitive et sécurisée permettant de consulter, copier, déplacer, sauvegarder et supprimer les sauvegardes de jeu pour l'ensemble des installations OpenGOAL (jeux de base vanilla et mods communautaires installés).
 
 ### Points Clés
 
-- **Vision Multi-Installations** : Affichage dans un tableau de bord unique des 4 slots de sauvegarde du jeu vanilla et de chaque mod installé.
+- **Sélecteur Multi-Jeux** : Basculement direct et fluide entre Jak 1, Jak 2 et Jak 3 via une barre de sélection intégrée en haut de l'écran.
+- **Dossiers Régionaux et Sous-Dossiers** : Prise en charge des dossiers régionaux OpenGOAL (ex. `BASCUS-97265AYBABTU!`, `BESCES-51608AYBABTU!`). L'utilisateur sélectionne un dossier régional pour visualiser ses slots spécifiques.
+- **Vision Multi-Installations** : Affichage des sauvegardes du jeu vanilla et de chaque mod installé avec badges d'identification.
 - **Affichage des Jalons et de la Progression** : Détection automatique des tâches accomplies et affichage du jalon le plus avancé (ex. Rocher du Geyser, Jungle Interdite).
-- **Transferts Sécurisés et Sauvegardes Automatiques** : Permet de dupliquer ou déplacer des sauvegardes avec génération automatique d'une copie `.bak` horodatée en cas d'écrasement.
-- **Protection Anti-Corruption pour les Mods Incompatibles ("Big Warning")** : Identification des mods modifiant la structure binaire des sauvegardes (comme _Fishing Legacy_). Lorsqu'un tel mod est consulté, un bandeau d'alerte très visible s'affiche et les transferts vers/depuis le jeu vanilla sont **strictement désactivés** pour éviter toute corruption de données.
+- **Transferts Sécurisés et Sauvegardes Automatiques** : Duplication ou déplacement de sauvegardes entre installations avec génération automatique d'une copie de secours `.bak` horodatée en cas d'écrasement.
+- **Protection Anti-Suppression Accidentelle** : Modale de confirmation avant toute suppression définitive.
+- **Info-Bulles et Palette Orange Harmonisée** : Info-bulles explicatives au survol de chaque bouton et boutons d'action stylisés en orange ambré (`bg-amber-500 hover:bg-amber-600`).
 
 ---
 
 ## 2. Comment fonctionne la fonctionnalité
 
-### Cycle de consultation
+### Cycle de consultation et dossiers régionaux
 
-1. À l'ouverture de `/:game_name/saves`, le composant Svelte interroge le backend via la commande Tauri `list_game_save_installs`.
+1. À l'ouverture du Saves Manager (`/:game_name/saves`), le composant interroge le backend via la commande Tauri `list_game_save_installs`.
 2. Le module Rust analyse :
    - Le dossier vanilla (`%APPDATA%/OpenGOAL/<game>/saves` sous Windows ou `~/.config/OpenGOAL/<game>/saves` sous Linux).
    - Les dossiers des mods (`<install_dir>/features/<game>/mods/<source>/_settings/<mod>/...`).
-3. Les fichiers `.bin` sont scannés pour extraire leur taille, date de modification, numéro de slot et nom de jalon.
-4. Si un mod altère la structure des sauvegardes, il reçoit le drapeau `hasCustomSaveFormat = true`.
+3. Les sous-dossiers régionaux sont identifiés (`BASCUS-*`, `BESCES-*`, `default`).
+4. Les fichiers `.bin` de chaque dossier sont analysés pour extraire leur taille, date de modification, numéro de slot et jalon atteint.
 
-### Cycle de transfert et protection
+### Cycle de transfert, backup et suppression
 
-1. L'utilisateur clique sur **Copier vers...**, ce qui ouvre une modale de destination.
-2. Si le transfert implique le jeu vanilla et un mod incompatible, le bouton de confirmation est désactivé et un message d'avertissement explicite est présenté.
-3. Si le transfert est valide et que le slot cible est déjà occupé, une sauvegarde automatique `.bak` du fichier existant est créée avant la copie.
+1. **Copie / Déplacement** : Un clic sur **Copier vers...** ouvre une modale permettant de choisir l'installation, le dossier et le slot cible, avec option de déplacement (suppression de la source). Si la destination est occupée, une sauvegarde `.bak-<timestamp>` est créée automatiquement.
+2. **Sauvegarde manuelle (Backup)** : Génère une copie horodatée indépendante du slot sélectionné.
+3. **Suppression** : Affiche une boîte de dialogue de confirmation avant d'exécuter `delete_save`.
+4. **Ouvrir le dossier** : Ouvre l'explorateur de fichiers natif sur le dossier de sauvegarde actif via `open_save_folder`.
 
 ---
 
 ## 3. Comment elle s'intègre dans l'architecture
 
-- **Navigation Frontend ([src/router.ts](../../src/router.ts))** : Enregistrement de la route `/:game_name/saves`.
+- **Navigation Frontend ([src/router.ts](../../src/router.ts))** : Enregistrement des routes `/:game_name/saves` et `/:game_name/mods/:source_name/:mod_name/saves`.
 - **Points d'accès** :
-  - Jeu vanilla : Menu déroulant « Fonctionnalités » de [src/components/games/GameControls.svelte](../../src/components/games/GameControls.svelte).
-  - Mods : Menu d'options de [src/components/games/GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte).
-- **Commandes Backend ([src-tauri/src/commands/saves.rs](../../src-tauri/src/commands/saves.rs))** : Gestion du système de fichiers, création de copies de sauvegarde, détection d'incompatibilité et suppression.
+  - Jeu vanilla : Menu déroulant « Advanced » de [src/components/games/GameControls.svelte](../../src/components/games/GameControls.svelte) via l'option « Open Saves Manager ».
+  - Mods : Menu déroulant « Advanced » de [src/components/games/GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte) via l'option « Open Saves Manager ».
+- **Commandes Backend ([src-tauri/src/commands/saves.rs](../../src-tauri/src/commands/saves.rs))** : Énumération des sauvegardes et dossiers régionaux, calcul des jalons, backups automatiques, copie, déplacement et suppression.
 
 ---
 
 ## 4. Quels sont les nouveaux fichiers
 
 1. **`src-tauri/src/commands/saves.rs`** :
-   Module Rust assurant l'énumération des sauvegardes, la copie, le déplacement, les backups et la suppression.
+   Module Rust assurant l'énumération des dossiers régionaux, la copie, le déplacement, les backups et la suppression.
 2. **`src/lib/rpc/saves.ts`** :
    Couche RPC TypeScript typée pour appeler les commandes backend.
 3. **`src/components/saves/SaveDataManager.svelte`** :
-   Interface Svelte 5 affichant les slots, les alertes d'incompatibilité et la modale de transfert.
-4. **`src/lib/rpc/bindings/SaveInstallInfo.ts` & `SaveSlotInfo.ts`** :
+   Interface Svelte 5 affichant la barre de sélection de jeu, les dossiers régionaux, la grille de slots et les modales de confirmation.
+4. **`src/lib/rpc/bindings/SaveInstallInfo.ts`**, **`SaveFolderInfo.ts`** & **`SaveSlotInfo.ts`** :
    Liaisons TypeScript générées automatiquement par `ts-rs`.
 
 ---
 
 ## 5. Quels sont les modifications dans les grandes lignes
 
-- **Suppression du commutateur en ligne de commande** :
-  - Retrait du paramètre dangereux `--disable_save_location_override` et du champ `share_vanilla_saves` dans [src-tauri/src/commands/features/mods.rs](../../src-tauri/src/commands/features/mods.rs) et [src-tauri/src/config.rs](../../src-tauri/src/config.rs).
-- **Intégration UI et Route** :
-  - Ajout de la route `/:game_name/saves` dans [src/router.ts](../../src/router.ts).
-  - Ajout des accès vers le gestionnaire dans [GameControls.svelte](../../src/components/games/GameControls.svelte) et [GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte).
+- **Déplacement des points d'accès** :
+  - Les accès ont été déplacés dans le menu déroulant « Advanced » avec le libellé « Open Saves Manager » sur le jeu de base et sur les mods.
+- **Hiérarchie régionale et sélecteur de jeu** :
+  - Ajout de la sélection de jeu intégrée et du niveau d'arborescence des dossiers régionaux (`BASCUS-*`, `BESCES-*`).
+- **Sécurité et Ergonomie** :
+  - Ajout d'une pop-up de confirmation pour la suppression, info-bulles descriptives sur les boutons et harmonisation de la charte graphique en orange.
 - **Politique de Traduction (Crowdin)** :
-  - Clés ajoutées uniquement dans le fichier anglais ([src/assets/translations/en-US.json](../../src/assets/translations/en-US.json)), nettoyage des 34 autres fichiers de langue pour laisser Crowdin gérer les traductions.
+  - Clés de traduction ajoutées uniquement dans le fichier anglais ([src/assets/translations/en-US.json](../../src/assets/translations/en-US.json)), préservant ainsi le workflow de synchronisation Crowdin.

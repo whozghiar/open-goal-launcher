@@ -71,6 +71,10 @@ When assisting on this repository, the AI must strictly adhere to the following 
    When adding or modifying user-facing text strings, only edit the primary English file (`src/assets/translations/en-US.json`). **Never** translate or edit the remaining 30+ language files manually. Crowdin manages all community translations; manual additions pollute pull requests and cause merge conflicts.
 9. **Mod Metadata & Schema Collision Prevention**:
    Never introduce launcher config or state field names that conflict or overlap with mod metadata schema properties (such as introducing `shareVanillaSaves` when mod metadata defines or plans a property of the same name). Always inspect `schemas/mod-source/` to avoid naming ambiguity and collisions.
+10. **Strict Prohibition on Commits without Explicit User Authorization**:
+    The AI must **never** perform a `git commit` unless explicitly instructed or authorized by the user in the prompt. Code modifications must remain in the working tree for user review until a commit is explicitly requested.
+11. **Strict Prohibition on Pushing without Explicit User Permission**:
+    The AI is **strictly forbidden** from executing any `git push` command without explicit permission from the user.
 
 ---
 
@@ -83,7 +87,6 @@ When assisting on this repository, the AI must strictly adhere to the following 
 3. **Execution Engine (`gk`)**:
    - Vanilla game: `gk` saves data to `%APPDATA%/OpenGOAL/<game>/saves` (Windows) or `~/.config/OpenGOAL/<game>/saves` (Linux).
    - Mods: launched with `--config-path <mod_settings_dir>`, which isolates both settings and save directories.
-   - Shared saves: passing `--disable_save_location_override` alongside `--config-path` directs save files to the vanilla saves folder while preserving isolated mod settings.
 
 ---
 
