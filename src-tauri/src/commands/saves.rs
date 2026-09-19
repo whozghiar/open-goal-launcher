@@ -11,9 +11,8 @@ use ts_rs::TS;
 use walkdir::WalkDir;
 
 use crate::{
-  commands::{CommandError, game::get_saves_highest_milestone},
+  commands::CommandError,
   config::{LauncherConfig, SupportedGame},
-  util::game_milestones::get_jak1_milestones,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
@@ -26,7 +25,6 @@ pub struct SaveSlotInfo {
   pub slot_number: Option<u8>,
   pub size_bytes: u64,
   pub modified_timestamp: u64,
-  pub milestone_name: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
@@ -97,17 +95,11 @@ fn parse_slot_number(file_name: &str) -> Option<u8> {
 
 fn scan_save_folders_in_dir(
   save_dir: &Path,
-  game_name: SupportedGame,
+  _game_name: SupportedGame,
 ) -> (Vec<SaveFolderInfo>, Vec<SaveSlotInfo>) {
   if !save_dir.exists() {
     return (Vec::new(), Vec::new());
   }
-
-  let milestones = if game_name == SupportedGame::Jak1 {
-    Some(get_jak1_milestones())
-  } else {
-    None
-  };
 
   let mut folder_map: BTreeMap<String, Vec<SaveSlotInfo>> = BTreeMap::new();
 
@@ -163,12 +155,6 @@ fn scan_save_folders_in_dir(
       .map(|d| d.as_millis() as u64)
       .unwrap_or(0);
 
-    let milestone_name = if let Some(ref ms) = milestones {
-      get_saves_highest_milestone(path, ms).map(|(name, _)| name)
-    } else {
-      None
-    };
-
     let slot_number = parse_slot_number(&base_name);
 
     let save_slot = SaveSlotInfo {
@@ -178,7 +164,6 @@ fn scan_save_folders_in_dir(
       slot_number,
       size_bytes: metadata.len(),
       modified_timestamp,
-      milestone_name,
     };
 
     folder_map.entry(folder_name).or_default().push(save_slot);

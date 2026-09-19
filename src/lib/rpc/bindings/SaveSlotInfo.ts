@@ -7,5 +7,4 @@ export type SaveSlotInfo = {
   slotNumber: number | null;
   sizeBytes: bigint;
   modifiedTimestamp: bigint;
-  milestoneName: string | null;
 };

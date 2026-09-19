@@ -270,7 +270,6 @@
   "saveManager_slot": "Slot",
   "saveManager_emptySlot": "Empty Slot",
   "saveManager_lastModified": "Modified",
-  "saveManager_milestone": "Progress",
   "saveManager_copyTo": "Copy To...",
   "saveManager_moveTo": "Move To...",
   "saveManager_targetInstall": "Destination Installation",

@@ -290,11 +290,6 @@ impl LauncherConfig {
     self.games.entry(game_name).or_default()
   }
 
-  // Retrieves the configuration for a supported game if present.
-  pub fn get_supported_game_config(&self, game_name: SupportedGame) -> Option<&GameConfig> {
-    self.games.get(&game_name)
-  }
-
   pub fn load_config(config_dir: std::path::PathBuf) -> LauncherConfig {
     let settings_path = config_dir.join("settings.json");
     tracing::info!("Loading configuration at path: {}", settings_path.display());

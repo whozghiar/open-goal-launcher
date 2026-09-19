@@ -643,14 +643,6 @@
               <!-- Save Details -->
               {#if item.save}
                 <div class="space-y-1.5 text-xs text-neutral-400 my-3">
-                  {#if item.save.milestoneName}
-                    <div class="flex items-center justify-between">
-                      <span>{$_("saveManager_milestone")}:</span>
-                      <span class="font-semibold text-amber-400 uppercase">
-                        {item.save.milestoneName}
-                      </span>
-                    </div>
-                  {/if}
                   <div class="flex items-center justify-between">
                     <span>Size:</span>
                     <span class="text-neutral-300"
@@ -923,14 +915,6 @@
             <span class="text-neutral-400">Folder / Region:</span>
             <span class="font-mono text-amber-300"
               >{saveToDelete.folderName}</span
-            >
-          </div>
-        {/if}
-        {#if saveToDelete.milestoneName}
-          <div class="flex justify-between items-center">
-            <span class="text-neutral-400">Milestone:</span>
-            <span class="text-amber-400 font-semibold"
-              >{saveToDelete.milestoneName}</span
             >
           </div>
         {/if}
