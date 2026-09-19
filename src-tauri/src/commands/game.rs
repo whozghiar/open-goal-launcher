@@ -91,7 +91,7 @@ pub async fn reset_game_settings(
 /// A task is considered:
 /// - introduced if its status is not 0, 1, 6, or 7
 /// - completed if its status is 7
-fn get_saves_highest_milestone(
+pub(crate) fn get_saves_highest_milestone(
   path: impl AsRef<Path>,
   milestones: &[MilestoneCriteria],
 ) -> Option<(String, i32)> {

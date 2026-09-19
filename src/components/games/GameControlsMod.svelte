@@ -594,6 +594,14 @@
           <DropdownDivider />
           <DropdownItem
             onclick={async () => {
+              navigate("/:game_name/saves", {
+                params: { game_name: activeGame },
+              });
+            }}>{$_("gameControls_button_saveManager")}</DropdownItem
+          >
+          <DropdownDivider />
+          <DropdownItem
+            onclick={async () => {
               const launchString = await getLaunchModString(
                 activeGame,
                 modName,

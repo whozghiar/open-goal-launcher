@@ -126,6 +126,15 @@
           >
             {$_("gameControls_button_features_mods")}
           </DropdownItem>
+          <DropdownItem
+            onclick={async () => {
+              navigate(`/:game_name/saves`, {
+                params: { game_name: activeGame },
+              });
+            }}
+          >
+            {$_("gameControls_button_saveManager")}
+          </DropdownItem>
         </Dropdown>
         <Button
           class="font-medium text-gray-200 h-10 text-center focus:ring-0 focus:outline-none border-solid border border-[#2a2a2a] rounded bg-[#0b0b0b] hover:bg-[#141414] hover:border-[#3a3a3a] hover:text-white"
