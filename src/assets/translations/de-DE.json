@@ -35,6 +35,8 @@
   "gameControls_button_openGameFolder": "Öffne Spieldatenverzeichnis",
   "gameControls_button_openExtractedAssetsFolder": "Ordner für entpackte Dateien öffnen",
   "gameControls_button_openSavesFolder": "Spielstandordner öffnen",
+  "gameControls_button_shareVanillaSaves": "Basisspiel-Spielstände teilen",
+  "gameControls_button_shareVanillaSaves_helpText": "Den Vanilla-Spielstandordner anstelle von Mod-isolierten Spielständen verwenden",
   "gameControls_button_openSettingsFolder": "Einstellungsordner öffnen",
   "gameControls_button_install": "Installieren",
   "gameControls_button_play": "Spielen",

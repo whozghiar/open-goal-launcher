@@ -35,6 +35,8 @@
   "gameControls_button_openGameFolder": "打开游戏数据文件夹",
   "gameControls_button_openExtractedAssetsFolder": "打开已解开的资源文件夹",
   "gameControls_button_openSavesFolder": "打开存档文件夹",
+  "gameControls_button_shareVanillaSaves": "共享原版游戏存档",
+  "gameControls_button_shareVanillaSaves_helpText": "使用原版存档目录而不是模组独立存档",
   "gameControls_button_openSettingsFolder": "打开设置文件夹",
   "gameControls_button_install": "安装",
   "gameControls_button_play": "开始游戏",

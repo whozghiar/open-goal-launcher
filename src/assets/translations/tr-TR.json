@@ -35,6 +35,8 @@
   "gameControls_button_openGameFolder": "Oyun Klasörünü Aç",
   "gameControls_button_openExtractedAssetsFolder": "Çıkartılmış oyun içerik klasörünü aç",
   "gameControls_button_openSavesFolder": "Kayıtlar Klasörünü Aç",
+  "gameControls_button_shareVanillaSaves": "Ana Oyun Kayıtlarını Paylaş",
+  "gameControls_button_shareVanillaSaves_helpText": "Moda özel yalıtılmış kayıtlar yerine orijinal oyun kayıt dizinini kullan",
   "gameControls_button_openSettingsFolder": "Ayarlar Klasörünü Aç",
   "gameControls_button_install": "Yükle",
   "gameControls_button_play": "Oyna",
