@@ -10,6 +10,8 @@ import Mods from "./routes/Mods.svelte";
 // @ts-ignore
 import TexturePacks from "./components/texture-packs/TexturePacks.svelte";
 // @ts-ignore
+import ModTexturePacks from "./components/texture-packs/ModTexturePacks.svelte";
+// @ts-ignore
 import UpdateLauncher from "./routes/UpdateLauncher.svelte";
 // @ts-ignore
 import Layout from "./layouts/Layout.svelte";
@@ -134,7 +136,7 @@ export const { p, navigate, isActive, route } = createRouter({
           },
         },
         "/texture_packs": {
-          "/": TexturePacks,
+          "/": ModTexturePacks,
         },
       },
     },

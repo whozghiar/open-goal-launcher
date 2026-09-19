@@ -8,6 +8,7 @@ use crate::{
   config::{LauncherConfig, SupportedGame},
   util::{
     file::{create_dir, delete_dir, overwrite_dir},
+    network::download_file,
     zip::{check_if_zip_contains_top_level_entry, extract_zip_file},
   },
 };
@@ -173,6 +174,43 @@ pub async fn extract_new_texture_pack(
   Ok(())
 }
 
+// Downloads a remote texture pack zip archive and extracts it into the texture-packs features directory
+#[instrument(skip(config))]
+#[tauri::command]
+pub async fn download_and_extract_texture_pack(
+  config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
+  game_name: SupportedGame,
+  download_url: String,
+  pack_name: String,
+) -> Result<(), CommandError> {
+  let install_dir = {
+    let config_lock = config.lock().await;
+    config_lock.install_dir()?
+  };
+
+  let destination_dir = install_dir
+    .join("features")
+    .join(game_name.to_string())
+    .join("texture-packs")
+    .join(&pack_name);
+
+  create_dir(&destination_dir)?;
+  let download_path = destination_dir.join("temp_pack.zip");
+
+  info!(
+    "Downloading texture pack from {} to {}",
+    download_url,
+    download_path.display()
+  );
+  download_file(&download_url, &download_path).await?;
+
+  let extract_result = extract_zip_file(&download_path, &destination_dir, false);
+  let _ = fs::remove_file(&download_path);
+  extract_result.context("Unable to extract downloaded texture pack")?;
+
+  Ok(())
+}
+
 #[instrument(skip(config))]
 #[tauri::command]
 pub async fn update_texture_pack_data(
@@ -213,6 +251,54 @@ pub async fn update_texture_pack_data(
 
     info!("Appending textures from: {}", texture_pack_dir.display());
     overwrite_dir(&texture_pack_dir, &game_texture_pack_dir)?;
+  }
+  return Ok(());
+}
+
+// Deploys active texture pack files into the mod-specific texture replacement directory
+#[instrument(skip(config))]
+#[tauri::command]
+pub async fn update_mod_texture_pack_data(
+  config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
+  game_name: SupportedGame,
+  source_name: String,
+  mod_name: String,
+) -> Result<(), CommandError> {
+  let config_lock = config.lock().await;
+  let install_dir = config_lock.install_dir()?;
+
+  let texture_packs = config_lock
+    .get_mod_texture_packs(game_name, &source_name, &mod_name)?;
+
+  let mod_texture_pack_dir = install_dir
+    .join("features")
+    .join(game_name.to_string())
+    .join("mods")
+    .join(&source_name)
+    .join(&mod_name)
+    .join("data")
+    .join("custom_assets")
+    .join(game_name.to_string())
+    .join("texture_replacements");
+
+  // Reset mod texture replacement directory
+  delete_dir(&mod_texture_pack_dir)?;
+  create_dir(&mod_texture_pack_dir)?;
+
+  drop(config_lock);
+
+  for pack in texture_packs.iter().rev() {
+    let texture_pack_dir = install_dir
+      .join("features")
+      .join(game_name.to_string())
+      .join("texture-packs")
+      .join(pack)
+      .join("custom_assets")
+      .join(game_name.to_string())
+      .join("texture_replacements");
+
+    info!("Appending textures to mod from: {}", texture_pack_dir.display());
+    overwrite_dir(&texture_pack_dir, &mod_texture_pack_dir)?;
   }
   return Ok(());
 }

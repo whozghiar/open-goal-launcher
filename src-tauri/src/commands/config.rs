@@ -64,6 +64,25 @@ pub async fn set_texture_packs(
   Ok(())
 }
 
+// Persists the active texture packs list for a specific mod
+#[instrument(skip(config))]
+#[tauri::command]
+pub async fn set_mod_texture_packs(
+  config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
+  game_name: SupportedGame,
+  source_name: String,
+  mod_name: String,
+  texture_packs: Vec<String>,
+) -> Result<(), CommandError> {
+  let mut config_lock = config.lock().await;
+  config_lock
+    .set_mod_texture_packs(game_name, &source_name, &mod_name, texture_packs)
+    .map_err(|_| {
+      CommandError::Configuration("Unable to save mod texture packs".to_owned())
+    })?;
+  Ok(())
+}
+
 #[instrument(skip(config))]
 #[tauri::command]
 pub async fn set_install_directory(
@@ -280,6 +299,25 @@ pub async fn cleanup_enabled_texture_packs(
   Ok(())
 }
 
+// Removes obsolete texture packs from a specific mod's active list
+#[instrument(skip(config))]
+#[tauri::command]
+pub async fn cleanup_mod_enabled_texture_packs(
+  config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
+  game_name: SupportedGame,
+  source_name: String,
+  mod_name: String,
+  cleanup_list: Vec<String>,
+) -> Result<(), CommandError> {
+  let mut config_lock = config.lock().await;
+  config_lock
+    .cleanup_mod_enabled_texture_packs(game_name, &source_name, &mod_name, cleanup_list)
+    .map_err(|_| {
+      CommandError::Configuration("Unable to cleanup mod enabled texture packs".to_owned())
+    })?;
+  Ok(())
+}
+
 #[instrument(skip(config))]
 #[tauri::command]
 pub async fn set_hide_beta_alerts(
@@ -357,3 +395,24 @@ pub async fn does_active_tooling_version_meet_minimum(
     Ok(false)
   }
 }
+
+// Tauri command exposed to frontend RPC to update and persist the share_vanilla_saves preference
+#[instrument(skip(config))]
+#[tauri::command]
+pub async fn set_mod_share_vanilla_saves(
+  config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
+  game_name: SupportedGame,
+  source_name: String,
+  mod_name: String,
+  share: bool,
+) -> Result<(), CommandError> {
+  let mut config_lock = config.lock().await;
+  config_lock
+    .set_mod_share_vanilla_saves(game_name, source_name, mod_name, share)
+    .map_err(|err| {
+      tracing::error!("Unable to set mod share vanilla saves: {:?}", err);
+      CommandError::Configuration("Unable to set mod share vanilla saves".to_owned())
+    })?;
+  Ok(())
+}
+

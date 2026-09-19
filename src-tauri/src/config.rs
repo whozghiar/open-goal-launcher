@@ -55,6 +55,9 @@ pub struct InstalledMod {
   pub texture_packs: Vec<String>,
   #[serde(default)]
   pub seconds_played: u64,
+  // Indicates whether the mod shares saves with the base vanilla game
+  #[serde(default)]
+  pub share_vanilla_saves: bool,
 }
 
 type InstalledMods = HashMap<String, HashMap<String, InstalledMod>>;
@@ -290,6 +293,10 @@ impl LauncherConfig {
     self.games.entry(game_name).or_default()
   }
 
+  pub fn get_supported_game_config(&self, game_name: SupportedGame) -> Option<&GameConfig> {
+    self.games.get(&game_name)
+  }
+
   pub fn load_config(config_dir: std::path::PathBuf) -> LauncherConfig {
     let settings_path = config_dir.join("settings.json");
     tracing::info!("Loading configuration at path: {}", settings_path.display());
@@ -428,6 +435,7 @@ impl LauncherConfig {
     Ok(())
   }
 
+  // Adds or updates an installed mod record while preserving existing settings
   pub fn add_mod(
     &mut self,
     game_name: SupportedGame,
@@ -435,19 +443,118 @@ impl LauncherConfig {
     version: String,
     mod_name: String,
   ) -> Result<()> {
-    self
+    let mod_map = self
       .get_supported_game_config_mut(game_name)
       .installed_mods
       .entry(source)
-      .or_default()
-      .insert(
+      .or_default();
+    if let Some(existing) = mod_map.get_mut(&mod_name) {
+      existing.version = version;
+    } else {
+      mod_map.insert(
         mod_name,
         InstalledMod {
           version,
           ..Default::default()
         },
       );
+    }
     self.save_config()?;
+    Ok(())
+  }
+
+  // Returns whether the specified mod is configured to share saves with the vanilla game
+  pub fn get_mod_share_vanilla_saves(
+    &self,
+    game_name: SupportedGame,
+    source: &str,
+    mod_name: &str,
+  ) -> bool {
+    self
+      .get_supported_game_config(game_name)
+      .and_then(|g| g.installed_mods.get(source))
+      .and_then(|mods| mods.get(mod_name))
+      .map(|m| m.share_vanilla_saves)
+      .unwrap_or(false)
+  }
+
+  // Updates the mod's share_vanilla_saves setting and persists it to settings.json
+  pub fn set_mod_share_vanilla_saves(
+    &mut self,
+    game_name: SupportedGame,
+    source: String,
+    mod_name: String,
+    share: bool,
+  ) -> Result<()> {
+    if let Some(mod_config) = self
+      .get_supported_game_config_mut(game_name)
+      .installed_mods
+      .get_mut(&source)
+      .and_then(|mods| mods.get_mut(&mod_name))
+    {
+      mod_config.share_vanilla_saves = share;
+      self.save_config()?;
+    }
+    Ok(())
+  }
+
+  // Retrieves the list of active texture packs for a specific mod
+  pub fn get_mod_texture_packs(
+    &self,
+    game_name: SupportedGame,
+    source: &str,
+    mod_name: &str,
+  ) -> Result<Vec<String>> {
+    let texture_packs = self
+      .get_supported_game_config(game_name)
+      .and_then(|g| g.installed_mods.get(source))
+      .and_then(|mods| mods.get(mod_name))
+      .map(|m| m.texture_packs.clone())
+      .unwrap_or_default();
+    Ok(texture_packs)
+  }
+
+  // Updates the list of active texture packs for a specific mod and saves configuration
+  pub fn set_mod_texture_packs(
+    &mut self,
+    game_name: SupportedGame,
+    source: &str,
+    mod_name: &str,
+    texture_packs: Vec<String>,
+  ) -> Result<()> {
+    let mod_map = self
+      .get_supported_game_config_mut(game_name)
+      .installed_mods
+      .entry(source.to_string())
+      .or_default();
+    let mod_config = mod_map.entry(mod_name.to_string()).or_default();
+    mod_config.texture_packs = texture_packs;
+    self.save_config()?;
+    Ok(())
+  }
+
+  // Cleans up any removed texture packs from a mod's active texture packs list
+  pub fn cleanup_mod_enabled_texture_packs(
+    &mut self,
+    game_name: SupportedGame,
+    source: &str,
+    mod_name: &str,
+    cleanup_list: Vec<String>,
+  ) -> Result<()> {
+    if cleanup_list.is_empty() {
+      return Ok(());
+    }
+    if let Some(mod_config) = self
+      .get_supported_game_config_mut(game_name)
+      .installed_mods
+      .get_mut(source)
+      .and_then(|mods| mods.get_mut(mod_name))
+    {
+      mod_config
+        .texture_packs
+        .retain(|pack| !cleanup_list.contains(pack));
+      self.save_config()?;
+    }
     Ok(())
   }
 
@@ -471,7 +578,7 @@ impl LauncherConfig {
     game_name: SupportedGame,
     cleanup_list: Vec<String>,
   ) -> Result<()> {
-    if !cleanup_list.is_empty() {
+    if cleanup_list.is_empty() {
       return Ok(());
     }
     self

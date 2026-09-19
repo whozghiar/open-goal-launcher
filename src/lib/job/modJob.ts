@@ -6,7 +6,11 @@ import {
   compileForModInstall,
   saveModInstallInfo,
   downloadAndExtractNewMod,
+  downloadAndExtractTexturePack,
+  updateModTexturePackData,
 } from "$lib/rpc/features";
+import { setModEnabledTexturePacks } from "$lib/rpc/config";
+import type { AttachedTexturePack } from "$lib/features/texture-packs";
 import { jobTracker } from "$lib/stores/JobStore";
 import { isoPrompt } from "$lib/utils/file-dialogs";
 import { unwrapFunctionStore, format } from "svelte-i18n";
@@ -19,6 +23,7 @@ export async function setupModInstallation(
   modSourceName: string,
   modDownloadUrl: string | undefined,
   modVersion: string,
+  attachedTexturePacks: AttachedTexturePack[] = [],
 ) {
   jobTracker.init([
     {
@@ -34,6 +39,40 @@ export async function setupModInstallation(
           );
           if (error) {
             jobTracker.updateFailureReason(error);
+            return false;
+          }
+        }
+        // Download and deploy any texture packs attached to this mod release
+        if (attachedTexturePacks && attachedTexturePacks.length > 0) {
+          for (const pack of attachedTexturePacks) {
+            let error = await downloadAndExtractTexturePack(
+              activeGame,
+              pack.downloadUrl,
+              pack.name,
+            );
+            if (error) {
+              jobTracker.updateFailureReason(error);
+              return false;
+            }
+          }
+          const packNames = attachedTexturePacks.map((p) => p.name);
+          let errSet = await setModEnabledTexturePacks(
+            activeGame,
+            modSourceName,
+            modName,
+            packNames,
+          );
+          if (errSet) {
+            jobTracker.updateFailureReason(errSet);
+            return false;
+          }
+          let errUpdate = await updateModTexturePackData(
+            activeGame,
+            modSourceName,
+            modName,
+          );
+          if (errUpdate) {
+            jobTracker.updateFailureReason(errUpdate);
             return false;
           }
         }
@@ -114,6 +153,15 @@ export async function setupModInstallation(
         if (error) {
           jobTracker.updateFailureReason(error);
           return false;
+        }
+        // Ensure active texture packs remain registered for this mod
+        if (attachedTexturePacks && attachedTexturePacks.length > 0) {
+          await setModEnabledTexturePacks(
+            activeGame,
+            modSourceName,
+            modName,
+            attachedTexturePacks.map((p) => p.name),
+          );
         }
         return true;
       },

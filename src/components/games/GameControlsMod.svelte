@@ -3,7 +3,7 @@
   import IconArrowLeft from "~icons/mdi/arrow-left";
   import IconCog from "~icons/mdi/cog";
   import OpenInNew from "~icons/mdi/open-in-new";
-  import { join } from "@tauri-apps/api/path";
+  import { configDir, join } from "@tauri-apps/api/path";
   import { onDestroy, onMount } from "svelte";
   import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { confirm } from "@tauri-apps/plugin-dialog";
@@ -17,7 +17,10 @@
     Indicator,
     Tooltip,
   } from "flowbite-svelte";
-  import { setCheckForLatestModVersion } from "$lib/rpc/config";
+  import {
+    setCheckForLatestModVersion,
+    setModShareVanillaSaves,
+  } from "$lib/rpc/config";
   import { _ } from "svelte-i18n";
   import { toastStore } from "$lib/stores/ToastStore";
   import {
@@ -34,6 +37,8 @@
   import type { SupportedGame } from "$lib/rpc/bindings/SupportedGame";
   import type { ModInfo } from "$lib/rpc/bindings/ModInfo";
   import { getModInfo } from "$lib/rpc/ModInfo";
+  import type { ModSourceData } from "$lib/rpc/bindings/ModSourceData";
+  import { findAttachedTexturePacks } from "$lib/features/texture-packs";
   import { asJobType } from "$lib/job/jobs";
   import { versionState } from "/src/state/VersionState.svelte";
   import { config } from "/src/state/config.svelte";
@@ -55,11 +60,45 @@
   let currentlyInstalledVersion: string = $state("");
   let numberOfVersionsOutOfDate = $state(0);
   let updateCheckEnabled = $state(config?.checkForLatestModVersion);
+  let relevantSourceData: ModSourceData | undefined = $state(undefined);
   let modInfo: ModInfo | undefined = $state(undefined);
   let displayName: string | undefined = $state(undefined);
   let description: string | undefined = $state(undefined);
 
+  // Reactively track and toggle whether this mod shares saves with the vanilla game
+  let shareVanillaSaves: boolean = $derived.by(() => {
+    let installedMods = config?.games?.[activeGame]?.mods;
+    if (
+      installedMods &&
+      installedMods[modSource] &&
+      installedMods[modSource][modName]
+    ) {
+      return installedMods[modSource][modName].shareVanillaSaves ?? false;
+    }
+    return false;
+  });
+
+  async function toggleShareVanillaSaves() {
+    if (!modInfo) return;
+    const nextShare = !shareVanillaSaves;
+    await setModShareVanillaSaves(
+      activeGame,
+      modInfo.source,
+      modInfo.name,
+      nextShare,
+    );
+    await initDirectories(modInfo);
+  }
+
   async function addModFromUrl(url: string, modVersion: string) {
+    // Detect any texture packs attached to this mod release in index.json
+    const attachedTexturePacks = findAttachedTexturePacks(
+      relevantSourceData,
+      modName,
+      modVersion,
+      url,
+      activeGame,
+    );
     navigate("/job/:job_type", {
       params: {
         job_type: asJobType("installModFromUrl"),
@@ -70,6 +109,7 @@
         modSourceName: modSource,
         modDownloadUrl: url,
         modVersion: modVersion,
+        attachedTexturePacks: JSON.stringify(attachedTexturePacks),
         returnTo: route.pathname,
       },
     });
@@ -123,18 +163,28 @@
       if (!(await exists(settingsDir))) {
         settingsDir = undefined;
       }
-      savesDir = await join(
-        installationDir,
-        "features",
-        activeGame,
-        "mods",
-        modInfo.source,
-        "_settings",
-        modInfo.name,
-        "OpenGOAL",
-        activeGame,
-        "saves",
-      );
+      // When shared saves are enabled, direct "Open Saves Folder" to the base game saves directory
+      if (shareVanillaSaves) {
+        savesDir = await join(
+          await configDir(),
+          "OpenGOAL",
+          activeGame,
+          "saves",
+        );
+      } else {
+        savesDir = await join(
+          installationDir,
+          "features",
+          activeGame,
+          "mods",
+          modInfo.source,
+          "_settings",
+          modInfo.name,
+          "OpenGOAL",
+          activeGame,
+          "saves",
+        );
+      }
       if (!(await exists(savesDir))) {
         savesDir = undefined;
       }
@@ -144,7 +194,7 @@
   async function sortModVersions(modInfo: ModInfo) {
     // Get a list of available versions, this is how we see if we're on the latest!
     let sourceData = await getModSourcesData();
-    let relevantSourceData = undefined;
+    relevantSourceData = undefined;
     for (const [sourceUrl, sourceDataEntry] of Object.entries(sourceData)) {
       if (sourceDataEntry.sourceName === modInfo.source) {
         relevantSourceData = sourceDataEntry;
@@ -311,8 +361,8 @@
           }}>{$_("gameControls_update_mod")}</Button
         >
       {/if}
-      <!-- TODO: Uncomment after I finish mods texture support -->
-      <!-- <Button
+      <!-- Button to navigate to the texture packs management page for this mod -->
+      <Button
         onclick={async () => {
           navigate(`/:game_name/mods/:source_name/:mod_name/texture_packs`, {
             params: {
@@ -324,7 +374,7 @@
         }}
         class="font-medium text-gray-200 h-10 text-center focus:ring-0 focus:outline-none border-solid border border-[#2a2a2a] rounded bg-[#0b0b0b] hover:bg-[#141414] hover:border-[#3a3a3a] hover:text-white"
         >{$_("gameControls_button_features_textures")}
-      </Button> -->
+      </Button>
       {#if modVersionListSorted.length > 0}
         <Button
           class="relative font-medium text-gray-200 h-10 text-center focus:ring-0 focus:outline-none border-solid border border-[#2a2a2a] rounded bg-[#0b0b0b] hover:bg-[#141414] hover:border-[#3a3a3a] hover:text-white"
@@ -480,7 +530,7 @@
           simple
           trigger="hover"
           placement="top-end"
-          class="dark:bg-slate-900! **:w-full"
+          class="dark:bg-slate-900! min-w-[22rem]"
         >
           <!-- TODO - screenshot folder? how do we even configure where those go? -->
           {#if settingsDir}
@@ -504,6 +554,43 @@
           {#if settingsDir || savesDir}
             <DropdownDivider />
           {/if}
+          <!-- Toggle option to share vanilla base game saves with this mod -->
+          <DropdownItem
+            onclick={async (e) => {
+              e.preventDefault();
+              await toggleShareVanillaSaves();
+            }}
+          >
+            <div class="flex items-center justify-between gap-4 w-full">
+              <div class="flex flex-col text-left flex-1 min-w-0 pr-2">
+                {$_("gameControls_button_shareVanillaSaves")}
+                <Helper class="dark:text-neutral-400! text-xs!">
+                  {$_("gameControls_button_shareVanillaSaves_helpText")}
+                </Helper>
+              </div>
+              <div
+                class="shrink-0 flex items-center justify-end"
+                style="width: 44px; min-width: 44px;"
+              >
+                <div
+                  role="switch"
+                  aria-checked={shareVanillaSaves}
+                  style="width: 44px; height: 24px;"
+                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {shareVanillaSaves
+                    ? 'bg-orange-500'
+                    : 'bg-[#374151]'}"
+                >
+                  <span
+                    style="width: 20px; height: 20px;"
+                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {shareVanillaSaves
+                      ? 'translate-x-5'
+                      : 'translate-x-0'}"
+                  ></span>
+                </div>
+              </div>
+            </div>
+          </DropdownItem>
+          <DropdownDivider />
           <DropdownItem
             onclick={async () => {
               const launchString = await getLaunchModString(

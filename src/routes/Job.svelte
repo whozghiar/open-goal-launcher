@@ -23,7 +23,8 @@
   import { searchParams } from "sv-router";
   import { toSupportedGame } from "$lib/rpc/SupportedGame";
   import { setupTexturePacks } from "$lib/job/texturePackJob";
-  import { infoLog } from "$lib/rpc/logging";
+  import type { AttachedTexturePack } from "$lib/features/texture-packs";
+  import { infoLog, warnLog } from "$lib/rpc/logging";
   import { config } from "../state/config.svelte";
 
   const proceedAfterSuccess = config?.proceedAfterSuccessfulOperation;
@@ -85,6 +86,17 @@
     if (searchParams.has("modVersion")) {
       modVersion = searchParams.get("modVersion")?.toString() ?? undefined;
     }
+    // - attachedTexturePacks
+    let attachedTexturePacks: AttachedTexturePack[] = [];
+    if (searchParams.has("attachedTexturePacks")) {
+      try {
+        attachedTexturePacks = JSON.parse(
+          searchParams.get("attachedTexturePacks")?.toString() ?? "[]",
+        );
+      } catch (err) {
+        warnLog(`Failed to parse attachedTexturePacks: ${err}`);
+      }
+    }
 
     infoLog(`Initializing job type: ${jobType}`);
 
@@ -111,7 +123,13 @@
         break;
       case "applyTexturePacks":
         if (activeGame) {
-          await setupTexturePacks(activeGame, packsToDelete, enabledPacks);
+          await setupTexturePacks(
+            activeGame,
+            packsToDelete,
+            enabledPacks,
+            modSourceName,
+            modName,
+          );
         }
         break;
       case "installModFromUrl":
@@ -128,6 +146,7 @@
             modSourceName,
             modDownloadUrl,
             modVersion,
+            attachedTexturePacks,
           );
         }
         break;

@@ -27,12 +27,42 @@ export async function extractNewTexturePack(
   });
 }
 
+// Downloads and extracts a remote texture pack directly into the local repository
+export async function downloadAndExtractTexturePack(
+  gameName: string,
+  downloadUrl: string,
+  packName: string,
+): Promise<string | null> {
+  return await invoke_rpc2("download_and_extract_texture_pack", {
+    args: {
+      gameName,
+      downloadUrl,
+      packName,
+    },
+  });
+}
+
 export async function updateTexturePackData(
   gameName: string,
 ): Promise<string | null> {
   return await invoke_rpc2("update_texture_pack_data", {
     args: {
       gameName: gameName,
+    },
+  });
+}
+
+// Deploys active texture replacements for a specific mod
+export async function updateModTexturePackData(
+  gameName: string,
+  sourceName: string,
+  modName: string,
+): Promise<string | null> {
+  return await invoke_rpc2("update_mod_texture_pack_data", {
+    args: {
+      gameName,
+      sourceName,
+      modName,
     },
   });
 }
