@@ -35,6 +35,8 @@
   "gameControls_button_openGameFolder": "Avaa pelitietojen kansio",
   "gameControls_button_openExtractedAssetsFolder": "Avaa purettujen resurssien kansio",
   "gameControls_button_openSavesFolder": "Avaa tallennusten kansio",
+  "gameControls_button_shareVanillaSaves": "Jaa peruspelin tallennukset",
+  "gameControls_button_shareVanillaSaves_helpText": "Käytä alkuperäisen pelin tallennuskansiota modikohtaisten tallennusten sijaan",
   "gameControls_button_openSettingsFolder": "Avaa asetusten kansio",
   "gameControls_button_install": "Asenna",
   "gameControls_button_play": "Pelaa",
