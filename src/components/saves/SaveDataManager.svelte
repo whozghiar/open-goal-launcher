@@ -402,7 +402,7 @@
           <Button
             id="btn-save-open-folder"
             size="sm"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+            class="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
             onclick={openCurrentSaveFolder}
           >
             <IconFolder class="w-4 h-4 mr-1.5" />
@@ -856,8 +856,8 @@
     <!-- Modal Action Buttons -->
     <div class="flex justify-end gap-2 pt-3 border-t border-neutral-700">
       <Button
-        color="alternative"
         size="sm"
+        class="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
         onclick={() => (showTransferModal = false)}
       >
         {$_("saveManager_cancel")}
@@ -946,8 +946,8 @@
 
     <div class="flex justify-end gap-2 pt-3 border-t border-neutral-700">
       <Button
-        color="alternative"
         size="sm"
+        class="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
         onclick={() => {
           showDeleteModal = false;
           saveToDelete = null;

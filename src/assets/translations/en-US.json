@@ -260,7 +260,7 @@
   "toasts_modSourceDuplicateName": "Mod source has the same display name as one you already have added",
   "toasts_unableToRetrieveModDownloadURL": "Unable to retrieve mod download URL",
   "toasts_githubUnexpectedError": "Unexpected error when hitting GitHub's API",
-  "saveManager_title": "Save Data Manager",
+  "saveManager_title": "Saves Manager",
   "saveManager_subtitle": "Manage, backup, and transfer save files between the vanilla game and installed mods.",
   "saveManager_openFolder": "Open Folder",
   "saveManager_install": "Installation",
