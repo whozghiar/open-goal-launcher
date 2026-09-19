@@ -1,4 +1,5 @@
 use std::{
+  collections::BTreeMap,
   fs,
   path::{Path, PathBuf},
   time::UNIX_EPOCH,
@@ -20,10 +21,22 @@ use crate::{
 #[ts(export, export_to = "../../src/lib/rpc/bindings/")]
 pub struct SaveSlotInfo {
   pub file_name: String,
+  pub folder_name: String,
+  pub base_name: String,
   pub slot_number: Option<u8>,
   pub size_bytes: u64,
   pub modified_timestamp: u64,
   pub milestone_name: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/lib/rpc/bindings/")]
+pub struct SaveFolderInfo {
+  pub folder_name: String,
+  pub display_name: String,
+  pub region: Option<String>,
+  pub saves: Vec<SaveSlotInfo>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
@@ -38,7 +51,32 @@ pub struct SaveInstallInfo {
   pub save_dir: String,
   pub has_custom_save_format: bool,
   pub warning_message: Option<String>,
+  pub folders: Vec<SaveFolderInfo>,
   pub saves: Vec<SaveSlotInfo>,
+}
+
+fn detect_region_and_display(folder_name: &str) -> (Option<String>, String) {
+  if folder_name.is_empty() || folder_name == "default" {
+    return (None, "Standard Saves".to_string());
+  }
+
+  let upper = folder_name.to_uppercase();
+  let region = if upper.contains("BASCUS") || upper.contains("SCUS") || upper.contains("SLUS") {
+    Some("NTSC-U".to_string())
+  } else if upper.contains("BESCES") || upper.contains("SCES") || upper.contains("SLES") {
+    Some("PAL".to_string())
+  } else if upper.contains("SCPS") || upper.contains("SLPS") {
+    Some("NTSC-J".to_string())
+  } else {
+    None
+  };
+
+  let display_name = match &region {
+    Some(reg) => format!("{folder_name} ({reg})"),
+    None => folder_name.to_string(),
+  };
+
+  (region, display_name)
 }
 
 fn check_mod_save_compatibility(mod_name: &str) -> (bool, Option<String>) {
@@ -70,9 +108,12 @@ fn parse_slot_number(file_name: &str) -> Option<u8> {
   }
 }
 
-fn scan_saves_in_dir(save_dir: &Path, game_name: SupportedGame) -> Vec<SaveSlotInfo> {
+fn scan_save_folders_in_dir(
+  save_dir: &Path,
+  game_name: SupportedGame,
+) -> (Vec<SaveFolderInfo>, Vec<SaveSlotInfo>) {
   if !save_dir.exists() {
-    return Vec::new();
+    return (Vec::new(), Vec::new());
   }
 
   let milestones = if game_name == SupportedGame::Jak1 {
@@ -81,7 +122,21 @@ fn scan_saves_in_dir(save_dir: &Path, game_name: SupportedGame) -> Vec<SaveSlotI
     None
   };
 
-  let mut saves = Vec::new();
+  let mut folder_map: BTreeMap<String, Vec<SaveSlotInfo>> = BTreeMap::new();
+
+  if let Ok(entries) = fs::read_dir(save_dir) {
+    for entry in entries.filter_map(Result::ok) {
+      if let Ok(file_type) = entry.file_type() {
+        if file_type.is_dir() {
+          let name = entry.file_name().to_string_lossy().into_owned();
+          if name != "_pcsx2_meta" {
+            folder_map.entry(name).or_default();
+          }
+        }
+      }
+    }
+  }
+
   for entry in WalkDir::new(save_dir)
     .max_depth(3)
     .into_iter()
@@ -98,9 +153,22 @@ fn scan_saves_in_dir(save_dir: &Path, game_name: SupportedGame) -> Vec<SaveSlotI
       continue;
     }
 
-    let file_name = match path.strip_prefix(save_dir) {
-      Ok(rel) => rel.to_string_lossy().replace('\\', "/"),
+    let rel_path = match path.strip_prefix(save_dir) {
+      Ok(rel) => rel,
       Err(_) => continue,
+    };
+
+    let file_name = rel_path.to_string_lossy().replace('\\', "/");
+    let base_name = path
+      .file_name()
+      .map(|n| n.to_string_lossy().into_owned())
+      .unwrap_or_else(|| file_name.clone());
+
+    let folder_name = match rel_path.parent() {
+      Some(parent) if parent != Path::new("") => {
+        parent.to_string_lossy().replace('\\', "/")
+      }
+      _ => "default".to_string(),
     };
 
     let metadata = match fs::metadata(path) {
@@ -121,25 +189,58 @@ fn scan_saves_in_dir(save_dir: &Path, game_name: SupportedGame) -> Vec<SaveSlotI
       None
     };
 
-    let slot_number = parse_slot_number(&file_name);
+    let slot_number = parse_slot_number(&base_name);
 
-    saves.push(SaveSlotInfo {
+    let save_slot = SaveSlotInfo {
       file_name,
+      folder_name: folder_name.clone(),
+      base_name,
       slot_number,
       size_bytes: metadata.len(),
       modified_timestamp,
       milestone_name,
+    };
+
+    folder_map.entry(folder_name).or_default().push(save_slot);
+  }
+
+  if folder_map.is_empty() {
+    folder_map.insert("default".to_string(), Vec::new());
+  }
+
+  let mut folders = Vec::new();
+  let mut all_saves = Vec::new();
+
+  for (folder_name, mut saves) in folder_map {
+    saves.sort_by(|a, b| match (a.slot_number, b.slot_number) {
+      (Some(sa), Some(sb)) => sa.cmp(&sb).then_with(|| a.base_name.cmp(&b.base_name)),
+      (Some(_), None) => std::cmp::Ordering::Less,
+      (None, Some(_)) => std::cmp::Ordering::Greater,
+      (None, None) => a.base_name.cmp(&b.base_name),
+    });
+
+    let (region, display_name) = detect_region_and_display(&folder_name);
+
+    all_saves.extend(saves.clone());
+    folders.push(SaveFolderInfo {
+      folder_name,
+      display_name,
+      region,
+      saves,
     });
   }
 
-  saves.sort_by(|a, b| match (a.slot_number, b.slot_number) {
-    (Some(sa), Some(sb)) => sa.cmp(&sb).then_with(|| a.file_name.cmp(&b.file_name)),
-    (Some(_), None) => std::cmp::Ordering::Less,
-    (None, Some(_)) => std::cmp::Ordering::Greater,
-    (None, None) => a.file_name.cmp(&b.file_name),
+  folders.sort_by(|a, b| {
+    if a.folder_name == "default" {
+      std::cmp::Ordering::Less
+    } else if b.folder_name == "default" {
+      std::cmp::Ordering::Greater
+    } else {
+      a.display_name.cmp(&b.display_name)
+    }
   });
 
-  saves
+  (folders, all_saves)
 }
 
 async fn resolve_install_save_dir(
@@ -215,7 +316,7 @@ pub async fn list_game_save_installs(
     .join(game_name.to_string())
     .join("saves");
 
-  let vanilla_saves = scan_saves_in_dir(&vanilla_save_dir, game_name);
+  let (vanilla_folders, vanilla_saves) = scan_save_folders_in_dir(&vanilla_save_dir, game_name);
 
   installs.push(SaveInstallInfo {
     id: "vanilla".to_string(),
@@ -226,6 +327,7 @@ pub async fn list_game_save_installs(
     save_dir: vanilla_save_dir.to_string_lossy().into_owned(),
     has_custom_save_format: false,
     warning_message: None,
+    folders: vanilla_folders,
     saves: vanilla_saves,
   });
 
@@ -271,7 +373,7 @@ pub async fn list_game_save_installs(
           fallback_dir
         };
 
-        let saves = scan_saves_in_dir(&save_dir, game_name);
+        let (folders, saves) = scan_save_folders_in_dir(&save_dir, game_name);
 
         installs.push(SaveInstallInfo {
           id: format!("mod:{}:{}", source_name, mod_name),
@@ -282,6 +384,7 @@ pub async fn list_game_save_installs(
           save_dir: save_dir.to_string_lossy().into_owned(),
           has_custom_save_format,
           warning_message,
+          folders,
           saves,
         });
       }
@@ -300,6 +403,7 @@ pub async fn copy_save(
   from_install_id: String,
   to_install_id: String,
   file_name: String,
+  target_folder: Option<String>,
   target_slot: Option<u8>,
   overwrite: bool,
 ) -> Result<(), CommandError> {
@@ -314,7 +418,7 @@ pub async fn copy_save(
     )));
   }
 
-  let parent_rel = Path::new(&file_name).parent();
+  let source_parent = Path::new(&file_name).parent();
   let base_name = Path::new(&file_name)
     .file_name()
     .and_then(|n| n.to_str())
@@ -332,9 +436,18 @@ pub async fn copy_save(
     base_name.to_string()
   };
 
-  let target_rel = match parent_rel {
-    Some(p) if p != Path::new("") => p.join(&new_base_name),
-    _ => PathBuf::from(&new_base_name),
+  let target_folder_path = match target_folder.as_deref() {
+    Some(f) if !f.is_empty() && f != "default" => PathBuf::from(f),
+    _ => match source_parent {
+      Some(p) if p != Path::new("") && p != Path::new("default") => p.to_path_buf(),
+      _ => PathBuf::new(),
+    },
+  };
+
+  let target_rel = if target_folder_path == Path::new("") {
+    PathBuf::from(&new_base_name)
+  } else {
+    target_folder_path.join(&new_base_name)
   };
 
   let target_file = to_dir.join(&target_rel);
@@ -373,6 +486,7 @@ pub async fn move_save(
   from_install_id: String,
   to_install_id: String,
   file_name: String,
+  target_folder: Option<String>,
   target_slot: Option<u8>,
   overwrite: bool,
 ) -> Result<(), CommandError> {
@@ -383,6 +497,7 @@ pub async fn move_save(
     from_install_id.clone(),
     to_install_id,
     file_name.clone(),
+    target_folder,
     target_slot,
     overwrite,
   )
@@ -462,28 +577,33 @@ pub async fn open_save_folder(
   config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
   game_name: SupportedGame,
   install_id: String,
+  folder_name: Option<String>,
 ) -> Result<(), CommandError> {
   let save_dir = resolve_install_save_dir(&app_handle, &config, game_name, &install_id).await?;
-  if !save_dir.exists() {
-    fs::create_dir_all(&save_dir)?;
+  let target_dir = match folder_name.as_deref() {
+    Some(sub) if !sub.is_empty() && sub != "default" => save_dir.join(sub),
+    _ => save_dir,
+  };
+  if !target_dir.exists() {
+    fs::create_dir_all(&target_dir)?;
   }
 
   #[cfg(target_os = "windows")]
   {
     std::process::Command::new("explorer")
-      .arg(&save_dir)
+      .arg(&target_dir)
       .spawn()?;
   }
   #[cfg(target_os = "linux")]
   {
     std::process::Command::new("xdg-open")
-      .arg(&save_dir)
+      .arg(&target_dir)
       .spawn()?;
   }
   #[cfg(target_os = "macos")]
   {
     std::process::Command::new("open")
-      .arg(&save_dir)
+      .arg(&target_dir)
       .spawn()?;
   }
 

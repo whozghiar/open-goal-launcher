@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "開啟遊戲資料夾",
   "gameControls_button_openExtractedAssetsFolder": "Open Extracted Assets Folder",
   "gameControls_button_openSavesFolder": "開啟存檔資料夾",
-  "gameControls_button_shareVanillaSaves": "共用原版遊戲存檔",
-  "gameControls_button_shareVanillaSaves_helpText": "使用原版存檔目錄而非模組獨立存檔",
   "gameControls_button_openSettingsFolder": "開啟設定資料夾",
   "gameControls_button_install": "安裝",
   "gameControls_button_play": "開始遊戲",

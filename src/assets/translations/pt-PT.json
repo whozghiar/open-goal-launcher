@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Abrir pasta de dados do jogo",
   "gameControls_button_openExtractedAssetsFolder": "Abrir pasta de recursos extraída",
   "gameControls_button_openSavesFolder": "Abrir pasta de salvamento",
-  "gameControls_button_shareVanillaSaves": "Partilhar gravações do jogo base",
-  "gameControls_button_shareVanillaSaves_helpText": "Utilizar a pasta de gravações vanilla em vez das gravações isoladas do mod",
   "gameControls_button_openSettingsFolder": "Abrir pasta de configurações",
   "gameControls_button_install": "Instalar",
   "gameControls_button_play": "Jogar",

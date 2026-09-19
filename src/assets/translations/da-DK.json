@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Åbn spil datamappe",
   "gameControls_button_openExtractedAssetsFolder": "Åbn \"udpakkede spilelementer\" mappe",
   "gameControls_button_openSavesFolder": "Åbn Saves Mappen",
-  "gameControls_button_shareVanillaSaves": "Del grundspillets gemte spil",
-  "gameControls_button_shareVanillaSaves_helpText": "Brug vanilla-gemmemappen i stedet for mod-isolerede gemte spil",
   "gameControls_button_openSettingsFolder": "Åbn Settings Mappen",
   "gameControls_button_install": "Installer",
   "gameControls_button_play": "Spil",

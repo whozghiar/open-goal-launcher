@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Open game data map",
   "gameControls_button_openExtractedAssetsFolder": "Open Extracted Assets Folder",
   "gameControls_button_openSavesFolder": "Open map met opgeslagen gegevens",
-  "gameControls_button_shareVanillaSaves": "Basisgame-opslagen delen",
-  "gameControls_button_shareVanillaSaves_helpText": "Gebruik de vanilla opslagmap in plaats van mod-geïsoleerde opslagen",
   "gameControls_button_openSettingsFolder": "Open de instellingenmap",
   "gameControls_button_install": "Installeren",
   "gameControls_button_play": "Speel",

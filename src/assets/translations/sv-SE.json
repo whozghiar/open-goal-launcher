@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Öppna speldatamappen",
   "gameControls_button_openExtractedAssetsFolder": "Open Extracted Assets Folder",
   "gameControls_button_openSavesFolder": "Öppna Spara Mappen",
-  "gameControls_button_shareVanillaSaves": "Dela grundspelets sparfiler",
-  "gameControls_button_shareVanillaSaves_helpText": "Använd vanilla-sparmappen i stället för mod-isolerade sparfiler",
   "gameControls_button_openSettingsFolder": "Öppna Inställningar Mappen",
   "gameControls_button_install": "Installera",
   "gameControls_button_play": "Spela",

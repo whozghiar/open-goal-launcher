@@ -35,8 +35,6 @@
   "gameControls_button_openGameFolder": "Otwórz folder Game Data",
   "gameControls_button_openExtractedAssetsFolder": "Otwórz folder z wypakowanymi zasobami",
   "gameControls_button_openSavesFolder": "Otwórz lokalizację plików z zapisami",
-  "gameControls_button_shareVanillaSaves": "Współdziel zapisy z gry podstawowej",
-  "gameControls_button_shareVanillaSaves_helpText": "Używaj katalogu zapisów z wersji podstawowej zamiast odizolowanych zapisów moda",
   "gameControls_button_openSettingsFolder": "Otwórz folder z ustawieniami",
   "gameControls_button_install": "Instaluj",
   "gameControls_button_play": "Zagraj",

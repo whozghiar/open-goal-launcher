@@ -1,6 +1,10 @@
 import { invoke_rpc } from "./rpc";
 import type { SaveInstallInfo } from "./bindings/SaveInstallInfo";
+import type { SaveFolderInfo } from "./bindings/SaveFolderInfo";
+import type { SaveSlotInfo } from "./bindings/SaveSlotInfo";
 import type { SupportedGame } from "./bindings/SupportedGame";
+
+export type { SaveInstallInfo, SaveFolderInfo, SaveSlotInfo };
 
 export async function listGameSaveInstalls(
   gameName: SupportedGame,
@@ -13,6 +17,7 @@ export async function copySave(
   fromInstallId: string,
   toInstallId: string,
   fileName: string,
+  targetFolder: string | null = null,
   targetSlot: number | null = null,
   overwrite: boolean = false,
 ): Promise<void> {
@@ -21,6 +26,7 @@ export async function copySave(
     fromInstallId,
     toInstallId,
     fileName,
+    targetFolder,
     targetSlot,
     overwrite,
   });
@@ -31,6 +37,7 @@ export async function moveSave(
   fromInstallId: string,
   toInstallId: string,
   fileName: string,
+  targetFolder: string | null = null,
   targetSlot: number | null = null,
   overwrite: boolean = false,
 ): Promise<void> {
@@ -39,6 +46,7 @@ export async function moveSave(
     fromInstallId,
     toInstallId,
     fileName,
+    targetFolder,
     targetSlot,
     overwrite,
   });
@@ -71,9 +79,11 @@ export async function deleteSave(
 export async function openSaveFolder(
   gameName: SupportedGame,
   installId: string,
+  folderName: string | null = null,
 ): Promise<void> {
   return await invoke_rpc("open_save_folder", {
     gameName,
     installId,
+    folderName,
   });
 }

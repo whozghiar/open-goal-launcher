@@ -2,6 +2,8 @@
 
 export type SaveSlotInfo = {
   fileName: string;
+  folderName: string;
+  baseName: string;
   slotNumber: number | null;
   sizeBytes: bigint;
   modifiedTimestamp: bigint;

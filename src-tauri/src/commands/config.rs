@@ -396,23 +396,4 @@ pub async fn does_active_tooling_version_meet_minimum(
   }
 }
 
-// Tauri command exposed to frontend RPC to update and persist the share_vanilla_saves preference
-#[instrument(skip(config))]
-#[tauri::command]
-pub async fn set_mod_share_vanilla_saves(
-  config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
-  game_name: SupportedGame,
-  source_name: String,
-  mod_name: String,
-  share: bool,
-) -> Result<(), CommandError> {
-  let mut config_lock = config.lock().await;
-  config_lock
-    .set_mod_share_vanilla_saves(game_name, source_name, mod_name, share)
-    .map_err(|err| {
-      tracing::error!("Unable to set mod share vanilla saves: {:?}", err);
-      CommandError::Configuration("Unable to set mod share vanilla saves".to_owned())
-    })?;
-  Ok(())
-}
 
