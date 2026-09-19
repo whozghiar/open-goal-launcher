@@ -6,6 +6,7 @@ pub mod config;
 pub mod download;
 pub mod features;
 pub mod game;
+pub mod saves;
 pub mod support;
 pub mod util;
 pub mod versions;
