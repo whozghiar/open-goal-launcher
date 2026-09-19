@@ -1,25 +1,13 @@
-> **Language / Langue :** [🇬🇧 English Version](#-english-version) &nbsp;•&nbsp; [🇫🇷 Version Française](#-version-française)
+## Summary
 
-## Summary / Sommaire
-
-- [🇬🇧 English Version](#-english-version)
-  - [1. Overview & Architecture](#1-overview--architecture)
-  - [2. Local Environment & Windows Tooling](#2-local-environment--windows-tooling)
-  - [3. AI Assistant Rules & Behavioral Protocols](#3-ai-assistant-rules--behavioral-protocols)
-  - [4. Modding & Runtime Pipeline](#4-modding--runtime-pipeline)
-  - [5. AI Features Documentation Standard (`docs/features_ai/`)](#5-ai-features-documentation-standard-docsfeatures_ai)
-  - [6. Documentation Standard](#6-documentation-standard)
-- [🇫🇷 Version Française](#-version-française)
-  - [1. Vue d'ensemble & Architecture](#1-vue-densemble--architecture)
-  - [2. Environnement Local & Outillage Windows](#2-environnement-local--outillage-windows)
-  - [3. Règles de l'Assistant IA & Protocoles](#3-règles-de-lassistant-ia--protocoles)
-  - [4. Pipeline d'Exécution & Modding](#4-pipeline-dexécution--modding)
-  - [5. Standard de Documentation des Fonctionnalités IA (`docs/features_ai/`)](#5-standard-de-documentation-des-fonctionnalités-ia-docsfeatures_ai)
-  - [6. Standard de Documentation Bilingue](#6-standard-de-documentation-bilingue)
+- [1. Overview & Architecture](#1-overview--architecture)
+- [2. Local Environment & Windows Tooling](#2-local-environment--windows-tooling)
+- [3. AI Assistant Rules & Behavioral Protocols](#3-ai-assistant-rules--behavioral-protocols)
+- [4. Modding & Runtime Pipeline](#4-modding--runtime-pipeline)
+- [5. AI Features Documentation Standard (`docs/features_ai/`)](#5-ai-features-documentation-standard-docsfeatures_ai)
+- [6. Documentation Standard](#6-documentation-standard)
 
 ---
-
-# 🇬🇧 English Version
 
 ## 1. Overview & Architecture
 
@@ -126,147 +114,6 @@ Each feature document must address the following 5 points:
 ## 6. Documentation Standard
 
 All `.md` files must follow this template:
-
-```markdown
-> **Language / Langue :** [🇬🇧 English Version](#-english-version) &nbsp;•&nbsp; [🇫🇷 Version Française](#-version-française)
-
-## Summary / Sommaire
-
-- [🇬🇧 English Version](#-english-version)
-  - [1. What This Feature Brings](#1-what-this-feature-brings)
-  - [2. How the Feature Works](#2-how-the-feature-works)
-  - [3. How it Integrates into the Architecture](#3-how-it-integrates-into-the-architecture)
-  - [4. New Files Created](#4-new-files-created)
-  - [5. Overview of Changes from the Original Project](#5-overview-of-changes-from-the-original-project)
-- [🇫🇷 Version Française](#-version-française)
-  - [1. Qu'est-ce qu'elle apporte](#1-quest-ce-quelle-apporte)
-  - [2. Comment fonctionne la fonctionnalité](#2-comment-fonctionne-la-fonctionnalité)
-  - [3. Comment elle s'intègre dans l'architecture](#3-comment-elle-sintègre-dans-larchitecture)
-  - [4. Quels sont les nouveaux fichiers](#4-quels-sont-les-nouveaux-fichiers)
-  - [5. Quels sont les modifications dans les grandes lignes](#5-quels-sont-les-modifications-dans-les-grandes-lignes)
-
----
-
-# 🇬🇧 English Version
-
-...
-
----
-
-# 🇫🇷 Version Française
-
-...
-```
-
----
-
-# 🇫🇷 Version Française
-
-## 1. Vue d'ensemble & Architecture
-
-L'**OpenGOAL Launcher** est une application de bureau multiplateforme conçue pour installer, gérer, mettre à jour et lancer les versions officielles d'OpenGOAL, les packs de textures et les mods communautaires pour la trilogie _Jak and Daxter_.
-
-### Pile Technologique
-
-- **Framework Desktop** : [Tauri v2](https://tauri.app/) (moteur natif Rust et bus de communication IPC).
-- **Frontend** : [Svelte 5](https://svelte.dev/) (utilisant les runes modernes : `$state`, `$derived`, `$props`, `$effect`).
-- **Styles** : [Tailwind CSS v4](https://tailwindcss.com/) & [Flowbite Svelte](https://flowbite-svelte.com/).
-- **Bundler & Outillage** : [Vite](https://vitejs.dev/) avec TypeScript.
-- **Architecture Backend (`src-tauri/`)** :
-  - `src-tauri/src/main.rs` : Point d'entrée de l'application, enregistrement des plugins et routage des commandes IPC.
-  - `src-tauri/src/config.rs` : Modèle `LauncherConfig`, sérialisation sur disque (`settings.json`), migrations de versions et résolutions de chemins.
-  - `src-tauri/src/cache.rs` : Cache des métadonnées de mods, schémas distants et compteurs de téléchargements.
-  - `src-tauri/src/commands/` : Commandes Tauri organisées par domaine métier :
-    - `binaries.rs` : Compilation, extraction des ISOs et lancement du jeu officiel (`gk`).
-    - `features/mods.rs` : Téléchargement, extraction des archives, construction des arguments CLI et exécution des mods.
-    - `features/texture_packs.rs` : Gestion et installation des packs de textures HD.
-    - `game.rs` : Détection du jeu actif et lecture des jalons de sauvegarde.
-    - `support.rs` : Génération du package de support (logs, configuration, métriques système).
-
----
-
-## 2. Environnement Local & Outillage Windows
-
-Sous Windows, les outils de développement et gestionnaires de paquets sont configurés selon les chemins suivants :
-
-| Outil                           | Exécutable / Commande                                            | Remarques                                                            |
-| :------------------------------ | :--------------------------------------------------------------- | :------------------------------------------------------------------- |
-| **Rust Toolchain**              | `C:\Users\IRLANDO\.cargo\bin\cargo.exe`                          | Utilisé pour compiler et tester `src-tauri`.                         |
-| **Node.js Package Runner**      | `npx yarn`                                                       | Exécute les scripts du projet sans installation globale de Yarn.     |
-| **Serveur Dev Frontend**        | `npx yarn dev`                                                   | Démarre Vite pour développer l'interface Svelte dans le navigateur.  |
-| **Serveur Dev Desktop Complet** | `npx yarn tauri dev`                                             | Lance l'application Tauri avec rechargement à chaud (Rust + Svelte). |
-| **Vérification des Types**      | `npx yarn typecheck`                                             | Analyse TypeScript et les composants Svelte 5 (`svelte-check`).      |
-| **Formatage de Code**           | `npx yarn check-format` / `npx yarn format`                      | Prettier configuré avec le plugin Svelte.                            |
-| **Tests Rust**                  | `cd src-tauri && & "C:\Users\IRLANDO\.cargo\bin\cargo.exe" test` | Exécute les tests unitaires du backend Rust et l'export des types.   |
-
----
-
-## 3. Règles de l'Assistant IA & Protocoles
-
-Lors de toute intervention sur ce dépôt, l'IA doit impérativement respecter les règles suivantes :
-
-1. **Information Préalable et Transparence Totale** :
-   L'IA ne doit **jamais** créer, modifier ou supprimer un fichier sans en informer explicitement l'utilisateur ou sans détailler précisément la modification dans sa réponse. Les altérations silencieuses de fichiers sont strictement interdites.
-2. **Respect Impératif de la Philosophie Initiale du Projet** :
-   L'IA doit scrupuleusement respecter la philosophie, l'architecture, la sémantique et la syntaxe d'origine du projet afin de limiter les régressions. Ne jamais modifier inutilement des fichiers non liés, et refactoriser ou supprimer tout code inutilement ajouté.
-3. **Commentaire Simple au-dessus des Fonctions** :
-   Laisser impérativement un commentaire simple, court et clair (une phrase) directement au-dessus de chaque fonction créée ou modifiée pour expliquer à quoi elle sert et son intention.
-4. **Interdiction Formelle de Modifier les Fichiers Générés** :
-   Les fichiers comportant la mention explicite de ne pas les modifier manuellement (par exemple : `// This file was generated by [ts-rs]... Do not edit this file manually`) ne doivent **en aucun cas** être édités manuellement. Toute mise à jour doit se faire exclusivement par le biais de l'outil ou processus officiel prévu à cet effet.
-5. **Messages de Commit Bilingues et Accessibles** :
-   Les messages de commit doivent obligatoirement être rédigés en anglais et en français (`<description en anglais> / <description en français>`). Ils doivent être courts, explicites et dépourvus de jargon interne trop complexe.
-6. **Suffixe Obligatoire pour les Commits IA** :
-   Tout commit assisté ou généré via l'IA doit obligatoirement se terminer par le suffixe `(AI-assisted)`.
-   - _Exemple_ : `feat: allow sharing vanilla saves with mods / autoriser le partage des sauvegardes du jeu de base avec les mods (AI-assisted)`
-7. **Documentation Obligatoire des Fonctionnalités IA (`docs/features_ai/`)** :
-   Pour chaque nouvelle fonctionnalité développée avec l'assistance de l'IA, créer un fichier Markdown bilingue dédié préfixé par `features_[nom_feature].md` dans `docs/features_ai/` selon les directives de la Section 5.
-
----
-
-## 4. Pipeline d'Exécution & Modding
-
-1. **Sources de mods** : Catalogues JSON (spécifiés dans `schemas/mod-source/v1/`) déclarant les mods, leurs versions, liens de téléchargement d'archives et jeux supportés (`jak1`, `jak2`, `jak3`, `jakx`).
-2. **Arborescence des dossiers** :
-   - Mods installés : `<install_dir>/features/<game>/mods/<source>/<mod_name>/`.
-   - Paramètres et sauvegardes isolées des mods : `<install_dir>/features/<game>/mods/<source>/_settings/<mod_name>/`.
-3. **Moteur d'exécution (`gk`)** :
-   - Jeu de base (vanilla) : `gk` enregistre dans `%APPDATA%/OpenGOAL/<game>/saves` (Windows) ou `~/.config/OpenGOAL/<game>/saves` (Linux).
-   - Mods : exécutés avec `--config-path <mod_settings_dir>`, isolant réglages et sauvegardes.
-   - Sauvegardes partagées : l'argument `--disable_save_location_override` combiné à `--config-path` permet d'utiliser le dossier de sauvegardes vanilla tout en préservant des paramètres de mod isolés.
-
----
-
-## 5. Standard de Documentation des Fonctionnalités IA (`docs/features_ai/`)
-
-Pour chaque nouvelle fonctionnalité développée avec l'assistance de l'IA, un fichier de documentation bilingue dédié doit être créé :
-
-```
-docs/features_ai/features_[nom_feature].md
-```
-
-### Démarche Pédagogique & Style Rédactionnel
-
-- **Accessible à Tous** : Rédaction pédagogique, compréhensible aussi bien par un développeur (même inexpérimenté) que par un non-initié.
-- **Direct & Clair** : Limiter impérativement les phrases et mots superflus habituellement posés par l'IA. Aller droit au but, être concis et limpide.
-- **Structure Bilingue** : Implémenter obligatoirement le format double version (bandeau de commutation, mini-sommaire, section `# 🇬🇧 English Version` et section `# 🇫🇷 Version Française`).
-- **Liens Relatifs Git** : Tous les liens vers des fichiers du dépôt doivent utiliser des chemins relatifs (ex. `../../src/...`) pour fonctionner immédiatement lors de la navigation sur Git/GitHub.
-- **Diagrammes Mermaid Propres** : Si des flux sont décrits, utiliser une syntaxe `flowchart TD` propre avec des libellés entre guillemets pour éviter toute erreur d'interprétation.
-
-### Contenu Obligatoire en 5 Points
-
-Chaque document de fonctionnalité doit obligatoirement détailler :
-
-1. **Qu'est-ce qu'elle apporte** : Valeur ajoutée, gains utilisateurs et fonctionnalités offertes.
-2. **Comment fonctionne la fonctionnalité** : Parcours concret et cycle de vie expliqués simplement.
-3. **Comment elle s'intègre dans l'architecture** : Articulation entre le frontend, le backend Tauri et le moteur de jeu.
-4. **Quels sont les nouveaux fichiers** : Liste de chaque nouveau fichier créé et son rôle en une ou deux phrases.
-5. **Quels sont les modifications dans les grandes lignes** : Synthèse des modifications apportées par rapport au projet initial, sans noyer le lecteur sous des détails techniques secondaires.
-
----
-
-## 6. Standard de Documentation Bilingue
-
-Chaque fichier `.md` de fonctionnalité doit suivre ce modèle :
 
 ```markdown
 > **Language / Langue :** [🇬🇧 English Version](#-english-version) &nbsp;•&nbsp; [🇫🇷 Version Française](#-version-française)
