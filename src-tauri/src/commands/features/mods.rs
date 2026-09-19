@@ -445,11 +445,13 @@ pub async fn save_mod_install_info(
   Ok(())
 }
 
+// Builds the command-line arguments to launch an OpenGOAL mod with gk.
 fn generate_launch_mod_args(
   game_name: SupportedGame,
   in_debug: bool,
   config_dir: PathBuf,
   quote_project_path: bool,
+  share_vanilla_saves: bool,
 ) -> Result<Vec<String>, CommandError> {
   let config_dir_adjusted = if quote_project_path {
     format!("\"{}\"", config_dir.to_string_lossy().into_owned())
@@ -463,10 +465,18 @@ fn generate_launch_mod_args(
     game_name.to_string(),
     "--config-path".to_string(),
     config_dir_adjusted,
-    "--".to_string(),
-    "-boot".to_string(),
-    "-fakeiso".to_string(),
   ];
+
+  // If enabled, instruct OpenGOAL (gk) to keep using the default vanilla saves directory
+  // instead of saving inside the isolated mod directory specified by --config-path.
+  if share_vanilla_saves {
+    args.push("--disable_save_location_override".to_string());
+  }
+
+  args.push("--".to_string());
+  args.push("-boot".to_string());
+  args.push("-fakeiso".to_string());
+
   if in_debug {
     args.push("-debug".to_string());
   }
@@ -474,6 +484,7 @@ fn generate_launch_mod_args(
   Ok(args)
 }
 
+// Launches a mod executable with the configured arguments and logging.
 #[instrument(skip(config, app_handle))]
 #[tauri::command]
 pub async fn launch_mod(
@@ -484,9 +495,11 @@ pub async fn launch_mod(
   mod_name: String,
   source_name: String,
 ) -> Result<(), CommandError> {
-  let install_path = {
+  let (install_path, share_vanilla_saves) = {
     let config_lock = config.lock().await;
-    config_lock.install_dir()?
+    let install_path = config_lock.install_dir()?;
+    let share = config_lock.get_mod_share_vanilla_saves(game_name, &source_name, &mod_name);
+    (install_path, share)
   };
   let config_dir = install_path
     .join("features")
@@ -496,7 +509,7 @@ pub async fn launch_mod(
     .join("_settings")
     .join(&mod_name);
   let exec_info = get_mod_exec_location(&install_path, "gk", game_name, &mod_name, &source_name);
-  let args = generate_launch_mod_args(game_name, in_debug, config_dir, false)?;
+  let args = generate_launch_mod_args(game_name, in_debug, config_dir, false, share_vanilla_saves)?;
 
   tracing::info!("Launching gk args: {:?}", args);
 
@@ -609,6 +622,7 @@ pub async fn reset_mod_settings(
   Ok(())
 }
 
+// Generates the full command-line invocation string to launch a mod.
 #[instrument(skip(config))]
 #[tauri::command]
 pub async fn get_launch_mod_string(
@@ -617,9 +631,11 @@ pub async fn get_launch_mod_string(
   mod_name: String,
   source_name: String,
 ) -> Result<String, CommandError> {
-  let install_path = {
+  let (install_path, share_vanilla_saves) = {
     let config_lock = config.lock().await;
-    config_lock.install_dir()?
+    let install_path = config_lock.install_dir()?;
+    let share = config_lock.get_mod_share_vanilla_saves(game_name, &source_name, &mod_name);
+    (install_path, share)
   };
   let exec_info = get_mod_exec_location(&install_path, "gk", game_name, &mod_name, &source_name);
   let config_dir = install_path
@@ -629,7 +645,7 @@ pub async fn get_launch_mod_string(
     .join(&source_name)
     .join("_settings")
     .join(&mod_name);
-  let args = generate_launch_mod_args(game_name, false, config_dir, true)?;
+  let args = generate_launch_mod_args(game_name, false, config_dir, true, share_vanilla_saves)?;
 
   Ok(format!(
     "{} {}",

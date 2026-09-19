@@ -55,6 +55,9 @@ pub struct InstalledMod {
   pub texture_packs: Vec<String>,
   #[serde(default)]
   pub seconds_played: u64,
+  // Indicates whether the mod shares saves with the base vanilla game
+  #[serde(default)]
+  pub share_vanilla_saves: bool,
 }
 
 type InstalledMods = HashMap<String, HashMap<String, InstalledMod>>;
@@ -290,6 +293,11 @@ impl LauncherConfig {
     self.games.entry(game_name).or_default()
   }
 
+  // Retrieves the configuration for a supported game if present.
+  pub fn get_supported_game_config(&self, game_name: SupportedGame) -> Option<&GameConfig> {
+    self.games.get(&game_name)
+  }
+
   pub fn load_config(config_dir: std::path::PathBuf) -> LauncherConfig {
     let settings_path = config_dir.join("settings.json");
     tracing::info!("Loading configuration at path: {}", settings_path.display());
@@ -448,6 +456,41 @@ impl LauncherConfig {
         },
       );
     self.save_config()?;
+    Ok(())
+  }
+
+  // Returns whether the specified mod is configured to share saves with the vanilla game
+  pub fn get_mod_share_vanilla_saves(
+    &self,
+    game_name: SupportedGame,
+    source: &str,
+    mod_name: &str,
+  ) -> bool {
+    self
+      .get_supported_game_config(game_name)
+      .and_then(|g| g.installed_mods.get(source))
+      .and_then(|mods| mods.get(mod_name))
+      .map(|m| m.share_vanilla_saves)
+      .unwrap_or(false)
+  }
+
+  // Updates the mod's share_vanilla_saves setting and persists it to settings.json
+  pub fn set_mod_share_vanilla_saves(
+    &mut self,
+    game_name: SupportedGame,
+    source: String,
+    mod_name: String,
+    share: bool,
+  ) -> Result<()> {
+    if let Some(mod_config) = self
+      .get_supported_game_config_mut(game_name)
+      .installed_mods
+      .get_mut(&source)
+      .and_then(|mods| mods.get_mut(&mod_name))
+    {
+      mod_config.share_vanilla_saves = share;
+      self.save_config()?;
+    }
     Ok(())
   }
 
