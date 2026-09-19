@@ -64,6 +64,25 @@ pub async fn set_texture_packs(
   Ok(())
 }
 
+// Persists the active texture packs list for a specific mod
+#[instrument(skip(config))]
+#[tauri::command]
+pub async fn set_mod_texture_packs(
+  config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
+  game_name: SupportedGame,
+  source_name: String,
+  mod_name: String,
+  texture_packs: Vec<String>,
+) -> Result<(), CommandError> {
+  let mut config_lock = config.lock().await;
+  config_lock
+    .set_mod_texture_packs(game_name, &source_name, &mod_name, texture_packs)
+    .map_err(|_| {
+      CommandError::Configuration("Unable to save mod texture packs".to_owned())
+    })?;
+  Ok(())
+}
+
 #[instrument(skip(config))]
 #[tauri::command]
 pub async fn set_install_directory(
@@ -276,6 +295,25 @@ pub async fn cleanup_enabled_texture_packs(
     .cleanup_game_enabled_texture_packs(game_name, cleanup_list)
     .map_err(|_| {
       CommandError::Configuration("Unable to cleanup enabled texture packs".to_owned())
+    })?;
+  Ok(())
+}
+
+// Removes obsolete texture packs from a specific mod's active list
+#[instrument(skip(config))]
+#[tauri::command]
+pub async fn cleanup_mod_enabled_texture_packs(
+  config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
+  game_name: SupportedGame,
+  source_name: String,
+  mod_name: String,
+  cleanup_list: Vec<String>,
+) -> Result<(), CommandError> {
+  let mut config_lock = config.lock().await;
+  config_lock
+    .cleanup_mod_enabled_texture_packs(game_name, &source_name, &mod_name, cleanup_list)
+    .map_err(|_| {
+      CommandError::Configuration("Unable to cleanup mod enabled texture packs".to_owned())
     })?;
   Ok(())
 }

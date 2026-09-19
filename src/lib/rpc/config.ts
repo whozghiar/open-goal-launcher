@@ -197,6 +197,38 @@ export async function setEnabledTexturePacks(
   });
 }
 
+// Persists active texture packs for a specific mod
+export async function setModEnabledTexturePacks(
+  gameName: string,
+  sourceName: string,
+  modName: string,
+  packs: string[],
+): Promise<string | null> {
+  return await invoke_rpc2("set_mod_texture_packs", {
+    args: {
+      gameName,
+      sourceName,
+      modName,
+      texturePacks: packs,
+    },
+  });
+}
+
+// Cleans up removed texture packs from a specific mod's configuration
+export async function cleanupModEnabledTexturePacks(
+  gameName: string,
+  sourceName: string,
+  modName: string,
+  cleanupList: string[],
+): Promise<void> {
+  return await invoke_rpc("cleanup_mod_enabled_texture_packs", {
+    gameName,
+    sourceName,
+    modName,
+    cleanupList,
+  });
+}
+
 export async function doesActiveToolingVersionSupportGame(
   gameName: string,
 ): Promise<boolean> {

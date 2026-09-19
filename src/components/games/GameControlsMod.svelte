@@ -37,6 +37,8 @@
   import type { SupportedGame } from "$lib/rpc/bindings/SupportedGame";
   import type { ModInfo } from "$lib/rpc/bindings/ModInfo";
   import { getModInfo } from "$lib/rpc/ModInfo";
+  import type { ModSourceData } from "$lib/rpc/bindings/ModSourceData";
+  import { findAttachedTexturePacks } from "$lib/features/texture-packs";
   import { asJobType } from "$lib/job/jobs";
   import { versionState } from "/src/state/VersionState.svelte";
   import { config } from "/src/state/config.svelte";
@@ -58,6 +60,7 @@
   let currentlyInstalledVersion: string = $state("");
   let numberOfVersionsOutOfDate = $state(0);
   let updateCheckEnabled = $state(config?.checkForLatestModVersion);
+  let relevantSourceData: ModSourceData | undefined = $state(undefined);
   let modInfo: ModInfo | undefined = $state(undefined);
   let displayName: string | undefined = $state(undefined);
   let description: string | undefined = $state(undefined);
@@ -89,6 +92,14 @@
   }
 
   async function addModFromUrl(url: string, modVersion: string) {
+    // Detect any texture packs attached to this mod release in index.json
+    const attachedTexturePacks = findAttachedTexturePacks(
+      relevantSourceData,
+      modName,
+      modVersion,
+      url,
+      activeGame,
+    );
     navigate("/job/:job_type", {
       params: {
         job_type: asJobType("installModFromUrl"),
@@ -99,6 +110,7 @@
         modSourceName: modSource,
         modDownloadUrl: url,
         modVersion: modVersion,
+        attachedTexturePacks: JSON.stringify(attachedTexturePacks),
         returnTo: route.pathname,
       },
     });
@@ -183,7 +195,7 @@
   async function sortModVersions(modInfo: ModInfo) {
     // Get a list of available versions, this is how we see if we're on the latest!
     let sourceData = await getModSourcesData();
-    let relevantSourceData = undefined;
+    relevantSourceData = undefined;
     for (const [sourceUrl, sourceDataEntry] of Object.entries(sourceData)) {
       if (sourceDataEntry.sourceName === modInfo.source) {
         relevantSourceData = sourceDataEntry;
@@ -350,8 +362,8 @@
           }}>{$_("gameControls_update_mod")}</Button
         >
       {/if}
-      <!-- TODO: Uncomment after I finish mods texture support -->
-      <!-- <Button
+      <!-- Button to navigate to the texture packs management page for this mod -->
+      <Button
         onclick={async () => {
           navigate(`/:game_name/mods/:source_name/:mod_name/texture_packs`, {
             params: {
@@ -363,7 +375,7 @@
         }}
         class="font-medium text-gray-200 h-10 text-center focus:ring-0 focus:outline-none border-solid border border-[#2a2a2a] rounded bg-[#0b0b0b] hover:bg-[#141414] hover:border-[#3a3a3a] hover:text-white"
         >{$_("gameControls_button_features_textures")}
-      </Button> -->
+      </Button>
       {#if modVersionListSorted.length > 0}
         <Button
           class="relative font-medium text-gray-200 h-10 text-center focus:ring-0 focus:outline-none border-solid border border-[#2a2a2a] rounded bg-[#0b0b0b] hover:bg-[#141414] hover:border-[#3a3a3a] hover:text-white"

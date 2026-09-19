@@ -436,6 +436,7 @@ impl LauncherConfig {
     Ok(())
   }
 
+  // Adds or updates an installed mod record while preserving existing settings
   pub fn add_mod(
     &mut self,
     game_name: SupportedGame,
@@ -443,18 +444,22 @@ impl LauncherConfig {
     version: String,
     mod_name: String,
   ) -> Result<()> {
-    self
+    let mod_map = self
       .get_supported_game_config_mut(game_name)
       .installed_mods
       .entry(source)
-      .or_default()
-      .insert(
+      .or_default();
+    if let Some(existing) = mod_map.get_mut(&mod_name) {
+      existing.version = version;
+    } else {
+      mod_map.insert(
         mod_name,
         InstalledMod {
           version,
           ..Default::default()
         },
       );
+    }
     self.save_config()?;
     Ok(())
   }
@@ -494,6 +499,66 @@ impl LauncherConfig {
     Ok(())
   }
 
+  // Retrieves the list of active texture packs for a specific mod
+  pub fn get_mod_texture_packs(
+    &self,
+    game_name: SupportedGame,
+    source: &str,
+    mod_name: &str,
+  ) -> Result<Vec<String>> {
+    let texture_packs = self
+      .get_supported_game_config(game_name)
+      .and_then(|g| g.installed_mods.get(source))
+      .and_then(|mods| mods.get(mod_name))
+      .map(|m| m.texture_packs.clone())
+      .unwrap_or_default();
+    Ok(texture_packs)
+  }
+
+  // Updates the list of active texture packs for a specific mod and saves configuration
+  pub fn set_mod_texture_packs(
+    &mut self,
+    game_name: SupportedGame,
+    source: &str,
+    mod_name: &str,
+    texture_packs: Vec<String>,
+  ) -> Result<()> {
+    let mod_map = self
+      .get_supported_game_config_mut(game_name)
+      .installed_mods
+      .entry(source.to_string())
+      .or_default();
+    let mod_config = mod_map.entry(mod_name.to_string()).or_default();
+    mod_config.texture_packs = texture_packs;
+    self.save_config()?;
+    Ok(())
+  }
+
+  // Cleans up any removed texture packs from a mod's active texture packs list
+  pub fn cleanup_mod_enabled_texture_packs(
+    &mut self,
+    game_name: SupportedGame,
+    source: &str,
+    mod_name: &str,
+    cleanup_list: Vec<String>,
+  ) -> Result<()> {
+    if cleanup_list.is_empty() {
+      return Ok(());
+    }
+    if let Some(mod_config) = self
+      .get_supported_game_config_mut(game_name)
+      .installed_mods
+      .get_mut(source)
+      .and_then(|mods| mods.get_mut(mod_name))
+    {
+      mod_config
+        .texture_packs
+        .retain(|pack| !cleanup_list.contains(pack));
+      self.save_config()?;
+    }
+    Ok(())
+  }
+
   pub fn uninstall_mod(
     &mut self,
     game_name: SupportedGame,
@@ -514,7 +579,7 @@ impl LauncherConfig {
     game_name: SupportedGame,
     cleanup_list: Vec<String>,
   ) -> Result<()> {
-    if !cleanup_list.is_empty() {
+    if cleanup_list.is_empty() {
       return Ok(());
     }
     self
