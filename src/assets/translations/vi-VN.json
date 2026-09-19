@@ -35,6 +35,8 @@
   "gameControls_button_openGameFolder": "Open Game Data Folder",
   "gameControls_button_openExtractedAssetsFolder": "Open Extracted Assets Folder",
   "gameControls_button_openSavesFolder": "Open Saves Folder",
+  "gameControls_button_shareVanillaSaves": "Chia sẻ bản lưu của trò chơi gốc",
+  "gameControls_button_shareVanillaSaves_helpText": "Sử dụng thư mục lưu vanilla thay vì các bản lưu riêng biệt của bản mod",
   "gameControls_button_openSettingsFolder": "Open Settings Folder",
   "gameControls_button_install": "Install",
   "gameControls_button_play": "Play",

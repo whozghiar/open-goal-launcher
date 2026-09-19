@@ -241,3 +241,18 @@ export async function setRipStreamedAudioEnabled(
     enabled: enabled,
   });
 }
+
+// Invokes the backend command to update whether a mod shares saves with the vanilla game.
+export async function setModShareVanillaSaves(
+  gameName: string,
+  sourceName: string,
+  modName: string,
+  share: boolean,
+): Promise<void> {
+  return await invoke_rpc("set_mod_share_vanilla_saves", {
+    gameName,
+    sourceName,
+    modName,
+    share,
+  });
+}

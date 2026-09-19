@@ -3,7 +3,7 @@
   import IconArrowLeft from "~icons/mdi/arrow-left";
   import IconCog from "~icons/mdi/cog";
   import OpenInNew from "~icons/mdi/open-in-new";
-  import { join } from "@tauri-apps/api/path";
+  import { configDir, join } from "@tauri-apps/api/path";
   import { onDestroy, onMount } from "svelte";
   import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { confirm } from "@tauri-apps/plugin-dialog";
@@ -17,7 +17,10 @@
     Indicator,
     Tooltip,
   } from "flowbite-svelte";
-  import { setCheckForLatestModVersion } from "$lib/rpc/config";
+  import {
+    setCheckForLatestModVersion,
+    setModShareVanillaSaves,
+  } from "$lib/rpc/config";
   import { _ } from "svelte-i18n";
   import { toastStore } from "$lib/stores/ToastStore";
   import {
@@ -58,6 +61,32 @@
   let modInfo: ModInfo | undefined = $state(undefined);
   let displayName: string | undefined = $state(undefined);
   let description: string | undefined = $state(undefined);
+
+  // Reactively track and toggle whether this mod shares saves with the vanilla game
+  let shareVanillaSaves: boolean = $derived.by(() => {
+    let installedMods = config?.games?.[activeGame]?.mods;
+    if (
+      installedMods &&
+      installedMods[modSource] &&
+      installedMods[modSource][modName]
+    ) {
+      return installedMods[modSource][modName].shareVanillaSaves ?? false;
+    }
+    return false;
+  });
+
+  // Toggles whether this mod shares save files with the base game and updates folder paths.
+  async function toggleShareVanillaSaves() {
+    if (!modInfo) return;
+    const nextShare = !shareVanillaSaves;
+    await setModShareVanillaSaves(
+      activeGame,
+      modInfo.source,
+      modInfo.name,
+      nextShare,
+    );
+    await initDirectories(modInfo);
+  }
 
   async function addModFromUrl(url: string, modVersion: string) {
     navigate("/job/:job_type", {
@@ -123,18 +152,28 @@
       if (!(await exists(settingsDir))) {
         settingsDir = undefined;
       }
-      savesDir = await join(
-        installationDir,
-        "features",
-        activeGame,
-        "mods",
-        modInfo.source,
-        "_settings",
-        modInfo.name,
-        "OpenGOAL",
-        activeGame,
-        "saves",
-      );
+      // When shared saves are enabled, direct "Open Saves Folder" to the base game saves directory
+      if (shareVanillaSaves) {
+        savesDir = await join(
+          await configDir(),
+          "OpenGOAL",
+          activeGame,
+          "saves",
+        );
+      } else {
+        savesDir = await join(
+          installationDir,
+          "features",
+          activeGame,
+          "mods",
+          modInfo.source,
+          "_settings",
+          modInfo.name,
+          "OpenGOAL",
+          activeGame,
+          "saves",
+        );
+      }
       if (!(await exists(savesDir))) {
         savesDir = undefined;
       }
@@ -480,7 +519,7 @@
           simple
           trigger="hover"
           placement="top-end"
-          class="dark:bg-slate-900! **:w-full"
+          class="dark:bg-slate-900! **:w-full min-w-[22rem]"
         >
           <!-- TODO - screenshot folder? how do we even configure where those go? -->
           {#if settingsDir}
@@ -504,6 +543,43 @@
           {#if settingsDir || savesDir}
             <DropdownDivider />
           {/if}
+          <!-- Toggle option to share vanilla base game saves with this mod -->
+          <DropdownItem
+            onclick={async (e) => {
+              e.preventDefault();
+              await toggleShareVanillaSaves();
+            }}
+          >
+            <div class="flex items-center justify-between gap-4 w-full">
+              <div class="flex flex-col text-left flex-1 min-w-0 pr-2">
+                {$_("gameControls_button_shareVanillaSaves")}
+                <Helper class="dark:text-neutral-400! text-xs!">
+                  {$_("gameControls_button_shareVanillaSaves_helpText")}
+                </Helper>
+              </div>
+              <div
+                class="shrink-0 flex items-center justify-end"
+                style="width: 44px; min-width: 44px;"
+              >
+                <div
+                  role="switch"
+                  aria-checked={shareVanillaSaves}
+                  style="width: 44px; height: 24px;"
+                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {shareVanillaSaves
+                    ? 'bg-orange-500'
+                    : 'bg-[#374151]'}"
+                >
+                  <span
+                    style="width: 20px; height: 20px;"
+                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {shareVanillaSaves
+                      ? 'translate-x-5'
+                      : 'translate-x-0'}"
+                  ></span>
+                </div>
+              </div>
+            </div>
+          </DropdownItem>
+          <DropdownDivider />
           <DropdownItem
             onclick={async () => {
               navigate("/:game_name/saves", {

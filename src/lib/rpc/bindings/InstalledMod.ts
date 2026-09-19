@@ -4,4 +4,5 @@ export type InstalledMod = {
   version: string;
   texturePacks: Array<string>;
   secondsPlayed: bigint;
+  shareVanillaSaves: boolean;
 };

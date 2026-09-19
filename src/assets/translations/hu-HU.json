@@ -35,6 +35,8 @@
   "gameControls_button_openGameFolder": "Játékadatot Tartalmazó Mappa Megnyitása",
   "gameControls_button_openExtractedAssetsFolder": "Kibontott Assetek Mappa Megnyitása",
   "gameControls_button_openSavesFolder": "Mentés Mappa Megnyitása",
+  "gameControls_button_shareVanillaSaves": "Alapjáték mentések megosztása",
+  "gameControls_button_shareVanillaSaves_helpText": "Az alapjáték mentési mappájának használata a mod-elkülönített mentések helyett",
   "gameControls_button_openSettingsFolder": "Beállítások Mappa Megnyitása",
   "gameControls_button_install": "Telepítés",
   "gameControls_button_play": "Játék indítása",

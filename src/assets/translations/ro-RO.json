@@ -35,6 +35,8 @@
   "gameControls_button_openGameFolder": "Deschide folderul de date al jocului",
   "gameControls_button_openExtractedAssetsFolder": "Open Extracted Assets Folder",
   "gameControls_button_openSavesFolder": "Deschide dosarul Salvări",
+  "gameControls_button_shareVanillaSaves": "Partajează salvările jocului de bază",
+  "gameControls_button_shareVanillaSaves_helpText": "Utilizează folderul de salvări vanilla în locul salvărilor izolate ale modului",
   "gameControls_button_openSettingsFolder": "Deschide directorul cu setări",
   "gameControls_button_install": "Instalează",
   "gameControls_button_play": "Joacă",
