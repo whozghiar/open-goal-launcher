@@ -54,11 +54,16 @@ fn check_mod_save_compatibility(mod_name: &str) -> (bool, Option<String>) {
 }
 
 fn parse_slot_number(file_name: &str) -> Option<u8> {
-  if file_name.starts_with("jak1-game-") && file_name.ends_with(".bin") {
-    let slot_str = &file_name[10..file_name.len() - 4];
+  let base_name = Path::new(file_name)
+    .file_name()
+    .and_then(|n| n.to_str())
+    .unwrap_or(file_name);
+
+  if base_name.starts_with("jak1-game-") && base_name.ends_with(".bin") {
+    let slot_str = &base_name[10..base_name.len() - 4];
     slot_str.parse::<u8>().ok()
-  } else if file_name.starts_with("bank") && file_name.ends_with(".bin") {
-    let slot_str = &file_name[4..file_name.len() - 4];
+  } else if base_name.starts_with("bank") && base_name.ends_with(".bin") {
+    let slot_str = &base_name[4..base_name.len() - 4];
     slot_str.parse::<u8>().ok()
   } else {
     None
@@ -78,20 +83,24 @@ fn scan_saves_in_dir(save_dir: &Path, game_name: SupportedGame) -> Vec<SaveSlotI
 
   let mut saves = Vec::new();
   for entry in WalkDir::new(save_dir)
-    .max_depth(2)
+    .max_depth(3)
     .into_iter()
     .filter_map(Result::ok)
     .filter(|e| e.file_type().is_file())
   {
     let path = entry.path();
+    if path.components().any(|c| c.as_os_str() == "_pcsx2_meta") {
+      continue;
+    }
+
     let is_bin = path.extension().is_some_and(|ext| ext == "bin");
     if !is_bin {
       continue;
     }
 
-    let file_name = match path.file_name() {
-      Some(name) => name.to_string_lossy().into_owned(),
-      None => continue,
+    let file_name = match path.strip_prefix(save_dir) {
+      Ok(rel) => rel.to_string_lossy().replace('\\', "/"),
+      Err(_) => continue,
     };
 
     let metadata = match fs::metadata(path) {
@@ -124,7 +133,7 @@ fn scan_saves_in_dir(save_dir: &Path, game_name: SupportedGame) -> Vec<SaveSlotI
   }
 
   saves.sort_by(|a, b| match (a.slot_number, b.slot_number) {
-    (Some(sa), Some(sb)) => sa.cmp(&sb),
+    (Some(sa), Some(sb)) => sa.cmp(&sb).then_with(|| a.file_name.cmp(&b.file_name)),
     (Some(_), None) => std::cmp::Ordering::Less,
     (None, Some(_)) => std::cmp::Ordering::Greater,
     (None, None) => a.file_name.cmp(&b.file_name),
@@ -305,23 +314,34 @@ pub async fn copy_save(
     )));
   }
 
-  if !to_dir.exists() {
-    fs::create_dir_all(&to_dir)?;
-  }
+  let parent_rel = Path::new(&file_name).parent();
+  let base_name = Path::new(&file_name)
+    .file_name()
+    .and_then(|n| n.to_str())
+    .unwrap_or(&file_name);
 
-  let target_file_name = if let Some(slot) = target_slot {
-    if file_name.starts_with("jak1-game-") && file_name.ends_with(".bin") {
+  let new_base_name = if let Some(slot) = target_slot {
+    if base_name.starts_with("jak1-game-") && base_name.ends_with(".bin") {
       format!("jak1-game-{slot}.bin")
-    } else if file_name.starts_with("bank") && file_name.ends_with(".bin") {
+    } else if base_name.starts_with("bank") && base_name.ends_with(".bin") {
       format!("bank{slot}.bin")
     } else {
-      file_name.clone()
+      base_name.to_string()
     }
   } else {
-    file_name.clone()
+    base_name.to_string()
   };
 
-  let target_file = to_dir.join(&target_file_name);
+  let target_rel = match parent_rel {
+    Some(p) if p != Path::new("") => p.join(&new_base_name),
+    _ => PathBuf::from(&new_base_name),
+  };
+
+  let target_file = to_dir.join(&target_rel);
+
+  if let Some(target_parent) = target_file.parent() {
+    fs::create_dir_all(target_parent)?;
+  }
 
   if target_file.exists() {
     if !overwrite {
@@ -331,7 +351,11 @@ pub async fn copy_save(
       .duration_since(UNIX_EPOCH)
       .unwrap_or_default()
       .as_secs();
-    let bak_path = to_dir.join(format!("{target_file_name}.bak-{timestamp}"));
+    let bak_name = format!("{new_base_name}.bak-{timestamp}");
+    let bak_path = target_file
+      .parent()
+      .unwrap_or(&to_dir)
+      .join(bak_name);
     let _ = fs::copy(&target_file, bak_path);
   }
 
@@ -394,8 +418,15 @@ pub async fn backup_save(
     .duration_since(UNIX_EPOCH)
     .unwrap_or_default()
     .as_secs();
-  let backup_name = format!("{file_name}.bak-{timestamp}");
-  let backup_path = save_dir.join(&backup_name);
+  let base_name = Path::new(&file_name)
+    .file_name()
+    .and_then(|n| n.to_str())
+    .unwrap_or(&file_name);
+  let backup_name = format!("{base_name}.bak-{timestamp}");
+  let backup_path = file_path
+    .parent()
+    .unwrap_or(&save_dir)
+    .join(&backup_name);
   fs::copy(&file_path, &backup_path)?;
   tracing::info!("Created backup {}", backup_path.display());
   Ok(backup_name)
@@ -458,3 +489,4 @@ pub async fn open_save_folder(
 
   Ok(())
 }
+

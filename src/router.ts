@@ -139,14 +139,13 @@ export const { p, navigate, isActive, route } = createRouter({
         "/texture_packs": {
           "/": ModTexturePacks,
         },
+        "/saves": SaveDataManager,
       },
     },
     "/texture_packs": {
       "/": TexturePacks,
     },
-    "/saves": {
-      "/": SaveDataManager,
-    },
+    "/saves": SaveDataManager,
   },
   "/mods": {
     "/": Mods,
