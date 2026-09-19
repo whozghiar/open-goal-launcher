@@ -1,17 +1,17 @@
+use serde::{Deserialize, Serialize};
 use std::{
   collections::BTreeMap,
   fs,
   path::{Path, PathBuf},
   time::UNIX_EPOCH,
 };
-use serde::{Deserialize, Serialize};
 use tauri::Manager;
 use tracing::instrument;
 use ts_rs::TS;
 use walkdir::WalkDir;
 
 use crate::{
-  commands::{game::get_saves_highest_milestone, CommandError},
+  commands::{CommandError, game::get_saves_highest_milestone},
   config::{LauncherConfig, SupportedGame},
   util::game_milestones::get_jak1_milestones,
 };
@@ -49,8 +49,6 @@ pub struct SaveInstallInfo {
   pub source_name: Option<String>,
   pub mod_name: Option<String>,
   pub save_dir: String,
-  pub has_custom_save_format: bool,
-  pub warning_message: Option<String>,
   pub folders: Vec<SaveFolderInfo>,
   pub saves: Vec<SaveSlotInfo>,
 }
@@ -61,11 +59,11 @@ fn detect_region_and_display(folder_name: &str) -> (Option<String>, String) {
   }
 
   let upper = folder_name.to_uppercase();
-  let region = if upper.contains("BASCUS") || upper.contains("SCUS") || upper.contains("SLUS") {
+  let region = if upper.contains("BASCUS") || upper.contains("SCUS") {
     Some("NTSC-U".to_string())
-  } else if upper.contains("BESCES") || upper.contains("SCES") || upper.contains("SLES") {
+  } else if upper.contains("BESCES") || upper.contains("SCES") {
     Some("PAL".to_string())
-  } else if upper.contains("SCPS") || upper.contains("SLPS") {
+  } else if upper.contains("SCPS") {
     Some("NTSC-J".to_string())
   } else {
     None
@@ -79,17 +77,6 @@ fn detect_region_and_display(folder_name: &str) -> (Option<String>, String) {
   (region, display_name)
 }
 
-fn check_mod_save_compatibility(mod_name: &str) -> (bool, Option<String>) {
-  let lower = mod_name.to_lowercase();
-  if lower.contains("fishing") {
-    (
-      true,
-      Some("This mod (Fishing Legacy) alters the save file format. Transferring saves between this mod and vanilla is disabled to protect your save files from corruption.".to_string()),
-    )
-  } else {
-    (false, None)
-  }
-}
 
 fn parse_slot_number(file_name: &str) -> Option<u8> {
   let base_name = Path::new(file_name)
@@ -129,9 +116,7 @@ fn scan_save_folders_in_dir(
       if let Ok(file_type) = entry.file_type() {
         if file_type.is_dir() {
           let name = entry.file_name().to_string_lossy().into_owned();
-          if name != "_pcsx2_meta" {
-            folder_map.entry(name).or_default();
-          }
+          folder_map.entry(name).or_default();
         }
       }
     }
@@ -144,9 +129,6 @@ fn scan_save_folders_in_dir(
     .filter(|e| e.file_type().is_file())
   {
     let path = entry.path();
-    if path.components().any(|c| c.as_os_str() == "_pcsx2_meta") {
-      continue;
-    }
 
     let is_bin = path.extension().is_some_and(|ext| ext == "bin");
     if !is_bin {
@@ -165,9 +147,7 @@ fn scan_save_folders_in_dir(
       .unwrap_or_else(|| file_name.clone());
 
     let folder_name = match rel_path.parent() {
-      Some(parent) if parent != Path::new("") => {
-        parent.to_string_lossy().replace('\\', "/")
-      }
+      Some(parent) if parent != Path::new("") => parent.to_string_lossy().replace('\\', "/"),
       _ => "default".to_string(),
     };
 
@@ -260,7 +240,9 @@ async fn resolve_install_save_dir(
   } else if let Some(stripped) = install_id.strip_prefix("mod:") {
     let parts: Vec<&str> = stripped.split(':').collect();
     if parts.len() != 2 {
-      return Err(CommandError::GameManagement(format!("Invalid mod install ID: {install_id}")));
+      return Err(CommandError::GameManagement(format!(
+        "Invalid mod install ID: {install_id}"
+      )));
     }
     let source = parts[0];
     let mod_name = parts[1];
@@ -296,7 +278,9 @@ async fn resolve_install_save_dir(
       Ok(fallback_dir)
     }
   } else {
-    Err(CommandError::GameManagement(format!("Unknown install ID: {install_id}")))
+    Err(CommandError::GameManagement(format!(
+      "Unknown install ID: {install_id}"
+    )))
   }
 }
 
@@ -325,8 +309,6 @@ pub async fn list_game_save_installs(
     source_name: None,
     mod_name: None,
     save_dir: vanilla_save_dir.to_string_lossy().into_owned(),
-    has_custom_save_format: false,
-    warning_message: None,
     folders: vanilla_folders,
     saves: vanilla_saves,
   });
@@ -345,8 +327,6 @@ pub async fn list_game_save_installs(
   if let Some(install_path) = install_path {
     for (source_name, mods_in_source) in &installed_mods {
       for (mod_name, _) in mods_in_source {
-        let (has_custom_save_format, warning_message) = check_mod_save_compatibility(mod_name);
-
         let primary_dir = install_path
           .join("features")
           .join(game_name.to_string())
@@ -382,8 +362,6 @@ pub async fn list_game_save_installs(
           source_name: Some(source_name.clone()),
           mod_name: Some(mod_name.clone()),
           save_dir: save_dir.to_string_lossy().into_owned(),
-          has_custom_save_format,
-          warning_message,
           folders,
           saves,
         });
@@ -407,7 +385,8 @@ pub async fn copy_save(
   target_slot: Option<u8>,
   overwrite: bool,
 ) -> Result<(), CommandError> {
-  let from_dir = resolve_install_save_dir(&app_handle, &config, game_name, &from_install_id).await?;
+  let from_dir =
+    resolve_install_save_dir(&app_handle, &config, game_name, &from_install_id).await?;
   let to_dir = resolve_install_save_dir(&app_handle, &config, game_name, &to_install_id).await?;
 
   let source_file = from_dir.join(&file_name);
@@ -458,22 +437,25 @@ pub async fn copy_save(
 
   if target_file.exists() {
     if !overwrite {
-      return Err(CommandError::GameManagement("DESTINATION_FILE_EXISTS".to_string()));
+      return Err(CommandError::GameManagement(
+        "DESTINATION_FILE_EXISTS".to_string(),
+      ));
     }
     let timestamp = std::time::SystemTime::now()
       .duration_since(UNIX_EPOCH)
       .unwrap_or_default()
       .as_secs();
     let bak_name = format!("{new_base_name}.bak-{timestamp}");
-    let bak_path = target_file
-      .parent()
-      .unwrap_or(&to_dir)
-      .join(bak_name);
+    let bak_path = target_file.parent().unwrap_or(&to_dir).join(bak_name);
     let _ = fs::copy(&target_file, bak_path);
   }
 
   fs::copy(&source_file, &target_file)?;
-  tracing::info!("Copied save {} to {}", source_file.display(), target_file.display());
+  tracing::info!(
+    "Copied save {} to {}",
+    source_file.display(),
+    target_file.display()
+  );
   Ok(())
 }
 
@@ -503,7 +485,8 @@ pub async fn move_save(
   )
   .await?;
 
-  let from_dir = resolve_install_save_dir(&app_handle, &config, game_name, &from_install_id).await?;
+  let from_dir =
+    resolve_install_save_dir(&app_handle, &config, game_name, &from_install_id).await?;
   let source_file = from_dir.join(&file_name);
   if source_file.exists() {
     fs::remove_file(source_file)?;
@@ -538,10 +521,7 @@ pub async fn backup_save(
     .and_then(|n| n.to_str())
     .unwrap_or(&file_name);
   let backup_name = format!("{base_name}.bak-{timestamp}");
-  let backup_path = file_path
-    .parent()
-    .unwrap_or(&save_dir)
-    .join(&backup_name);
+  let backup_path = file_path.parent().unwrap_or(&save_dir).join(&backup_name);
   fs::copy(&file_path, &backup_path)?;
   tracing::info!("Created backup {}", backup_path.display());
   Ok(backup_name)
@@ -609,4 +589,3 @@ pub async fn open_save_folder(
 
   Ok(())
 }
-

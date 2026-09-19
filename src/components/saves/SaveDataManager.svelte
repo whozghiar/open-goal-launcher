@@ -4,7 +4,6 @@
   import IconContentCopy from "~icons/mdi/content-copy";
   import IconDelete from "~icons/mdi/delete";
   import IconBackup from "~icons/mdi/backup-restore";
-  import IconAlert from "~icons/mdi/alert-circle";
   import IconRefresh from "~icons/mdi/refresh";
   import {
     Alert,
@@ -50,7 +49,6 @@
   let selectedFolderName: string | null = $state(null);
   let lastFetchedGame: SupportedGame | undefined = $state(undefined);
 
-  // Sync currentGame from route if route changes externally
   $effect(() => {
     const routeGame = toSupportedGame(route.params.game_name);
     if (routeGame && routeGame !== currentGame) {
@@ -58,7 +56,6 @@
     }
   });
 
-  // Pre-select install if navigated from mod details
   $effect(() => {
     if (route.params.mod_name && route.params.source_name) {
       const modInstallId = `mod:${route.params.source_name}:${route.params.mod_name}`;
@@ -68,7 +65,6 @@
     }
   });
 
-  // Automatically fetch when currentGame changes
   $effect(() => {
     if (currentGame && currentGame !== lastFetchedGame) {
       lastFetchedGame = currentGame;
@@ -84,9 +80,6 @@
     activeInstall?.folders ?? [],
   );
 
-  // Manage folder selection:
-  // If only 1 standard folder, auto-select it.
-  // If multiple folders exist and current selection is invalid, reset to null to show folder overview.
   $effect(() => {
     if (
       availableFolders.length === 1 &&
@@ -110,7 +103,6 @@
     activeFolder ? activeFolder.saves : (activeInstall?.saves ?? []),
   );
 
-  // Transfer Modal State
   let showTransferModal = $state(false);
   let transferSourceSave: SaveSlotInfo | null = $state(null);
   let targetInstallId: string = $state("");
@@ -119,21 +111,12 @@
   let isMoveOperation: boolean = $state(false);
   let performingAction = $state(false);
 
-  // Delete Confirmation State
   let showDeleteModal = $state(false);
   let saveToDelete: SaveSlotInfo | null = $state(null);
 
   let targetInstall = $derived(
     installs.find((i) => i.id === targetInstallId) ?? null,
   );
-
-  let isTransferBlocked = $derived.by(() => {
-    if (!activeInstall || !targetInstall) return false;
-    const involvesVanilla = activeInstall.isVanilla || targetInstall.isVanilla;
-    const hasIncompatibleMod =
-      activeInstall.hasCustomSaveFormat || targetInstall.hasCustomSaveFormat;
-    return involvesVanilla && hasIncompatibleMod;
-  });
 
   let targetSlotOccupied = $derived.by(() => {
     if (!targetInstall) return false;
@@ -198,7 +181,6 @@
 
   async function executeTransfer() {
     if (!currentGame || !transferSourceSave || !targetInstallId) return;
-    if (isTransferBlocked) return;
 
     performingAction = true;
     try {
@@ -328,7 +310,6 @@
     });
   }
 
-  // Generate visual slots for the selected folder
   let slotList = $derived.by(() => {
     if (!activeInstall || !activeFolder) return [];
     const maxSlots = currentGame === "jak1" ? 4 : 8;
@@ -488,14 +469,6 @@
               <Badge color="blue" class="text-xs px-1.5 py-0.5">
                 {$_("saveManager_vanillaBadge")}
               </Badge>
-            {:else if inst.hasCustomSaveFormat}
-              <Badge
-                color="red"
-                class="text-xs px-1.5 py-0.5 flex items-center gap-1"
-              >
-                <IconAlert class="w-3 h-3" />
-                Custom
-              </Badge>
             {:else}
               <Badge
                 color="gray"
@@ -508,27 +481,6 @@
         {/each}
       </div>
     </div>
-
-    <!-- Incompatible Mod High-Visibility Warning -->
-    {#if activeInstall?.hasCustomSaveFormat}
-      <Alert
-        color="yellow"
-        class="border-2 border-amber-500/80 bg-amber-950/40 text-amber-200 rounded-lg p-4 shadow-lg"
-      >
-        <div class="flex items-start gap-3">
-          <IconAlert class="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
-          <div class="flex flex-col gap-1">
-            <span class="text-base font-bold text-amber-300">
-              {$_("saveManager_warningIncompatibleTitle")}
-            </span>
-            <p class="text-sm text-amber-100/90 leading-relaxed">
-              {activeInstall.warningMessage ??
-                $_("saveManager_warningIncompatibleMessage")}
-            </p>
-          </div>
-        </div>
-      </Alert>
-    {/if}
 
     <!-- Regional Folders Navigation View: If multiple folders exist and none is selected, show folders cards -->
     {#if availableFolders.length > 1 && selectedFolderName === null}
@@ -828,24 +780,10 @@
             {inst.isVanilla
               ? `(${String($_("saveManager_vanillaBadge"))})`
               : ""}
-            {inst.hasCustomSaveFormat ? "(Incompatible)" : ""}
           </option>
         {/each}
       </select>
     </div>
-
-    <!-- Mod Incompatibility Warning inside modal -->
-    {#if isTransferBlocked}
-      <Alert
-        color="red"
-        class="border border-red-600 bg-red-950/60 text-red-200 text-xs p-3 rounded"
-      >
-        <div class="flex items-start gap-2">
-          <IconAlert class="w-5 h-5 text-red-400 shrink-0" />
-          <span>{$_("saveManager_disabledTransferTooltip")}</span>
-        </div>
-      </Alert>
-    {/if}
 
     <!-- Destination Folder Selector if target has folders -->
     {#if targetInstall && targetInstall.folders.length > 1}
@@ -894,7 +832,7 @@
       </select>
     </div>
 
-    {#if targetSlotOccupied && !isTransferBlocked}
+    {#if targetSlotOccupied}
       <p
         class="text-xs text-amber-400 font-medium bg-amber-950/30 p-2 rounded border border-amber-700/50"
       >
@@ -927,7 +865,7 @@
       <Button
         size="sm"
         class="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
-        disabled={performingAction || isTransferBlocked || !targetInstallId}
+        disabled={performingAction || !targetInstallId}
         onclick={executeTransfer}
       >
         {#if performingAction}

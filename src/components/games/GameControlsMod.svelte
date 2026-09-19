@@ -460,6 +460,18 @@
             }}
             >{$_("gameControls_button_openExtractedAssetsFolder")}</DropdownItem
           >
+          <DropdownDivider />
+          <DropdownItem
+            onclick={async () => {
+              navigate("/:game_name/mods/:source_name/:mod_name/saves", {
+                params: {
+                  game_name: activeGame,
+                  source_name: modSource,
+                  mod_name: modName,
+                },
+              });
+            }}>{$_("gameControls_button_saveManager")}</DropdownItem
+          >
         </Dropdown>
       {/if}
       {#if !currentlyInstalledVersion}
@@ -505,18 +517,6 @@
             <DropdownDivider />
           {/if}
 
-          <DropdownItem
-            onclick={async () => {
-              navigate("/:game_name/mods/:source_name/:mod_name/saves", {
-                params: {
-                  game_name: activeGame,
-                  source_name: modSource,
-                  mod_name: modName,
-                },
-              });
-            }}>{$_("gameControls_button_saveManager")}</DropdownItem
-          >
-          <DropdownDivider />
           <DropdownItem
             onclick={async () => {
               const launchString = await getLaunchModString(

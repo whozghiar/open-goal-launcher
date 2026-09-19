@@ -9,8 +9,6 @@ export type SaveInstallInfo = {
   sourceName: string | null;
   modName: string | null;
   saveDir: string;
-  hasCustomSaveFormat: boolean;
-  warningMessage: string | null;
   folders: Array<SaveFolderInfo>;
   saves: Array<SaveSlotInfo>;
 };
