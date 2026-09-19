@@ -582,8 +582,12 @@
           <DropdownDivider />
           <DropdownItem
             onclick={async () => {
-              navigate("/:game_name/saves", {
-                params: { game_name: activeGame },
+              navigate("/:game_name/mods/:source_name/:mod_name/saves", {
+                params: {
+                  game_name: activeGame,
+                  source_name: modSource,
+                  mod_name: modName,
+                },
               });
             }}>{$_("gameControls_button_saveManager")}</DropdownItem
           >

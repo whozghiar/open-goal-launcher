@@ -32,20 +32,33 @@
   import type { SaveInstallInfo } from "$lib/rpc/bindings/SaveInstallInfo";
   import type { SaveSlotInfo } from "$lib/rpc/bindings/SaveSlotInfo";
 
-  const gameParam = $derived(route.params.game_name);
-  let activeGame: SupportedGame | undefined = $state(undefined);
-
-  $effect(() => {
-    const activeGameFromParam = toSupportedGame(gameParam);
-    if (activeGameFromParam) {
-      activeGame = activeGameFromParam;
-    }
-  });
+  const activeGame: SupportedGame | undefined = $derived(
+    toSupportedGame(route.params.game_name),
+  );
 
   let loaded = $state(false);
   let loadingInstalls = $state(false);
   let installs: SaveInstallInfo[] = $state([]);
   let selectedInstallId: string = $state("vanilla");
+  let lastFetchedGame: SupportedGame | undefined = $state(undefined);
+
+  // Pre-select install if navigated from mod
+  $effect(() => {
+    if (route.params.mod_name && route.params.source_name) {
+      const modInstallId = `mod:${route.params.source_name}:${route.params.mod_name}`;
+      if (installs.some((i) => i.id === modInstallId)) {
+        selectedInstallId = modInstallId;
+      }
+    }
+  });
+
+  // Automatically fetch when activeGame is available or changes
+  $effect(() => {
+    if (activeGame && activeGame !== lastFetchedGame) {
+      lastFetchedGame = activeGame;
+      refreshInstalls(activeGame);
+    }
+  });
 
   // Transfer Modal State
   let showTransferModal = $state(false);
@@ -80,26 +93,41 @@
     return targetInstall.saves.some((s) => s.slotNumber === targetSlotNumber);
   });
 
-  onMount(async () => {
-    await refreshInstalls();
-    loaded = true;
+  onMount(() => {
+    const game = toSupportedGame(route.params.game_name);
+    if (game) {
+      lastFetchedGame = game;
+      refreshInstalls(game);
+    } else {
+      loaded = true;
+    }
   });
 
-  async function refreshInstalls() {
-    if (!activeGame) return;
+  async function refreshInstalls(game = activeGame) {
+    if (!game) {
+      loaded = true;
+      return;
+    }
     loadingInstalls = true;
     try {
-      installs = await listGameSaveInstalls(activeGame);
-      if (
-        !installs.some((i) => i.id === selectedInstallId) &&
-        installs.length > 0
-      ) {
-        selectedInstallId = installs[0].id;
+      const result = await listGameSaveInstalls(game);
+      if (Array.isArray(result)) {
+        installs = result;
+        if (
+          !installs.some((i) => i.id === selectedInstallId) &&
+          installs.length > 0
+        ) {
+          selectedInstallId = installs[0].id;
+        }
+      } else {
+        installs = [];
       }
     } catch (err) {
       toastStore.makeToast(`Failed to load saves: ${err}`, "error");
+      installs = [];
     } finally {
       loadingInstalls = false;
+      loaded = true;
     }
   }
 
@@ -216,26 +244,34 @@
     });
   }
 
-  // Pre-generate 4 visual slots for Jak 1
+  // Generate visual slots with unique keys for Svelte
   let slotList = $derived.by(() => {
     if (!activeInstall) return [];
-    const maxSlots = 4;
+    const maxSlots = activeGame === "jak1" ? 4 : 8;
     const slots = [];
+    const usedFiles = new Set<string>();
+
     for (let slotIdx = 0; slotIdx < maxSlots; slotIdx++) {
       const existing = activeInstall.saves.find(
-        (s) => s.slotNumber === slotIdx,
+        (s) => s.slotNumber === slotIdx && !usedFiles.has(s.fileName),
       );
+      if (existing) {
+        usedFiles.add(existing.fileName);
+      }
       slots.push({
+        id: `slot-${slotIdx}-${existing?.fileName ?? "empty"}`,
         slotNumber: slotIdx,
         save: existing ?? null,
       });
     }
-    // Include extra saves that did not match standard slot numbering (e.g. backup files)
-    const extraSaves = activeInstall.saves.filter(
-      (s) => s.slotNumber === null || s.slotNumber >= maxSlots,
+
+    const remainingSaves = activeInstall.saves.filter(
+      (s) => !usedFiles.has(s.fileName),
     );
-    for (const extra of extraSaves) {
+    for (let idx = 0; idx < remainingSaves.length; idx++) {
+      const extra = remainingSaves[idx];
       slots.push({
+        id: `extra-${idx}-${extra.fileName}`,
         slotNumber: extra.slotNumber ?? -1,
         save: extra,
       });
@@ -245,9 +281,21 @@
 </script>
 
 <div class="flex flex-col min-h-full flex-1 bg-[#1e1e1e] p-5 gap-4 text-white">
-  {#if !loaded || !activeGame}
+  {#if !loaded}
     <div class="flex items-center justify-center h-64">
       <Spinner color="yellow" size="12" />
+    </div>
+  {:else if !activeGame}
+    <div class="flex flex-col items-center justify-center h-64 gap-4">
+      <p class="text-neutral-400">Game not specified or not supported.</p>
+      <Button
+        outline
+        class="text-white border-neutral-600 hover:bg-neutral-800"
+        onclick={() => navigate("/")}
+      >
+        <IconArrowLeft class="w-4 h-4 mr-2" />
+        Back to Home
+      </Button>
     </div>
   {:else}
     <!-- Top Action Bar -->
@@ -259,8 +307,22 @@
           outline
           class="border-solid rounded text-white hover:dark:text-slate-900 hover:bg-white font-semibold p-2.5"
           onclick={() => {
-            if (activeGame) {
+            if (
+              route.params.mod_name &&
+              route.params.source_name &&
+              activeGame
+            ) {
+              navigate(`/:game_name/mods/:source_name/:mod_name`, {
+                params: {
+                  game_name: activeGame,
+                  source_name: route.params.source_name,
+                  mod_name: route.params.mod_name,
+                },
+              });
+            } else if (activeGame) {
               navigate(`/:game_name/`, { params: { game_name: activeGame } });
+            } else {
+              navigate("/");
             }
           }}
           aria-label={$_("saveManager_back")}
@@ -282,7 +344,7 @@
           size="sm"
           outline
           class="border-neutral-600 text-neutral-200 hover:bg-neutral-800"
-          onclick={refreshInstalls}
+          onclick={() => refreshInstalls()}
           disabled={loadingInstalls}
         >
           <IconRefresh
@@ -372,7 +434,7 @@
 
     <!-- Save Slots Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-      {#each slotList as item (item.slotNumber + (item.save?.fileName ?? "empty"))}
+      {#each slotList as item (item.id)}
         <div
           class="flex flex-col justify-between p-4 rounded-xl border transition-all {item.save
             ? 'bg-neutral-900/80 border-neutral-700/80 shadow-md hover:border-neutral-500'
@@ -535,7 +597,7 @@
         bind:value={targetSlotNumber}
         class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-sm text-white focus:ring-amber-500 focus:border-amber-500"
       >
-        {#each [0, 1, 2, 3] as slotIdx}
+        {#each activeGame === "jak1" ? [0, 1, 2, 3] : [0, 1, 2, 3, 4, 5, 6, 7] as slotIdx}
           <option value={slotIdx}>
             Slot {slotIdx + 1}
             {#if targetInstall?.saves.some((s) => s.slotNumber === slotIdx)}
