@@ -25,6 +25,7 @@ pub struct SaveSlotInfo {
   pub slot_number: Option<u8>,
   pub size_bytes: u64,
   pub modified_timestamp: u64,
+  pub region: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
@@ -53,7 +54,7 @@ pub struct SaveInstallInfo {
 
 fn detect_region_and_display(folder_name: &str) -> (Option<String>, String) {
   if folder_name.is_empty() || folder_name == "default" {
-    return (None, "Standard Saves".to_string());
+    return (None, "default".to_string());
   }
 
   let upper = folder_name.to_uppercase();
@@ -156,6 +157,7 @@ fn scan_save_folders_in_dir(
       .unwrap_or(0);
 
     let slot_number = parse_slot_number(&base_name);
+    let (slot_region, _) = detect_region_and_display(&folder_name);
 
     let save_slot = SaveSlotInfo {
       file_name,
@@ -164,13 +166,10 @@ fn scan_save_folders_in_dir(
       slot_number,
       size_bytes: metadata.len(),
       modified_timestamp,
+      region: slot_region,
     };
 
     folder_map.entry(folder_name).or_default().push(save_slot);
-  }
-
-  if folder_map.is_empty() {
-    folder_map.insert("default".to_string(), Vec::new());
   }
 
   let mut folders = Vec::new();
@@ -383,6 +382,31 @@ pub async fn copy_save(
   }
 
   let source_parent = Path::new(&file_name).parent();
+  let source_folder_name = source_parent
+    .and_then(|p| p.to_str())
+    .filter(|s| !s.is_empty())
+    .unwrap_or("default");
+  let (source_region, _) = detect_region_and_display(source_folder_name);
+
+  let target_folder_path = match target_folder.as_deref() {
+    Some(f) if !f.is_empty() && f != "default" => PathBuf::from(f),
+    _ => PathBuf::new(),
+  };
+
+  let target_folder_name = target_folder_path
+    .to_str()
+    .filter(|s| !s.is_empty())
+    .unwrap_or("default");
+  let (target_region, _) = detect_region_and_display(target_folder_name);
+
+  if let (Some(s_reg), Some(t_reg)) = (&source_region, &target_region) {
+    if s_reg != t_reg {
+      return Err(CommandError::GameManagement(format!(
+        "Regional incompatibility: Cannot transfer a {s_reg} save to a {t_reg} folder."
+      )));
+    }
+  }
+
   let base_name = Path::new(&file_name)
     .file_name()
     .and_then(|n| n.to_str())
@@ -398,14 +422,6 @@ pub async fn copy_save(
     }
   } else {
     base_name.to_string()
-  };
-
-  let target_folder_path = match target_folder.as_deref() {
-    Some(f) if !f.is_empty() && f != "default" => PathBuf::from(f),
-    _ => match source_parent {
-      Some(p) if p != Path::new("") && p != Path::new("default") => p.to_path_buf(),
-      _ => PathBuf::new(),
-    },
   };
 
   let target_rel = if target_folder_path == Path::new("") {

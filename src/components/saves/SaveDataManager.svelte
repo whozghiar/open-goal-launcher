@@ -77,16 +77,11 @@
   );
 
   let availableFolders: SaveFolderInfo[] = $derived(
-    activeInstall?.folders ?? [],
+    (activeInstall?.folders ?? []).filter((f) => f.folderName !== "default"),
   );
 
   $effect(() => {
     if (
-      availableFolders.length === 1 &&
-      availableFolders[0].folderName === "default"
-    ) {
-      selectedFolderName = "default";
-    } else if (
       availableFolders.length > 0 &&
       selectedFolderName !== null &&
       !availableFolders.some((f) => f.folderName === selectedFolderName)
@@ -118,12 +113,128 @@
     installs.find((i) => i.id === targetInstallId) ?? null,
   );
 
+  let transferSourceRegion = $derived(
+    (transferSourceSave as SaveSlotInfo | null)?.region ??
+      activeFolder?.region ??
+      null,
+  );
+
+  interface TargetFolderOption {
+    folderName: string;
+    displayName: string;
+    region?: string | null;
+    disabled: boolean;
+  }
+
+  let targetFolderOptions: TargetFolderOption[] = $derived.by(() => {
+    if (!targetInstall || !transferSourceSave) return [];
+
+    const options: TargetFolderOption[] = [];
+
+    // 1. Existing folders in destination installation (excluding "default")
+    for (const f of targetInstall.folders) {
+      if (f.folderName === "default") continue;
+
+      const isIncompatible = Boolean(
+        f.region && transferSourceRegion && f.region !== transferSourceRegion,
+      );
+
+      options.push({
+        folderName: f.folderName,
+        displayName: isIncompatible
+          ? `${f.displayName} (Incompatible: ${f.region})`
+          : f.displayName,
+        region: f.region,
+        disabled: isIncompatible,
+      });
+    }
+
+    // 2. If source save belongs to a regional folder that doesn't exist yet on target, allow creating it
+    const sourceFolder = transferSourceSave.folderName;
+    if (
+      sourceFolder &&
+      sourceFolder !== "default" &&
+      !options.some((o) => o.folderName === sourceFolder)
+    ) {
+      options.push({
+        folderName: sourceFolder,
+        displayName: `${sourceFolder} (${transferSourceRegion ?? "Regional"})`,
+        region: transferSourceRegion,
+        disabled: false,
+      });
+    }
+
+    // 3. Fallback only if no other options exist or source is in default
+    if (options.length === 0 || sourceFolder === "default") {
+      options.push({
+        folderName: "default",
+        displayName: "default",
+        region: null,
+        disabled: false,
+      });
+    }
+
+    return options;
+  });
+
+  let selectedFolderOption = $derived.by(() => {
+    return (
+      targetFolderOptions.find((opt) => opt.folderName === targetFolderName) ??
+      null
+    );
+  });
+
+  let hasRegionIncompatibility = $derived.by(() => {
+    if (!targetInstall || !transferSourceSave) return false;
+    if (selectedFolderOption && selectedFolderOption.disabled) return true;
+    return false;
+  });
+
+  $effect(() => {
+    if (showTransferModal && targetInstall && targetFolderOptions.length > 0) {
+      const currentOpt = targetFolderOptions.find(
+        (opt) => opt.folderName === targetFolderName,
+      );
+      if (!currentOpt || currentOpt.disabled) {
+        // Priority 1: Match source folder if available and enabled
+        const matchingSource = targetFolderOptions.find(
+          (opt) =>
+            !opt.disabled &&
+            transferSourceSave &&
+            opt.folderName === transferSourceSave.folderName,
+        );
+        if (matchingSource) {
+          targetFolderName = matchingSource.folderName;
+          return;
+        }
+
+        // Priority 2: Match region
+        const matchingRegion = targetFolderOptions.find(
+          (opt) =>
+            !opt.disabled && opt.region && opt.region === transferSourceRegion,
+        );
+        if (matchingRegion) {
+          targetFolderName = matchingRegion.folderName;
+          return;
+        }
+
+        // Priority 3: First enabled option
+        const firstEnabled = targetFolderOptions.find((opt) => !opt.disabled);
+        targetFolderName = firstEnabled
+          ? firstEnabled.folderName
+          : targetFolderOptions[0].folderName;
+      }
+    }
+  });
+
   let targetSlotOccupied = $derived.by(() => {
     if (!targetInstall) return false;
     return targetInstall.saves.some(
       (s) =>
         s.slotNumber === targetSlotNumber &&
-        (targetFolderName === "default" || s.folderName === targetFolderName),
+        (s.folderName === targetFolderName ||
+          (targetFolderName === "default" &&
+            (!s.folderName || s.folderName === "default"))),
     );
   });
 
@@ -180,7 +291,13 @@
   }
 
   async function executeTransfer() {
-    if (!currentGame || !transferSourceSave || !targetInstallId) return;
+    if (
+      !currentGame ||
+      !transferSourceSave ||
+      !targetInstallId ||
+      hasRegionIncompatibility
+    )
+      return;
 
     performingAction = true;
     try {
@@ -482,119 +599,135 @@
       </div>
     </div>
 
-    <!-- Regional Folders Navigation View: If multiple folders exist and none is selected, show folders cards -->
-    {#if availableFolders.length > 1 && selectedFolderName === null}
-      <div class="space-y-3 mt-1">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2
-              class="text-base font-bold text-neutral-200 flex items-center gap-2"
-            >
-              <IconFolder class="w-5 h-5 text-amber-400" />
-              {$_("saveManager_folders")}
-            </h2>
-            <p class="text-xs text-neutral-400">
-              {$_("saveManager_selectFolder")}
-            </p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {#each availableFolders as folder (folder.folderName)}
-            <button
-              type="button"
-              class="flex flex-col text-left p-4 rounded-xl border bg-neutral-900/80 border-neutral-700/80 hover:border-amber-500 hover:bg-neutral-800/80 transition-all cursor-pointer group shadow-md"
-              onclick={() => (selectedFolderName = folder.folderName)}
-            >
-              <div class="flex items-center justify-between mb-3">
-                <div
-                  class="p-2.5 rounded-lg bg-neutral-800 group-hover:bg-amber-500/20 text-amber-400 transition-colors"
-                >
-                  <IconFolder class="w-6 h-6" />
-                </div>
-                {#if folder.region === "NTSC-U"}
-                  <Badge color="indigo" class="text-xs">NTSC-U (Americas)</Badge
-                  >
-                {:else if folder.region === "PAL"}
-                  <Badge color="purple" class="text-xs">PAL (Europe)</Badge>
-                {:else if folder.region === "NTSC-J"}
-                  <Badge color="red" class="text-xs">NTSC-J (Japan)</Badge>
-                {:else if folder.folderName === "default"}
-                  <Badge color="gray" class="text-xs">Standard</Badge>
-                {:else}
-                  <Badge color="gray" class="text-xs">Custom Region</Badge>
-                {/if}
-              </div>
-
-              <div class="flex-1">
-                <h3
-                  class="font-bold text-base text-neutral-100 group-hover:text-amber-400 transition-colors"
-                >
-                  {folder.displayName}
-                </h3>
-                <p class="text-xs font-mono text-neutral-400 mt-1 truncate">
-                  {folder.folderName}
-                </p>
-              </div>
-
-              <div
-                class="flex items-center justify-between pt-3 mt-3 border-t border-neutral-800 text-xs text-neutral-400"
-              >
-                <span>
-                  {folder.saves.length === 0
-                    ? "0 saves"
-                    : folder.saves.length === 1
-                      ? "1 save"
-                      : `${folder.saves.length} saves`}
-                </span>
-                <span
-                  class="text-amber-400 font-semibold group-hover:translate-x-0.5 transition-transform"
-                >
-                  View Slots &rarr;
-                </span>
-              </div>
-            </button>
-          {/each}
-        </div>
-      </div>
-    {:else}
-      <!-- Folder Header / Switcher when inside a folder -->
-      {#if availableFolders.length > 1}
+    <!-- Save Folders View: If no folder is selected, show folders cards (or empty state) -->
+    {#if selectedFolderName === null}
+      {#if availableFolders.length === 0}
         <div
-          class="flex flex-wrap items-center justify-between gap-3 bg-neutral-900/70 p-3 rounded-lg border border-neutral-800"
+          class="flex flex-col items-center justify-center py-16 px-4 text-center bg-neutral-900/50 rounded-xl border border-dashed border-neutral-700 mt-2"
         >
-          <div class="flex items-center gap-2">
-            <Button
-              id="btn-back-folders"
-              size="xs"
-              outline
-              class="border-neutral-600 text-neutral-300 hover:bg-neutral-800"
-              onclick={() => (selectedFolderName = null)}
-            >
-              <IconArrowLeft class="w-3.5 h-3.5 mr-1" />
-              {$_("saveManager_allFolders")}
-            </Button>
-            <Tooltip
-              triggeredBy="#btn-back-folders"
-              placement="bottom"
-              type="dark"
-            >
-              View all save folders and regions
-            </Tooltip>
-
-            <div class="h-4 border-l border-neutral-700 mx-1"></div>
-
-            <IconFolder class="w-4 h-4 text-amber-400" />
-            <span class="font-bold text-sm text-neutral-200">
-              {activeFolder?.displayName ?? selectedFolderName}
-            </span>
-            {#if activeFolder?.region}
-              <Badge color="indigo" class="text-xs">{activeFolder.region}</Badge
+          <div class="p-3 rounded-full bg-neutral-800 text-neutral-400 mb-3">
+            <IconFolder class="w-8 h-8" />
+          </div>
+          <h3 class="text-base font-semibold text-neutral-200">
+            {$_("saveManager_noFolderFoundTitle")}
+          </h3>
+          <p class="text-xs text-neutral-400 max-w-md mt-1">
+            {$_("saveManager_noFolderFoundDesc")}
+          </p>
+        </div>
+      {:else}
+        <div class="space-y-3 mt-1">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2
+                class="text-base font-bold text-neutral-200 flex items-center gap-2"
               >
-            {/if}
+                <IconFolder class="w-5 h-5 text-amber-400" />
+                {$_("saveManager_folders")}
+              </h2>
+              <p class="text-xs text-neutral-400">
+                {$_("saveManager_selectFolder")}
+              </p>
+            </div>
           </div>
 
-          <!-- Quick Folder Switcher Tabs -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {#each availableFolders as folder (folder.folderName)}
+              <button
+                type="button"
+                class="flex flex-col text-left p-4 rounded-xl border bg-neutral-900/80 border-neutral-700/80 hover:border-amber-500 hover:bg-neutral-800/80 transition-all cursor-pointer group shadow-md"
+                onclick={() => (selectedFolderName = folder.folderName)}
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <div
+                    class="p-2.5 rounded-lg bg-neutral-800 group-hover:bg-amber-500/20 text-amber-400 transition-colors"
+                  >
+                    <IconFolder class="w-6 h-6" />
+                  </div>
+                  {#if folder.region === "NTSC-U"}
+                    <Badge color="indigo" class="text-xs"
+                      >NTSC-U (Americas)</Badge
+                    >
+                  {:else if folder.region === "PAL"}
+                    <Badge color="purple" class="text-xs">PAL (Europe)</Badge>
+                  {:else if folder.region === "NTSC-J"}
+                    <Badge color="red" class="text-xs">NTSC-J (Japan)</Badge>
+                  {:else if folder.folderName === "default"}
+                    <Badge color="gray" class="text-xs">Standard</Badge>
+                  {:else}
+                    <Badge color="gray" class="text-xs">Custom Region</Badge>
+                  {/if}
+                </div>
+
+                <div class="flex-1">
+                  <h3
+                    class="font-bold text-base text-neutral-100 group-hover:text-amber-400 transition-colors"
+                  >
+                    {folder.displayName}
+                  </h3>
+                  <p class="text-xs font-mono text-neutral-400 mt-1 truncate">
+                    {folder.folderName}
+                  </p>
+                </div>
+
+                <div
+                  class="flex items-center justify-between pt-3 mt-3 border-t border-neutral-800 text-xs text-neutral-400"
+                >
+                  <span>
+                    {folder.saves.length === 0
+                      ? "0 saves"
+                      : folder.saves.length === 1
+                        ? "1 save"
+                        : `${folder.saves.length} saves`}
+                  </span>
+                  <span
+                    class="text-amber-400 font-semibold group-hover:translate-x-0.5 transition-transform"
+                  >
+                    View Slots &rarr;
+                  </span>
+                </div>
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
+    {:else}
+      <!-- Folder Header / Switcher when inside a folder: ALWAYS shown when a folder is selected -->
+      <div
+        class="flex flex-wrap items-center justify-between gap-3 bg-neutral-900/70 p-3 rounded-lg border border-neutral-800"
+      >
+        <div class="flex items-center gap-2">
+          <Button
+            id="btn-back-folders"
+            size="xs"
+            outline
+            class="border-neutral-600 text-neutral-300 hover:bg-neutral-800"
+            onclick={() => (selectedFolderName = null)}
+          >
+            <IconArrowLeft class="w-3.5 h-3.5 mr-1" />
+            {$_("saveManager_allFolders")}
+          </Button>
+          <Tooltip
+            triggeredBy="#btn-back-folders"
+            placement="bottom"
+            type="dark"
+          >
+            {$_("saveManager_allFolders")}
+          </Tooltip>
+
+          <div class="h-4 border-l border-neutral-700 mx-1"></div>
+
+          <IconFolder class="w-4 h-4 text-amber-400" />
+          <span class="font-bold text-sm text-neutral-200">
+            {activeFolder?.displayName ?? selectedFolderName}
+          </span>
+          {#if activeFolder?.region}
+            <Badge color="indigo" class="text-xs">{activeFolder.region}</Badge>
+          {/if}
+        </div>
+
+        <!-- Quick Folder Switcher Tabs if multiple folders exist -->
+        {#if availableFolders.length > 1}
           <div class="flex items-center gap-1.5">
             {#each availableFolders as f (f.folderName)}
               <button
@@ -609,6 +742,14 @@
               </button>
             {/each}
           </div>
+        {/if}
+      </div>
+
+      {#if currentFolderSaves.length === 0}
+        <div
+          class="text-xs text-neutral-400 bg-neutral-900/40 p-3 rounded-lg border border-neutral-800 flex items-center gap-2"
+        >
+          <span>{$_("saveManager_emptyFolderHelp")}</span>
         </div>
       {/if}
 
@@ -777,8 +918,8 @@
       </select>
     </div>
 
-    <!-- Destination Folder Selector if target has folders -->
-    {#if targetInstall && targetInstall.folders.length > 1}
+    <!-- Destination Folder Selector -->
+    {#if targetInstall && targetFolderOptions.length > 0}
       <div>
         <label
           for="target-folder"
@@ -791,13 +932,32 @@
           bind:value={targetFolderName}
           class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-sm text-white focus:ring-amber-500 focus:border-amber-500"
         >
-          {#each targetInstall.folders as f (f.folderName)}
-            <option value={f.folderName}>
-              {f.displayName}
+          {#each targetFolderOptions as opt (opt.folderName)}
+            <option value={opt.folderName} disabled={opt.disabled}>
+              {opt.displayName}
             </option>
           {/each}
         </select>
       </div>
+    {/if}
+
+    {#if hasRegionIncompatibility}
+      <Alert
+        color="red"
+        class="bg-red-950/40 border border-red-700/60 text-red-200 text-xs p-3 rounded space-y-1"
+      >
+        <div class="font-bold">
+          {$_("saveManager_incompatibleRegionTitle")}
+        </div>
+        <div>
+          {$_("saveManager_incompatibleRegionMessage")}
+        </div>
+        {#if transferSourceRegion}
+          <div class="font-semibold text-amber-300 pt-0.5">
+            Source Region: {transferSourceRegion}
+          </div>
+        {/if}
+      </Alert>
     {/if}
 
     <!-- Target Slot Selector -->
@@ -816,7 +976,7 @@
         {#each currentGame === "jak1" ? [0, 1, 2, 3] : [0, 1, 2, 3, 4, 5, 6, 7] as slotIdx}
           <option value={slotIdx}>
             Slot {slotIdx + 1}
-            {#if targetInstall?.saves.some((s) => s.slotNumber === slotIdx && (targetFolderName === "default" || s.folderName === targetFolderName))}
+            {#if targetInstall?.saves.some((s) => s.slotNumber === slotIdx && (s.folderName === targetFolderName || (targetFolderName === "default" && (!s.folderName || s.folderName === "default"))))}
               (Occupied - Will overwrite)
             {/if}
           </option>
@@ -857,7 +1017,9 @@
       <Button
         size="sm"
         class="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
-        disabled={performingAction || !targetInstallId}
+        disabled={performingAction ||
+          !targetInstallId ||
+          hasRegionIncompatibility}
         onclick={executeTransfer}
       >
         {#if performingAction}

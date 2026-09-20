@@ -291,7 +291,7 @@
   "saveManager_refresh": "Refresh",
   "saveManager_back": "Back",
   "saveManager_game": "Game",
-  "saveManager_folders": "Save Folders & Regions",
+  "saveManager_folders": "Save Folders by region",
   "saveManager_allFolders": "All Folders",
   "saveManager_selectFolder": "Select a folder to view its save slots",
   "saveManager_folderRegion": "Region",
@@ -301,6 +301,11 @@
   "saveManager_tooltip_openFolder": "Open current save directory in file explorer",
   "saveManager_tooltip_copy": "Copy or move this save slot to another installation",
   "saveManager_tooltip_backup": "Create a timestamped backup copy of this save",
-  "saveManager_tooltip_delete": "Permanently delete this save file"
+  "saveManager_tooltip_delete": "Permanently delete this save file",
+  "saveManager_noFolderFoundTitle": "No Save Directory Found",
+  "saveManager_noFolderFoundDesc": "No save directory exists yet for this installation. Launch the game or mod at least once to create it automatically.",
+  "saveManager_incompatibleRegionTitle": "Regional Incompatibility",
+  "saveManager_incompatibleRegionMessage": "This save belongs to a different game region and cannot be transferred to this installation. Cross-region transfers (e.g. PAL to NTSC-U) are disabled to prevent save corruption.",
+  "saveManager_noCompatibleFolder": "No compatible region folder in destination.",
+  "saveManager_emptyFolderHelp": "This folder is currently empty. Start or save a game in this region, or transfer a compatible save file here."
 }
-
