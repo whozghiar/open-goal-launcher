@@ -395,5 +395,3 @@ pub async fn does_active_tooling_version_meet_minimum(
     Ok(false)
   }
 }
-
-

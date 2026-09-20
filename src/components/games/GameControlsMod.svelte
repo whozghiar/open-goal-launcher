@@ -3,7 +3,7 @@
   import IconArrowLeft from "~icons/mdi/arrow-left";
   import IconCog from "~icons/mdi/cog";
   import OpenInNew from "~icons/mdi/open-in-new";
-  import { configDir, join } from "@tauri-apps/api/path";
+  import { join } from "@tauri-apps/api/path";
   import { onDestroy, onMount } from "svelte";
   import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { confirm } from "@tauri-apps/plugin-dialog";
@@ -504,7 +504,7 @@
           simple
           trigger="hover"
           placement="top-end"
-          class="dark:bg-slate-900! **:w-full min-w-[22rem]"
+          class="dark:bg-slate-900! **:w-full"
         >
           <!-- TODO - screenshot folder? how do we even configure where those go? -->
           {#if settingsDir}
