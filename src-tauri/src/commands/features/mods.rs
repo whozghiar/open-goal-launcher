@@ -445,7 +445,6 @@ pub async fn save_mod_install_info(
   Ok(())
 }
 
-// Builds the command-line arguments to launch an OpenGOAL mod with gk.
 fn generate_launch_mod_args(
   game_name: SupportedGame,
   in_debug: bool,
@@ -464,12 +463,10 @@ fn generate_launch_mod_args(
     game_name.to_string(),
     "--config-path".to_string(),
     config_dir_adjusted,
+    "--".to_string(),
+    "-boot".to_string(),
+    "-fakeiso".to_string(),
   ];
-
-  args.push("--".to_string());
-  args.push("-boot".to_string());
-  args.push("-fakeiso".to_string());
-
   if in_debug {
     args.push("-debug".to_string());
   }
@@ -477,7 +474,6 @@ fn generate_launch_mod_args(
   Ok(args)
 }
 
-// Launches a mod executable with the configured arguments and logging.
 #[instrument(skip(config, app_handle))]
 #[tauri::command]
 pub async fn launch_mod(
@@ -613,7 +609,6 @@ pub async fn reset_mod_settings(
   Ok(())
 }
 
-// Generates the full command-line invocation string to launch a mod.
 #[instrument(skip(config))]
 #[tauri::command]
 pub async fn get_launch_mod_string(

@@ -492,7 +492,7 @@
           simple
           trigger="hover"
           placement="top-end"
-          class="dark:bg-slate-900! **:w-full min-w-[22rem]"
+          class="dark:bg-slate-900! **:w-full"
         >
           <!-- TODO - screenshot folder? how do we even configure where those go? -->
           {#if settingsDir}
