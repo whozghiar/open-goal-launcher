@@ -4,11 +4,14 @@ on:
   push:
     branches:
       - main
+      - master-dev
     tags:
       - v*
   pull_request:
     branches:
       - main
+      - master-dev
+  workflow_dispatch:
 
 jobs:
   build:
@@ -80,3 +83,19 @@ jobs:
         with:
           name: AppImage Bundle
           path: ./src-tauri/target/release/bundle/appimage/*.AppImage
+
+      - name: Upload Windows installer
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Windows Installer
+          path: ./src-tauri/target/release/bundle/msi/*.msi
+
+      - name: Upload macOS bundle
+        if: startsWith(matrix.platform, 'macos')
+        uses: actions/upload-artifact@v7
+        with:
+          name: macOS Bundle (${{ matrix.platform }})
+          path: |
+            ./src-tauri/target/release/bundle/dmg/*.dmg
+            ./src-tauri/target/release/bundle/macos/*.app

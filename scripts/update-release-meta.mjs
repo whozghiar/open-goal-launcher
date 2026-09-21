@@ -157,32 +157,33 @@ for (var i = 0; i < releaseAssets.length; i++) {
   }
 }
 
-// Make the download links idempotent instead of using 'latest' which is a moving target
-// if the asset doesn't contain the version number (the macOS ones don't)
-//
-// - /releases/latest/download/ replace with /releases/download/v${version}/
-const currentVersion = jsonOutput.version;
-const replacementDownloadSubstring = `/releases/download/v${currentVersion}/`;
-for (const [key, value] of Object.entries(jsonOutput.platforms)) {
-  jsonOutput.platforms[key].url = value.url.replace(
-    "/releases/latest/download/",
-    replacementDownloadSubstring,
+if (jsonOutput !== undefined) {
+  // Make the download links idempotent instead of using 'latest' which is a moving target
+  // if the asset doesn't contain the version number (the macOS ones don't)
+  //
+  // - /releases/latest/download/ replace with /releases/download/v${version}/
+  const currentVersion = jsonOutput.version;
+  const replacementDownloadSubstring = `/releases/download/v${currentVersion}/`;
+  for (const [key, value] of Object.entries(jsonOutput.platforms)) {
+    jsonOutput.platforms[key].url = value.url.replace(
+      "/releases/latest/download/",
+      replacementDownloadSubstring,
+    );
+  }
+
+  jsonOutput.notes = JSON.stringify({
+    changes: launcherChanges,
+  });
+
+  fs.writeFileSync(
+    "./.tauri/latest-release-v2.json",
+    JSON.stringify(jsonOutput, null, 2) + "\n",
+  );
+} else {
+  console.log(
+    "Didn't find 'latest.json' asset in release (updater artifacts not generated). Skipping .tauri/latest-release-v2.json update.",
   );
 }
-
-if (jsonOutput === undefined) {
-  console.log(`Didn't find 'latest.json' asset in release`);
-  process.exit(1);
-}
-
-jsonOutput.notes = JSON.stringify({
-  changes: launcherChanges,
-});
-
-fs.writeFileSync(
-  "./.tauri/latest-release-v2.json",
-  JSON.stringify(jsonOutput, null, 2) + "\n",
-);
 
 // Publish the release
 await octokit.rest.repos.updateRelease({
