@@ -50,7 +50,7 @@ jobs:
           sed -i "/APP_VERSION/c\version = \""$NEW_VERSION"\" # APP_VERSION" ./src-tauri/Cargo.toml
           sed -i "/\"version\":/c\  \"version\": \""$NEW_VERSION"\"", ./src-tauri/tauri.conf.json
           cd ./src-tauri
-          cargo update --workspace --offline
+          cargo update -p opengoal-launcher
           cd ..
           echo "new_tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo -e "---\nVersion: $NEW_VERSION\nDate: $(date +'%Y-%m-%d')\n---" > resources/metadata/news.yaml
