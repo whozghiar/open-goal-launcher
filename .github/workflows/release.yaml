@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
           ref: ${{ github.ref_name }}
 
       - name: Setup Node
@@ -50,7 +50,7 @@ jobs:
           sed -i "/APP_VERSION/c\version = \""$NEW_VERSION"\" # APP_VERSION" ./src-tauri/Cargo.toml
           sed -i "/\"version\":/c\  \"version\": \""$NEW_VERSION"\"", ./src-tauri/tauri.conf.json
           cd ./src-tauri
-          cargo generate-lockfile
+          cargo update --workspace --offline
           cd ..
           echo "new_tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo -e "---\nVersion: $NEW_VERSION\nDate: $(date +'%Y-%m-%d')\n---" > resources/metadata/news.yaml
@@ -61,8 +61,6 @@ jobs:
         uses: EndBug/add-and-commit@v11
         with:
           default_author: github_actor
-          author_name: "OpenGOALBot"
-          author_email: "OpenGOALBot@users.noreply.github.com"
           message: "release: bump to version - ${{ steps.version_bump.outputs.new_tag }}"
           tag: "${{ steps.version_bump.outputs.new_tag }}"
 
@@ -80,7 +78,7 @@ jobs:
       # Create the release, use `gh` CLI so we can auto generate the notes
       - name: Create Release
         env:
-          GH_TOKEN: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release create ${{needs.create-tag.outputs.new_tag}} --generate-notes --draft --repo ${{ github.repository }}
 
@@ -98,7 +96,7 @@ jobs:
       - name: Get Release ID
         id: get_release_id
         env:
-          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
         run: |
@@ -182,7 +180,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref_name }}
-          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
 
       - name: setup node
         uses: actions/setup-node@v7
@@ -193,7 +191,7 @@ jobs:
       - name: update release metadata and publish the release
         env:
           RELEASE_ID: ${{needs.create-release.outputs.release_id}}
-          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
         run: |
@@ -204,6 +202,4 @@ jobs:
         uses: EndBug/add-and-commit@v11
         with:
           default_author: github_actor
-          author_name: "OpenGOALBot"
-          author_email: "OpenGOALBot@users.noreply.github.com"
           message: "release: update release metadata to latest"
