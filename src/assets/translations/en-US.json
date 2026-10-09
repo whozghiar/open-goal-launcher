@@ -69,7 +69,7 @@
   "gameUpdate_versionMismatch_title": "Version Mismatch Detected!",
   "gameUpdate_versionMismatch_type": "Type",
   "gameUpdate_versionMismatch_version": "Version",
-  "header_launcherVersionLabel": "Launcher (customized by whozghiar) :",
+  "header_launcherVersionLabel": "Launcher",
   "header_toolingVersionLabel": "Tooling",
   "header_modVersionLabel": "Mod Version",
   "header_updateAvailable": "Update Available!",
