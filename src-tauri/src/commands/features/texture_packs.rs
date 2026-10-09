@@ -267,8 +267,7 @@ pub async fn update_mod_texture_pack_data(
   let config_lock = config.lock().await;
   let install_dir = config_lock.install_dir()?;
 
-  let texture_packs = config_lock
-    .get_mod_texture_packs(game_name, &source_name, &mod_name)?;
+  let texture_packs = config_lock.get_mod_texture_packs(game_name, &source_name, &mod_name)?;
 
   let mod_texture_pack_dir = install_dir
     .join("features")
@@ -297,7 +296,10 @@ pub async fn update_mod_texture_pack_data(
       .join(game_name.to_string())
       .join("texture_replacements");
 
-    info!("Appending textures to mod from: {}", texture_pack_dir.display());
+    info!(
+      "Appending textures to mod from: {}",
+      texture_pack_dir.display()
+    );
     overwrite_dir(&texture_pack_dir, &mod_texture_pack_dir)?;
   }
   return Ok(());

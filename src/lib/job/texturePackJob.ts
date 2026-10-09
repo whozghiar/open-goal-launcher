@@ -9,6 +9,7 @@ import {
   updateTexturePackData,
   updateModTexturePackData,
   decompileForModInstall,
+  compileForModInstall,
 } from "$lib/rpc/features";
 import { jobTracker, type JobStep } from "$lib/stores/JobStore";
 import { unwrapFunctionStore, format } from "svelte-i18n";
@@ -79,6 +80,24 @@ export async function setupTexturePacks(
         label: $format("setup_decompile"),
         task: async () => {
           let error = await decompileForModInstall(
+            activeGame,
+            modName,
+            modSourceName,
+          );
+          if (error) {
+            jobTracker.updateFailureReason(error);
+            return false;
+          }
+          return true;
+        },
+      },
+      {
+        // Custom levels/models (e.g. assets ported from another game) bake
+        // their textures at compile time, so a decompile alone leaves them stale
+        status: "queued",
+        label: $format("setup_compile"),
+        task: async () => {
+          let error = await compileForModInstall(
             activeGame,
             modName,
             modSourceName,

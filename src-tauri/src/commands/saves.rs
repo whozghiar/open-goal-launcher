@@ -76,7 +76,6 @@ fn detect_region_and_display(folder_name: &str) -> (Option<String>, String) {
   (region, display_name)
 }
 
-
 fn parse_slot_number(file_name: &str) -> Option<u8> {
   let base_name = Path::new(file_name)
     .file_name()
