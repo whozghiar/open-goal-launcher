@@ -461,11 +461,14 @@
 
       <div class="grid grid-cols-1 gap-4">
         {#each affiliatedPacks as pack (pack.key)}
+          {@const isApplied = initialEnabledState[pack.key]}
           <div
             class={`flex flex-col md:flex-row gap-5 p-5 rounded-xl border transition-all duration-200 ${
-              pack.isEnabled
-                ? "border-green-500/50 bg-green-950/10 shadow-[0_4px_20px_rgba(34,197,94,0.08)]"
-                : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700"
+              pack.isEnabled !== isApplied
+                ? "border-amber-500/50 bg-amber-950/10"
+                : isApplied
+                  ? "border-green-500/50 bg-green-950/10 shadow-[0_4px_20px_rgba(34,197,94,0.08)]"
+                  : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700"
             }`}
           >
             <!-- Thumbnail / Cover Art -->
@@ -480,7 +483,7 @@
                   (e.currentTarget as HTMLImageElement).src = placeholder;
                 }}
               />
-              {#if pack.isEnabled}
+              {#if isApplied}
                 <div
                   class="absolute top-2 left-2 bg-green-500 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md"
                 >
@@ -559,7 +562,7 @@
                 class="flex items-center justify-between border-t border-zinc-800/60 pt-3"
               >
                 <div class="text-xs">
-                  {#if pack.isEnabled}
+                  {#if isApplied}
                     <span class="text-green-400 font-medium"
                       >{$_("features_modTextures_packActiveDescription")}</span
                     >
