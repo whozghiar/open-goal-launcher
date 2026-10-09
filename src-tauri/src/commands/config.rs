@@ -77,9 +77,7 @@ pub async fn set_mod_texture_packs(
   let mut config_lock = config.lock().await;
   config_lock
     .set_mod_texture_packs(game_name, &source_name, &mod_name, texture_packs)
-    .map_err(|_| {
-      CommandError::Configuration("Unable to save mod texture packs".to_owned())
-    })?;
+    .map_err(|_| CommandError::Configuration("Unable to save mod texture packs".to_owned()))?;
   Ok(())
 }
 
@@ -415,4 +413,3 @@ pub async fn set_mod_share_vanilla_saves(
     })?;
   Ok(())
 }
-
