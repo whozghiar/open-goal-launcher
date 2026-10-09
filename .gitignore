@@ -48,3 +48,8 @@ coverage/
 *.pem
 
 package-lock.json
+
+# Tauri keys
+*.key
+*.key.pub
+~/.tauri/

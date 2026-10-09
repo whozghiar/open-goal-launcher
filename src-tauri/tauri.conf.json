@@ -33,9 +33,9 @@
     "updater": {
       "active": false,
       "dialog": false,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM5Q0RCMDMyRkYwQTQxOTIKUldTU1FRci9NckROT1FERSs0UjhTNzRsTHU0cjZGdTZzN1FTWGF4aldYdGFlTG56eWc5Uko4YzkK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDRDkzN0E4NjZBMzUwQkIKUldTN1VLTm1xRGZaUEZ2NW1Xd2dhYndscFFHNGdsdndjYTN1TG9MT0ZWZlIyZXpEeEtNNzBUS1MK",
       "endpoints": [
-        "https://raw.githubusercontent.com/open-goal/launcher/main/.tauri/latest-release-v2.json"
+        "https://raw.githubusercontent.com/whozghiar/open-goal-launcher/main/.tauri/latest-release-v2.json"
       ]
     },
     "opener": {
