@@ -46,7 +46,10 @@
 
   onMount(async () => {
     // Get current versions
-    launcherVersion = `v${await getVersion()}`;
+    const appVersion = await getVersion();
+    launcherVersion = appVersion.includes("whozghiar")
+      ? `v${appVersion}`
+      : `v${appVersion}-whozghiar`;
 
     // Check for a launcher update
     if (!isInDebugMode()) {
