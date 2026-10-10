@@ -269,13 +269,14 @@ pub async fn update_mod_texture_pack_data(
 
   let texture_packs = config_lock.get_mod_texture_packs(game_name, &source_name, &mod_name)?;
 
-  let mod_texture_pack_dir = install_dir
+  let mod_data_dir = install_dir
     .join("features")
     .join(game_name.to_string())
     .join("mods")
     .join(&source_name)
     .join(&mod_name)
-    .join("data")
+    .join("data");
+  let mod_texture_pack_dir = mod_data_dir
     .join("custom_assets")
     .join(game_name.to_string())
     .join("texture_replacements");
@@ -283,6 +284,25 @@ pub async fn update_mod_texture_pack_data(
   // Reset mod texture replacement directory
   delete_dir(&mod_texture_pack_dir)?;
   create_dir(&mod_texture_pack_dir)?;
+  // The compile's incremental steps go by file dates and miss a pack change (copied PNGs keep the
+  // pack's old dates, a removed pack leaves none), so the old textures would stay baked:
+  // - a level port (custom_assets/<game>/ports) re-extracts its source game only when that
+  //   extraction is missing or older than a replacement PNG: drop it (the decompile remakes ours)
+  delete_dir(mod_data_dir.join("decompiler_out"))?;
+  // - goalc rebuilds a custom level only when its .jsonc is newer than its output: touch them
+  let levels_pattern = mod_data_dir
+    .join("custom_assets")
+    .join(game_name.to_string())
+    .join("levels/**/*.jsonc");
+  for level in glob::glob(&levels_pattern.to_string_lossy())
+    .context("Invalid custom levels pattern")?
+    .flatten()
+  {
+    fs::File::options()
+      .write(true)
+      .open(&level)?
+      .set_modified(std::time::SystemTime::now())?;
+  }
 
   drop(config_lock);
 
