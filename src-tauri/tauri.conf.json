@@ -35,7 +35,7 @@
       "dialog": false,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDRDkzN0E4NjZBMzUwQkIKUldTN1VLTm1xRGZaUEZ2NW1Xd2dhYndscFFHNGdsdndjYTN1TG9MT0ZWZlIyZXpEeEtNNzBUS1MK",
       "endpoints": [
-        "https://raw.githubusercontent.com/whozghiar/open-goal-launcher/main/.tauri/latest-release-v2.json"
+        "https://raw.githubusercontent.com/whozghiar/open-goal-launcher/master-dev/.tauri/latest-release-v2.json"
       ]
     },
     "opener": {
