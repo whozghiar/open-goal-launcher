@@ -1,198 +1,186 @@
-> **Language / Langue :** [🇬🇧 English Version](#-english-version) &nbsp;•&nbsp; [🇫🇷 Version Française](#-version-française)
+# Saves Manager
 
-## Summary / Sommaire
+The Saves Manager lists the save files of every OpenGOAL game and every installed mod on one screen. From there you can copy, move, back up or delete a save without opening a file explorer.
 
-- [🇬🇧 English Version](#-english-version)
-  - [1. What This Feature Brings](#1-what-this-feature-brings)
-  - [2. How the Feature Works](#2-how-the-feature-works)
-  - [3. How it Integrates into the Architecture](#3-how-it-integrates-into-the-architecture)
-  - [4. New Files Created](#4-new-files-created)
-  - [5. Overview of Changes from the Original Project](#5-overview-of-changes-from-the-original-project)
-- [🇫🇷 Version Française](#-version-française)
-  - [1. Qu'est-ce qu'elle apporte](#1-quest-ce-quelle-apporte)
-  - [2. Comment fonctionne la fonctionnalité](#2-comment-fonctionne-la-fonctionnalité)
-  - [3. Comment elle s'intègre dans l'architecture](#3-comment-elle-sintègre-dans-larchitecture)
-  - [4. Quels sont les nouveaux fichiers](#4-quels-sont-les-nouveaux-fichiers)
-  - [5. Quels sont les modifications dans les grandes lignes](#5-quels-sont-les-modifications-dans-les-grandes-lignes)
+Screenshots in this document come from launcher 1.0.2 built from `master-dev`, on Windows.
 
----
+## Contents
 
-# 🇬🇧 English Version
+- [1. What this feature brings](#1-what-this-feature-brings)
+- [2. How the feature works](#2-how-the-feature-works)
+- [3. How it integrates into the architecture](#3-how-it-integrates-into-the-architecture)
+- [4. New files created](#4-new-files-created)
+- [5. Overview of changes from the original project](#5-overview-of-changes-from-the-original-project)
 
-## 1. What This Feature Brings
+## 1. What this feature brings
 
-The **Saves Manager** introduces a comprehensive, safe, and intuitive interface to inspect, copy, move, backup, and delete game saves across all installations of supported OpenGOAL games (vanilla base games and every installed community mod).
+Each installation keeps its saves in a different folder:
 
-### Key Highlights
+- The base game writes to `%APPDATA%\OpenGOAL\<game>\saves` on Windows and `~/.config/OpenGOAL/<game>/saves` on Linux.
+- Each mod is launched with its own settings folder, so its saves live in `<install dir>/features/<game>/mods/<source>/_settings/<mod>/OpenGOAL/<game>/saves`. This keeps mod saves away from the base game, but it also hides them.
 
-- **Multi-Game Selection**: Switch seamlessly between Jak 1, Jak 2, and Jak 3 directly inside the Saves Manager interface via a top selector bar.
-- **Regional Save Folders & Subdirectories**: Supports OpenGOAL's regional folder structure (e.g. `BASCUS-97265AYBABTU!`, `BESCES-51608AYBABTU!`). Users can browse regional folders and inspect slot cards within each folder.
-- **Multi-Install Visibility**: Displays save slots for both the vanilla game and installed mods with dedicated status indicators and badges.
-- **Milestone & Progress Recognition**: Displays furthest completed tasks and in-game milestones (e.g. Geyser Rock, Forbidden Jungle) directly on the save slot cards.
-- **Safe Transfers & Automatic Backups**: Allows copying or moving saves between installations, automatically generating timestamped `.bak` files upon overwrite.
-- **Accidental Deletion Protection**: Includes a confirmation modal before deleting any save file to prevent data loss.
-- **Action Tooltips & Unified Styling**: Rich tooltips on hover for every button and consistent amber/orange styling (`bg-amber-500 hover:bg-amber-600`) across all confirmation and action buttons.
+Before this feature, comparing saves or moving one from the base game to a mod meant finding both folders by hand and renaming files.
 
-```
-+-------------------------------------------------------------------------+
-| Saves Manager                                       [Refresh] [Open Folder] |
-| Game: [Jak & Daxter] [Jak II] [Jak 3]                                   |
-| Install: [Vanilla Game] [Blue Krimzon Guard (Mod)]                      |
-+-------------------------------------------------------------------------+
-| Folders: [ BASCUS-97265AYBABTU! ]  [ BESCES-51608AYBABTU! ]             |
-+-------------------------------------------------------------------------+
-| [ Slot 1: Active ]   [ Slot 2: Active ]   [ Slot 3: Empty ]  [ Slot 4 ] |
-| Progress: GEYSER     Progress: JUNGLE     (No save file)                |
-| Size: 45.2 KB        Size: 45.2 KB                                      |
-| [Copy/Move] [Bk] [Del]                                                  |
-+-------------------------------------------------------------------------+
-```
+The Saves Manager adds:
 
----
+- One list of saves for the base game and for every installed mod, for Jak and Daxter, Jak II, Jak 3 and Jak X.
+- Saves grouped by region folder (NTSC-U, PAL, NTSC-J).
+- Copy and move between installations, with the choice of destination folder and slot.
+- An automatic backup of any save that a transfer would overwrite.
+- A manual backup button and a delete button that asks for confirmation.
+- A button that opens the current save folder in the system file explorer.
 
-## 2. How the Feature Works
+What it does not do: it does not read the content of a save, so it shows no progress or completion data. It only shows file size and last modification date.
 
-### Save Inspection & Folder Lifecycle
+## 2. How the feature works
 
-1. When opening the Saves Manager (`/:game_name/saves`), the frontend queries installations for the selected game via `list_game_save_installs`.
-2. The Rust backend inspects:
-   - Vanilla save directory (`%APPDATA%/OpenGOAL/<game>/saves` on Windows or `~/.config/OpenGOAL/<game>/saves` on Linux).
-   - Mod save directories (`<install_dir>/features/<game>/mods/<source>/_settings/<mod>/...`).
-3. Discovered directories are scanned for regional folders (`BASCUS-*`, `BESCES-*`, `default`).
-4. Save files (`.bin`) within each folder are parsed to determine file size, modification timestamps, slot indices, and completed milestones.
+### Opening the screen
 
-### Transfer, Backup & Deletion Lifecycle
+From the page of an installed game, hover **Advanced** and choose **Open Saves Manager**.
 
-1. **Copy / Move**: When clicking **Copy To...**, a modal lets users select the destination install, target folder, and target slot. Users can toggle whether to move (delete source) or copy. If the destination slot is occupied, an automatic timestamped backup (`.bak-<timestamp>`) is created.
-2. **Backup**: Creates a standalone timestamped backup of the selected save slot.
-3. **Delete**: Triggers a safety confirmation modal to confirm deletion before invoking `delete_save`.
-4. **Open Folder**: Launches the native file explorer to inspect the current save folder via `open_save_folder`.
+![The Advanced menu on the Jak II page, with Open Saves Manager at the bottom](../img/save_data_manager/capture_1.png)
 
----
+The same entry exists on the page of an installed mod. The screen then opens with that mod already selected. The **Advanced** button is disabled while the mod is not installed.
 
-## 3. How it Integrates into the Architecture
+![The Advanced menu on the Haven City New Dawn mod page](../img/save_data_manager/capture_2.png)
 
-```mermaid
-flowchart TD
-    subgraph Frontend ["Frontend (Svelte 5)"]
-        GC["GameControls.svelte"] -->|"Advanced > Open Saves Manager"| SDM["SaveDataManager.svelte (/:game_name/saves)"]
-        GCM["GameControlsMod.svelte"] -->|"Advanced > Open Saves Manager"| SDM
-        SDM --> RPC["rpc/saves.ts"]
-    end
+### Choosing a game, an installation and a region folder
 
-    subgraph Backend ["Tauri Backend (Rust)"]
-        RPC -->|"list_game_save_installs"| CMD_LIST["commands::saves::list_game_save_installs"]
-        RPC -->|"copy_save / move_save"| CMD_CP["commands::saves::copy_save / move_save"]
-        RPC -->|"backup_save / delete_save"| CMD_OPS["commands::saves::backup_save / delete_save"]
-        RPC -->|"open_save_folder"| CMD_OPEN["commands::saves::open_save_folder"]
-        CMD_LIST --> VANILLA_DIR["%APPDATA%/OpenGOAL/<game>/saves"]
-        CMD_LIST --> MOD_DIR["<install>/features/<game>/mods/<source>/_settings/<mod>/saves"]
-    end
-```
+The screen is organised in three levels, from top to bottom:
 
-- **Frontend Navigation ([src/router.ts](../../src/router.ts))**: Exposes routes `/:game_name/saves` and `/:game_name/mods/:source_name/:mod_name/saves`.
-- **Entry Points**:
-  - Vanilla: Added to the "Advanced" dropdown menu in [src/components/games/GameControls.svelte](../../src/components/games/GameControls.svelte) as "Open Saves Manager".
-  - Mods: Added to the "Advanced" dropdown menu in [src/components/games/GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte) as "Open Saves Manager".
-- **Backend Handlers ([src-tauri/src/commands/saves.rs](../../src-tauri/src/commands/saves.rs))**: Implements save directory scanning, regional subfolder discovery, milestone calculation, backup generation, copying, moving, and deletion.
+1. **Game**: Jak and Daxter, Jak II, Jak 3 or Jak X. Changing the game resets the installation to the base game.
+2. **Installation**: the base game (blue **Vanilla Game** badge) and one entry per installed mod of that game (grey **Mod** badge).
+3. **Save Folders by region**: one card per folder found in the save directory.
 
----
+![Region folders for Jak II: one NTSC-U folder with 7 saves and one PAL folder with 8 saves](../img/save_data_manager/capture_3.png)
 
-## 4. New Files Created
+The game stores saves in a folder named after the disc serial number, such as `BASCUS-97265AYBABTU!`. The launcher reads the region from that name:
 
-1. **`src-tauri/src/commands/saves.rs`**:
-   Rust backend module providing save enumeration, regional folder hierarchy resolution, milestone parsing, backup generation, and file operations.
-2. **`src/lib/rpc/saves.ts`**:
-   TypeScript wrapper handling typed Tauri command invocations for save operations.
-3. **`src/components/saves/SaveDataManager.svelte`**:
-   Svelte 5 view rendering the game switcher bar, regional folders, save slots grid, action tooltips, and transfer/delete modals.
-4. **`src/lib/rpc/bindings/SaveInstallInfo.ts`**, **`SaveFolderInfo.ts`** & **`SaveSlotInfo.ts`**:
-   TypeScript bindings automatically generated by `ts-rs`.
+| Folder name contains | Region            |
+| :------------------- | :---------------- |
+| `BASCUS` or `SCUS`   | NTSC-U (Americas) |
+| `BESCES` or `SCES`   | PAL (Europe)      |
+| `SCPS`               | NTSC-J (Japan)    |
+| anything else        | Custom Region     |
 
----
+Click **View Slots** on a card to open that folder. Save files placed directly in the `saves` folder, outside any subfolder, are not listed.
 
-## 5. Overview of Changes from the Original Project
+### Reading the slots
 
-- **Access Point Migration**:
-  - Moved entry points from "Features" / Cog into the "Advanced" dropdown menu under the name "Open Saves Manager" for both base games and mods.
-- **Regional Folders & Game Switcher**:
-  - Replaced the single-directory view with a two-level hierarchy supporting multiple regional folders (`BASCUS-*`, `BESCES-*`) and in-screen game switching.
-- **Safety & UX**:
-  - Added delete confirmation popups and informative tooltips across all interactive actions.
-  - Unified color scheme with amber/orange action buttons.
-- **Localization Policy (Crowdin)**:
-  - Added new strings exclusively to [src/assets/translations/en-US.json](../../src/assets/translations/en-US.json). Kept other language files clean for Crowdin synchronization.
+Inside a folder, every slot of the game is drawn as a card: 4 slots for Jak and Daxter, 8 for the other games.
 
----
+![The 8 slots of the Jak II NTSC-U folder; slot 6 has no save](../img/save_data_manager/capture_4.png)
 
-# 🇫🇷 Version Française
+A card shows:
 
-## 1. Qu'est-ce qu'elle apporte
+- The slot number, taken from the file name (`bank0.bin` is slot 1; `jak1-game-0.bin` is slot 1 for Jak and Daxter).
+- A green **Active** badge when a save file exists, or **Empty Slot** with a dashed border when it does not.
+- The file size, the last modification date and the path of the file inside the save directory.
+- Three buttons: **Copy To...**, the circular arrow (backup) and the trash can (delete).
 
-Le **Gestionnaire de Sauvegardes (_Saves Manager_)** apporte une interface centralisée, intuitive et sécurisée permettant de consulter, copier, déplacer, sauvegarder et supprimer les sauvegardes de jeu pour l'ensemble des installations OpenGOAL (jeux de base vanilla et mods communautaires installés).
+At the top of the folder view, **All Folders** returns to the region list. When the installation has several region folders, tabs on the right switch between them directly.
 
-### Points Clés
+Use **Refresh** after playing to reload the files from disk.
 
-- **Sélecteur Multi-Jeux** : Basculement direct et fluide entre Jak 1, Jak 2 et Jak 3 via une barre de sélection intégrée en haut de l'écran.
-- **Dossiers Régionaux et Sous-Dossiers** : Prise en charge des dossiers régionaux OpenGOAL (ex. `BASCUS-97265AYBABTU!`, `BESCES-51608AYBABTU!`). L'utilisateur sélectionne un dossier régional pour visualiser ses slots spécifiques.
-- **Vision Multi-Installations** : Affichage des sauvegardes du jeu vanilla et de chaque mod installé avec badges d'identification.
-- **Affichage des Jalons et de la Progression** : Détection automatique des tâches accomplies et affichage du jalon le plus avancé (ex. Rocher du Geyser, Jungle Interdite).
-- **Transferts Sécurisés et Sauvegardes Automatiques** : Duplication ou déplacement de sauvegardes entre installations avec génération automatique d'une copie de secours `.bak` horodatée en cas d'écrasement.
-- **Protection Anti-Suppression Accidentelle** : Modale de confirmation avant toute suppression définitive.
-- **Info-Bulles et Palette Orange Harmonisée** : Info-bulles explicatives au survol de chaque bouton et boutons d'action stylisés en orange ambré (`bg-amber-500 hover:bg-amber-600`).
+### Comparing the base game with a mod
 
----
+Select another installation to see its saves for the same game. Jak 3 below has the base game and the mod `haven-city-new-dawn`.
 
-## 2. Comment fonctionne la fonctionnalité
+![Installation row with the Jak 3 base game selected and the mod listed next to it](../img/save_data_manager/capture_5.png)
 
-### Cycle de consultation et dossiers régionaux
+The mod has its own saves, independent from the base game. Here it holds a single save in slot 1.
 
-1. À l'ouverture du Saves Manager (`/:game_name/saves`), le composant interroge le backend via la commande Tauri `list_game_save_installs`.
-2. Le module Rust analyse :
-   - Le dossier vanilla (`%APPDATA%/OpenGOAL/<game>/saves` sous Windows ou `~/.config/OpenGOAL/<game>/saves` sous Linux).
-   - Les dossiers des mods (`<install_dir>/features/<game>/mods/<source>/_settings/<mod>/...`).
-3. Les sous-dossiers régionaux sont identifiés (`BASCUS-*`, `BESCES-*`, `default`).
-4. Les fichiers `.bin` de chaque dossier sont analysés pour extraire leur taille, date de modification, numéro de slot et jalon atteint.
+![Slots of the mod: slot 1 is used, slots 2 to 8 are empty](../img/save_data_manager/capture_6.png)
 
-### Cycle de transfert, backup et suppression
+### Copying or moving a save
 
-1. **Copie / Déplacement** : Un clic sur **Copier vers...** ouvre une modale permettant de choisir l'installation, le dossier et le slot cible, avec option de déplacement (suppression de la source). Si la destination est occupée, une sauvegarde `.bak-<timestamp>` est créée automatiquement.
-2. **Sauvegarde manuelle (Backup)** : Génère une copie horodatée indépendante du slot sélectionné.
-3. **Suppression** : Affiche une boîte de dialogue de confirmation avant d'exécuter `delete_save`.
-4. **Ouvrir le dossier** : Ouvre l'explorateur de fichiers natif sur le dossier de sauvegarde actif via `open_save_folder`.
+Click **Copy To...** on a save. A dialog asks where to put it.
 
----
+![Copy To dialog: destination installation, region folder, destination slot, overwrite warning and Move checkbox](../img/save_data_manager/capture_7.png)
 
-## 3. Comment elle s'intègre dans l'architecture
+- **Destination Installation**: any other installation of the same game.
+- **Save Folders by region**: the folder in the destination. A folder from a different region is greyed out and marked `Incompatible`. If the destination has no folder of the same region as the save, a red message explains that cross-region transfers are blocked to avoid corrupting the save, and **Confirm** is disabled.
+- **Destination Slot**: slots that already hold a save are marked `Occupied - Will overwrite`, and an orange message confirms that a backup will be created.
+- **Delete source file after transfer (Move)**: when ticked, the dialog becomes **Move To...** and the original is deleted once the copy succeeds.
 
-- **Navigation Frontend ([src/router.ts](../../src/router.ts))** : Enregistrement des routes `/:game_name/saves` et `/:game_name/mods/:source_name/:mod_name/saves`.
-- **Points d'accès** :
-  - Jeu vanilla : Menu déroulant « Advanced » de [src/components/games/GameControls.svelte](../../src/components/games/GameControls.svelte) via l'option « Open Saves Manager ».
-  - Mods : Menu déroulant « Advanced » de [src/components/games/GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte) via l'option « Open Saves Manager ».
-- **Commandes Backend ([src-tauri/src/commands/saves.rs](../../src-tauri/src/commands/saves.rs))** : Énumération des sauvegardes et dossiers régionaux, calcul des jalons, backups automatiques, copie, déplacement et suppression.
+Click **Confirm** to run the transfer. If the destination slot was occupied, the old file is first copied next to itself as `<name>.bak-<timestamp>`.
 
----
+### Backing up a save
 
-## 4. Quels sont les nouveaux fichiers
+The circular arrow button copies the save in place as `<name>.bak-<timestamp>`, where the timestamp is the time of the backup in seconds since 1 January 1970. A message shows the name of the backup. Backups are not listed in the Saves Manager. To restore one, open the folder with **Open Folder** and rename the backup back to the original name.
 
-1. **`src-tauri/src/commands/saves.rs`** :
-   Module Rust assurant l'énumération des dossiers régionaux, la copie, le déplacement, les backups et la suppression.
-2. **`src/lib/rpc/saves.ts`** :
-   Couche RPC TypeScript typée pour appeler les commandes backend.
-3. **`src/components/saves/SaveDataManager.svelte`** :
-   Interface Svelte 5 affichant la barre de sélection de jeu, les dossiers régionaux, la grille de slots et les modales de confirmation.
-4. **`src/lib/rpc/bindings/SaveInstallInfo.ts`**, **`SaveFolderInfo.ts`** & **`SaveSlotInfo.ts`** :
-   Liaisons TypeScript générées automatiquement par `ts-rs`.
+### Deleting a save
 
----
+The trash can button opens a confirmation dialog that names the file and its folder. **Cancel** is selected by default.
 
-## 5. Quels sont les modifications dans les grandes lignes
+![Delete confirmation for bank0.bin, with a warning that the action cannot be undone](../img/save_data_manager/capture_8.png)
 
-- **Déplacement des points d'accès** :
-  - Les accès ont été déplacés dans le menu déroulant « Advanced » avec le libellé « Open Saves Manager » sur le jeu de base et sur les mods.
-- **Hiérarchie régionale et sélecteur de jeu** :
-  - Ajout de la sélection de jeu intégrée et du niveau d'arborescence des dossiers régionaux (`BASCUS-*`, `BESCES-*`).
-- **Sécurité et Ergonomie** :
-  - Ajout d'une pop-up de confirmation pour la suppression, info-bulles descriptives sur les boutons et harmonisation de la charte graphique en orange.
-- **Politique de Traduction (Crowdin)** :
-  - Clés de traduction ajoutées uniquement dans le fichier anglais ([src/assets/translations/en-US.json](../../src/assets/translations/en-US.json)), préservant ainsi le workflow de synchronisation Crowdin.
+The file is removed for good; it does not go to the recycle bin. Make a backup first if you may need it.
+
+### Installations without a save folder
+
+If the game or mod has never been launched, its save folder does not exist yet and the screen says so.
+
+![Empty state for Jak X: No Save Directory Found](../img/save_data_manager/capture_9.png)
+
+Launch the game once and press **Refresh**.
+
+### Opening the folder
+
+**Open Folder**, at the top right, opens the current save directory in the system file explorer. If a region folder is selected, it opens that folder. The folder is created if it does not exist.
+
+## 3. How it integrates into the architecture
+
+The feature follows the usual launcher layering: a Svelte screen calls typed wrapper functions, which call Tauri commands written in Rust, which work on the file system.
+
+### Entry points and routes
+
+- [GameControls.svelte](../../src/components/games/GameControls.svelte) and [GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte) each add an **Open Saves Manager** item to their **Advanced** menu.
+- [router.ts](../../src/router.ts) maps `/:game_name/saves` and `/:game_name/mods/:source_name/:mod_name/saves` to the same component. The mod route is what preselects the mod.
+
+### Frontend
+
+[SaveDataManager.svelte](../../src/components/saves/SaveDataManager.svelte) holds the whole screen: game selector, installation selector, region folders, slot grid, transfer dialog and delete dialog. It never touches the disk itself. It calls the functions of [saves.ts](../../src/lib/rpc/saves.ts).
+
+### Backend
+
+[saves.rs](../../src-tauri/src/commands/saves.rs) exposes six commands, registered in [main.rs](../../src-tauri/src/main.rs):
+
+| Command                   | What it does                                                                                                                                                       |
+| :------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list_game_save_installs` | Scans the base game and every installed mod of a game and returns installations, region folders and save files. Only `.bin` files are listed, up to 3 levels deep. |
+| `copy_save`               | Copies a save to another installation, folder and slot. Refuses a transfer between two different regions. Backs up the destination file first if it exists.        |
+| `move_save`               | Runs `copy_save`, then deletes the source. A failed copy leaves the source untouched.                                                                              |
+| `backup_save`             | Copies a save to `<name>.bak-<timestamp>` in the same folder.                                                                                                      |
+| `delete_save`             | Deletes a save file.                                                                                                                                               |
+| `open_save_folder`        | Opens the save directory in the system file explorer.                                                                                                              |
+
+The save directory of an installation is resolved in one place:
+
+- Base game: the `OpenGOAL/<game>/saves` folder inside the user's config directory.
+- Mod: `<install dir>/features/<game>/mods/<source>/_settings/<mod>/OpenGOAL/<game>/saves`. If that folder does not exist but `_settings/<mod>/saves` does, the second one is used.
+
+Mods are launched with `--config-path <mod settings dir>`, which is why their saves sit in that folder. The Saves Manager only reads and writes files there. It does not change how the game or the mods behave.
+
+### Types
+
+`SaveInstallInfo`, `SaveFolderInfo` and `SaveSlotInfo` are defined in Rust. `ts-rs` generates their TypeScript versions in [src/lib/rpc/bindings/](../../src/lib/rpc/bindings/). These generated files are never edited by hand.
+
+### Text
+
+New strings were added only to [en-US.json](../../src/assets/translations/en-US.json). The other languages are managed by Crowdin.
+
+## 4. New files created
+
+- [src-tauri/src/commands/saves.rs](../../src-tauri/src/commands/saves.rs): the six commands above and the region and slot detection.
+- [src/lib/rpc/saves.ts](../../src/lib/rpc/saves.ts): typed wrappers around the Tauri commands.
+- [src/components/saves/SaveDataManager.svelte](../../src/components/saves/SaveDataManager.svelte): the screen.
+- [SaveInstallInfo.ts](../../src/lib/rpc/bindings/SaveInstallInfo.ts), [SaveFolderInfo.ts](../../src/lib/rpc/bindings/SaveFolderInfo.ts), [SaveSlotInfo.ts](../../src/lib/rpc/bindings/SaveSlotInfo.ts): types generated by `ts-rs`.
+- [docs/img/save_data_manager/](../img/save_data_manager/): the screenshots used in this document.
+
+## 5. Overview of changes from the original project
+
+- **Routing**: [router.ts](../../src/router.ts) gains the two `saves` routes.
+- **Game and mod pages**: the **Advanced** menus of [GameControls.svelte](../../src/components/games/GameControls.svelte) and [GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte) gain **Open Saves Manager**.
+- **Backend**: [main.rs](../../src-tauri/src/main.rs) registers the six new commands.
+- **Translations**: `gameControls_button_saveManager` and the `saveManager_*` keys were added to [en-US.json](../../src/assets/translations/en-US.json).

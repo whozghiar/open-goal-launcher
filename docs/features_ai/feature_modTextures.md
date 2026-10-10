@@ -1,190 +1,184 @@
-> **Language / Langue :** [🇬🇧 English Version](#-english-version) &nbsp;•&nbsp; [🇫🇷 Version Française](#-version-française)
+# Mod Texture Packs
 
-## Summary / Sommaire
+A texture pack replaces in-game textures with PNG files. This feature lets each mod have its own texture packs, installed with the mod and kept apart from the base game and from other mods.
 
-- [🇬🇧 English Version](#-english-version)
-  - [1. What This Feature Brings](#1-what-this-feature-brings)
-  - [2. How the Feature Works](#2-how-the-feature-works)
-  - [3. How it Integrates into the Architecture](#3-how-it-integrates-into-the-architecture)
-  - [4. New Files Created](#4-new-files-created)
-  - [5. Overview of Changes from the Original Project](#5-overview-of-changes-from-the-original-project)
-- [🇫🇷 Version Française](#-version-française)
-  - [1. Qu'est-ce qu'elle apporte](#1-quest-ce-quelle-apporte)
-  - [2. Comment fonctionne la fonctionnalité](#2-comment-fonctionne-la-fonctionnalité)
-  - [3. Comment elle s'intègre dans l'architecture](#3-comment-elle-sintègre-dans-larchitecture)
-  - [4. Quels sont les nouveaux fichiers](#4-quels-sont-les-nouveaux-fichiers)
-  - [5. Quels sont les modifications dans les grandes lignes](#5-quels-sont-les-modifications-dans-les-grandes-lignes)
+Screenshots in this document come from launcher 1.0.2 built from `master-dev`, on Windows.
 
----
+## Contents
 
-# 🇬🇧 English Version
+- [1. What this feature brings](#1-what-this-feature-brings)
+- [2. How the feature works](#2-how-the-feature-works)
+- [3. How it integrates into the architecture](#3-how-it-integrates-into-the-architecture)
+- [4. New files created](#4-new-files-created)
+- [5. Overview of changes from the original project](#5-overview-of-changes-from-the-original-project)
 
-## 1. What This Feature Brings
+## 1. What this feature brings
 
-In the original OpenGOAL Launcher, texture packs were designed solely for the base (vanilla) game. If a mod creator wanted custom textures (e.g. snowy terrain, redesigned armor, or HD interface elements), they had no official way to tie those textures exclusively to their mod without either overwriting vanilla game textures or affecting other mods.
+In the original launcher, texture packs only applied to the base game. They were copied into the base game data folder (`active/<game>/data/custom_assets/...`). A mod runs from its own folder with its own data, so those packs never reached it. A mod author who wanted custom textures had no supported way to ship them with the mod.
 
-This feature introduces:
+This feature adds:
 
-1. **Automatic Installation**: When a mod author includes texture packs in their mod release (cataloged in `index.json`), the launcher automatically detects, downloads, and enables those texture packs specifically for that mod when clicking "Install" or "Update".
-2. **Total Isolation**: Textures enabled for a mod run **only** inside that mod. They never alter or bleed into the base game or into other installed mods.
-3. **Dedicated Management Screen**: Clicking "Texture Packs" on a mod's page opens a dedicated, user-friendly screen showcasing all texture packs affiliated with that mod, allowing players to view artwork, read descriptions, and toggle them on or off individually.
+- **Per-mod packs**: each installed mod keeps its own list of enabled packs. The base game keeps a separate list.
+- **Automatic installation**: if the mod source declares texture packs for a mod, installing or updating the mod also downloads and enables them.
+- **Isolation**: textures enabled for a mod are copied into that mod's folder only. The base game and other mods never see them.
+- **A dedicated screen**: a **Texture Packs** page on each mod shows the packs available for it and lets you turn them on or off.
 
----
+## 2. How the feature works
 
-## 2. How the Feature Works
+### Vocabulary
 
-To understand how it works in plain terms, imagine the lifecycle of a mod from installation to gameplay:
+- **Texture pack**: a ZIP file containing `custom_assets/<game>/texture_replacements/` with PNG files named after the textures they replace. Extracted packs are stored in a shared library, `features/<game>/texture-packs/<pack name>/`.
+- **Mod source**: a JSON feed (`index.json`) that lists mods and texture packs. Its format is defined in [schemas/mod-source/v1/](../../schemas/mod-source/v1/).
+- **Affiliated pack**: a pack that the mod source links to a given mod.
 
-1. **Detection in the Catalog (`index.json`)**:
-   - Each mod source provides an `index.json` file declaring available mods and texture packs.
-   - When you view or install a mod, the launcher scans `texturePacks` in `index.json` to find packs affiliated with this mod (matching release URLs, mod tags, or mod names).
-2. **Download and Unpacking**:
-   - The launcher downloads the texture pack `.zip` archive into the launcher's texture library (`features/<game>/texture-packs/<pack_name>/`).
-3. **Mod-Specific Texture Deployment**:
-   - Instead of putting textures in the base game folder, the launcher copies them directly into the target mod's private folder (`features/<game>/mods/<source>/<mod>/data/custom_assets/.../texture_replacements/`).
-4. **Immediate Decompilation**:
-   - During mod installation, OpenGOAL's decompiler (`extractor.exe`) reads these replacement textures and compiles them into the mod's game data immediately. No manual recompilation is needed!
-5. **Browsing and Customizing**:
-   - At any time, clicking "Texture Packs" on the mod dashboard displays the dedicated screen with full pack details (artwork, version, author, description, and status badges). Users can activate or deactivate packs and apply changes with one click.
+### Opening the screen
 
----
+Open a mod from the **Mods** list. The **Texture Packs** button sits next to **Play**.
 
-## 3. How it Integrates into the Architecture
+![Page of the installed mod Haven City New Dawn with the Texture Packs button next to Play](../img/modTextures/capture_1.png)
 
-The OpenGOAL Launcher architecture consists of two main layers: a **Rust backend** (`src-tauri/`) and a **Svelte 5 frontend** (`src/`). Here is how this feature fits naturally into that existing structure:
+### Reading the screen
 
-```mermaid
-flowchart TD
-    A["index.json (Mod Source)"] -->|"Declares mod and texture packs"| B["GameControlsMod.svelte"]
-    B -->|"Detects affiliated packs"| C["Mod Installation Job (modJob.ts)"]
-    C -->|"Downloads pack and copies textures"| D["Rust Backend (texture_packs.rs)"]
-    D -->|"Deploys to mod folder only"| E["Mod Directory: custom_assets/texture_replacements/"]
-    E -->|"Decompiler bakes textures in"| F["OpenGOAL Engine (gk.exe)"]
-    B -->|"Click Texture Packs"| G["ModTexturePacks.svelte (Dedicated Screen)"]
-    G -->|"Toggle packs and apply"| C
-```
+The page lists the packs available for this mod.
 
-- **Runtime Execution (`gk`)**: The game engine executable loads textures from `./data` relative to its working directory. Because mods run from their own folder (`features/<game>/mods/<source>/<mod>/`), mod textures are completely separated from the vanilla game (`active/<game>/data/`).
-- **Configuration Storage (`settings.json`)**: Each installed mod has an `InstalledMod` record. We added `texture_packs: Vec<String>` to store which packs are enabled for that specific mod, leaving `GameConfig.texture_packs` untouched.
-- **IPC Commands**: Clean Tauri backend commands (`update_mod_texture_pack_data`, `download_and_extract_texture_pack`, `set_mod_texture_packs`) communicate between Svelte and Rust.
+![Texture Packs page of Haven City New Dawn with one active pack](../img/modTextures/capture_2.png)
 
----
+At the top:
 
-## 4. New Files Created
+- The arrow goes back to the mod page.
+- The orange tag names the mod the page applies to.
+- **Import Local ZIP** adds a pack from a ZIP file on your disk.
+- **Apply Texture Changes** is grey until you change something.
 
-To keep the codebase modular and avoid bloating existing components, new dedicated files were created:
+On each pack card:
 
-1. [src/components/texture-packs/ModTexturePacks.svelte](../../src/components/texture-packs/ModTexturePacks.svelte):
-   - Dedicated frontend screen displayed when clicking "Texture Packs" from a mod page.
-   - Shows affiliated pack cards, status badges, local ZIP import, and apply buttons.
-2. [docs/features_documentation/feature_modTextures.md](./feature_modTextures.md):
-   - This accessible pedagogical documentation explaining the feature's role and integration.
+| Element                                            | Meaning                                                                 |
+| :------------------------------------------------- | :---------------------------------------------------------------------- |
+| Green **ACTIVE** label on the cover                | The pack is applied to this mod now.                                    |
+| **Release Affiliated**                             | The mod source links this pack to this mod.                             |
+| **Downloaded**                                     | The pack is already in the texture library of this game.                |
+| **Online**                                         | The pack is not downloaded yet. It will be downloaded when you apply.   |
+| Tags                                               | The tags declared by the pack author.                                   |
+| Status line                                        | Says whether the pack is active and compiled for this mod, or inactive. |
+| **Disable for this mod** / **Enable for this mod** | Turns the pack off or on, without applying yet.                         |
 
----
+The border of a card also carries meaning: green for an applied pack, orange for a pack you changed and have not applied, grey for an inactive pack.
 
-## 5. Overview of Changes from the Original Project
+The note at the bottom of the page recalls that packs enabled here are compiled inside this mod's folder only.
 
-Here is a summary of what was adjusted across the existing codebase:
+### Turning a pack on or off
 
-- **Backend Configuration ([src-tauri/src/config.rs](../../src-tauri/src/config.rs))**:
-  - Added helper methods to read and write active texture packs on a mod's config (`get_mod_texture_packs`, `set_mod_texture_packs`).
-  - Preserved existing mod settings when reinstalling or updating.
-- **Backend File Operations ([src-tauri/src/commands/features/texture_packs.rs](../../src-tauri/src/commands/features/texture_packs.rs))**:
-  - Added `download_and_extract_texture_pack` to download remote texture pack archives.
-  - Added `update_mod_texture_pack_data` to copy textures into the mod's custom assets folder.
-- **Mod Installation Pipeline ([src/lib/job/modJob.ts](../../src/lib/job/modJob.ts))**:
-  - Updated `setupModInstallation` so that if affiliated texture packs are detected, they are downloaded, enabled, and deployed before decompilation runs.
-- **Routing ([src/router.ts](../../src/router.ts))**:
-  - Pointed `/:game_name/mods/:source_name/:mod_name/texture_packs` to the new `ModTexturePacks.svelte` component, while leaving the vanilla route `/:game_name/texture_packs` to [TexturePacks.svelte](../../src/components/texture-packs/TexturePacks.svelte).
-- **Mod Controls ([src/components/games/GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte))**:
-  - Enabled the "Texture Packs" button.
-  - Added automatic detection of release-affiliated packs when clicking "Install" or "Update".
-- **Translations ([src/assets/translations/](../../src/assets/translations/))**:
-  - Added `features_modTextures_*` localization keys across all 35 supported languages.
+Click **Disable for this mod**. Nothing happens to the mod yet. The page only records your choice.
 
----
+![Same page after clicking Disable: orange card, Pending changes to apply, green Apply Texture Changes button, Enable for this mod](../img/modTextures/capture_3.png)
 
-# 🇫🇷 Version Française
+- The card turns orange and the button becomes **Enable for this mod**.
+- **Pending changes to apply** appears above the list.
+- **Apply Texture Changes** turns green.
+- The **ACTIVE** label and the status line still describe the applied state until you apply.
 
-## 1. Qu'est-ce qu'elle apporte
+Click the button again to undo the change. Leaving the page discards pending changes.
 
-Dans la version initiale de l'OpenGOAL Launcher, les packs de textures étaient exclusivement conçus pour le jeu de base officiel (vanilla). Si un créateur de mod souhaitait proposer des textures personnalisées (comme des décors enneigés, des armures recolorées ou une interface haute définition), il n'existait aucun moyen officiel de lier ces textures uniquement à son mod sans impacter le jeu de base ou les autres mods.
+Click **Apply Texture Changes** to apply. The launcher then:
 
-Cette fonctionnalité apporte trois améliorations majeures :
+1. Downloads every enabled pack that is not in the library yet.
+2. Opens a progress screen and runs four steps: save the list of enabled packs for the mod, copy the textures into the mod, decompile, compile.
+3. Returns to the Texture Packs page. If the setting that continues automatically after an operation is turned off, a button is shown instead.
 
-1. **Installation Automatique** : lorsqu'un créateur de mod associe un pack de textures à sa release (référencé dans `index.json`), le lanceur le détecte, le télécharge et l'active automatiquement pour ce mod lors de son installation.
-2. **Isolation Complète** : les textures activées pour un mod s'exécutent **exclusivement** pour ce mod. Elles ne modifient jamais le jeu de base ni les autres mods installés.
-3. **Écran de Gestion Dédié** : en cliquant sur "Packs de textures" depuis la page d'un mod, un écran clair et accessible présente tous les packs affiliés, leurs illustrations, descriptions et versions, avec la possibilité de les activer ou désactiver individuellement.
+If several enabled packs replace the same texture, the pack that appears first in the list wins.
 
----
+### Packs that are not enabled
 
-## 2. Comment fonctionne la fonctionnalité
+A pack can be in the library without being enabled for a given mod. The pack below is linked by the mod source to Haven City Peaceful. It is downloaded, but inactive: the status line says so and the button offers **Enable for this mod**.
 
-Pour comprendre le fonctionnement de manière simple, voici le cheminement pas à pas :
+![Blue KG-Vehicles pack: downloaded, inactive, with an Enable for this mod button](../img/modTextures/capture_5.png)
 
-1. **Détection dans le catalogue (`index.json`)** :
-   - Chaque source de mods fournit un fichier `index.json` qui liste les mods et les packs de textures disponibles.
-   - Le lanceur examine `texturePacks` dans `index.json` et repère les packs affiliés au mod (grâce à l'URL de téléchargement de la release, aux tags ou au nom du mod).
-2. **Téléchargement et Décompression** :
-   - Le lanceur télécharge l'archive `.zip` du pack de texture dans la bibliothèque de textures (`features/<game>/texture-packs/<pack_name>/`).
-3. **Déploiement Isolé dans le Mod** :
-   - Plutôt que de copier les textures dans le jeu vanilla, le lanceur les copie directement dans le dossier privé du mod (`features/<game>/mods/<source>/<mod>/data/custom_assets/.../texture_replacements/`).
-4. **Décompilation Immédiate** :
-   - Lors de l'installation du mod, l'extracteur OpenGOAL (`extractor.exe`) lit ces textures de remplacement et les compile directement dans les données du mod. Aucune manipulation manuelle supplémentaire n'est requise !
-5. **Consultation et Personnalisation** :
-   - À tout moment, le bouton "Packs de textures" sur la page du mod ouvre un écran dédié listant chaque pack avec son statut (`ACTIF`, `En ligne`, `Téléchargé`). Le joueur peut ainsi ajuster ses préférences en un clic.
+The page also opens for a mod that is not installed, which lets you check its packs before installing it. On such a mod, the main button is **Install**, with **Texture Packs** next to it.
 
----
+![Page of the mod Haven City Peaceful, not installed: Install and Texture Packs buttons](../img/modTextures/capture_4.png)
 
-## 3. Comment elle s'intègre dans l'architecture
+### Mods without packs
 
-L'OpenGOAL Launcher repose sur deux piliers : un **moteur natif Rust** (`src-tauri/`) et une **interface web Svelte 5** (`src/`). Cette fonctionnalité s'intègre naturellement dans cette organisation :
+When the mod source declares no pack for a mod, the page says so and offers the ZIP import.
 
-```mermaid
-flowchart TD
-    A["index.json (Source du mod)"] -->|"Déclare le mod et les packs de textures"| B["GameControlsMod.svelte"]
-    B -->|"Détecte les packs affiliés"| C["Job d'installation (modJob.ts)"]
-    C -->|"Télécharge le pack et copie les textures"| D["Backend Rust (texture_packs.rs)"]
-    D -->|"Déploie dans le dossier du mod uniquement"| E["Dossier du mod: custom_assets/texture_replacements/"]
-    E -->|"Le décompilateur intègre les textures"| F["Moteur OpenGOAL (gk.exe)"]
-    B -->|"Clic sur Packs de textures"| G["ModTexturePacks.svelte (Écran dédié)"]
-    G -->|"Activer ou désactiver et appliquer"| C
-```
+![Empty state: No affiliated texture packs found, with an Import Texture Pack (ZIP) button](../img/modTextures/capture_6.png)
 
-- **Moteur de jeu (`gk`)** : le moteur OpenGOAL charge ses données depuis `./data` relativement à son dossier de travail. Comme chaque mod s'exécute dans son propre répertoire (`features/<game>/mods/<source>/<mod>/`), ses textures sont strictement isolées de celles du jeu vanilla (`active/<game>/data/`).
-- **Stockage de Configuration (`settings.json`)** : chaque mod installé possède un objet `InstalledMod`. Nous y avons ajouté `texture_packs: Vec<String>` pour mémoriser les packs actifs de ce mod, sans jamais altérer `GameConfig.texture_packs` du jeu vanilla.
-- **Commandes IPC** : des fonctions Tauri concises (`update_mod_texture_pack_data`, `download_and_extract_texture_pack`, `set_mod_texture_packs`) assurent le dialogue sécurisé entre l'interface Svelte et le moteur Rust.
+### Installing or updating a mod
 
----
+On a mod page, **Install** and **Update** do more than download the mod. Before the download starts, the launcher looks in the mod source for packs attached to the release you are installing. A pack is attached when one of these is true:
 
-## 4. Quels sont les nouveaux fichiers
+1. Its download link is in the same release folder as the mod archive.
+2. Its tags include the mod name, or `mod:<mod name>`.
+3. Its key equals the mod name, starts with `<mod name>-` or `<mod name>_`, or the mod name starts with `<key>-`.
 
-Pour préserver la clarté du projet et éviter de surcharger les composants existants, deux fichiers dédiés ont été créés :
+A pack whose `supportedGames` list does not include the current game is ignored. For the download link, the launcher prefers the one for the current platform, then `all`, then `windows`, then any other.
 
-1. [src/components/texture-packs/ModTexturePacks.svelte](../../src/components/texture-packs/ModTexturePacks.svelte) :
-   - Écran dédié qui s'affiche lors du clic sur "Packs de textures" depuis la page d'un mod.
-   - Présente les fiches des packs affiliés, leurs illustrations, badges d'état, boutons d'activation et import de ZIP local.
-2. [docs/features_documentation/feature_modTextures.md](./feature_modTextures.md) :
-   - Ce document pédagogique expliquant la fonctionnalité de manière simple et accessible.
+Once the mod archive is downloaded, the launcher does the following for the attached packs:
 
----
+1. Downloads and extracts each pack into the texture library.
+2. Records the packs as enabled for this mod in `settings.json`.
+3. Copies their textures into the mod.
 
-## 5. Quels sont les modifications dans les grandes lignes
+The installation then continues with the usual extraction, decompilation and compilation, so the textures are part of the first build of the mod.
 
-Voici une vue d'ensemble des modifications apportées au projet initial :
+### Importing a ZIP
 
-- **Configuration Backend ([src-tauri/src/config.rs](../../src-tauri/src/config.rs))** :
-  - Ajout des méthodes pour lire et persister la liste des packs actifs par mod (`get_mod_texture_packs`, `set_mod_texture_packs`).
-  - Préservation des paramètres existants du mod lors des mises à jour.
-- **Gestion des Fichiers Backend ([src-tauri/src/commands/features/texture_packs.rs](../../src-tauri/src/commands/features/texture_packs.rs))** :
-  - Ajout de `download_and_extract_texture_pack` pour télécharger et extraire les archives de packs.
-  - Ajout de `update_mod_texture_pack_data` pour copier les textures dans le répertoire du mod.
-- **Pipeline d'Installation ([src/lib/job/modJob.ts](../../src/lib/job/modJob.ts))** :
-  - Évolution de `setupModInstallation` pour télécharger, activer et déployer automatiquement les packs affiliés avant l'étape de décompilation.
-- **Routage ([src/router.ts](../../src/router.ts))** :
-  - La route `/:game_name/mods/:source_name/:mod_name/texture_packs` ouvre `ModTexturePacks.svelte`, tandis que la route vanilla conserve [TexturePacks.svelte](../../src/components/texture-packs/TexturePacks.svelte).
-- **Page du Mod ([src/components/games/GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte))** :
-  - Décommentage et activation du bouton "Packs de textures".
-  - Détection automatique des packs affiliés lors du clic sur "Installer" ou "Mettre à jour".
-- **Traductions ([src/assets/translations/](../../src/assets/translations/))** :
-  - Intégration des clés `features_modTextures_*` dans l'ensemble des 35 langues de l'application.
+**Import Local ZIP** opens a file picker. The ZIP must contain `custom_assets/<game>/texture_replacements/`, otherwise it is refused. The pack is extracted into the library under the name of the ZIP file.
+
+The page lists the packs that the mod source links to the mod and the packs already enabled for it. An imported pack therefore appears on this page only if the source links it to the mod or if it is already enabled.
+
+## 3. How it integrates into the architecture
+
+### Where the files go
+
+| Location                                                                              | Content                                                                        |
+| :------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------- |
+| `features/<game>/texture-packs/<pack>/`                                               | The texture library. Shared by the base game and all mods of that game.        |
+| `active/<game>/data/custom_assets/<game>/texture_replacements/`                       | Textures of the packs enabled for the base game. Not touched by this feature.  |
+| `features/<game>/mods/<source>/<mod>/data/custom_assets/<game>/texture_replacements/` | Textures of the packs enabled for one mod. Emptied and rebuilt on every apply. |
+
+The game runs from the folder of the mod and loads its data from there. This is what keeps mod textures out of the base game.
+
+The list of enabled packs is stored in `settings.json`, in the `texturePacks` field of the installed mod. The base game keeps its own list in the `texturePacks` field of the game.
+
+### From catalog to files
+
+1. The mod source lists the packs. `findAttachedTexturePacks` in [texture-packs.ts](../../src/lib/features/texture-packs.ts) applies the rules above and returns the attached packs of a release.
+2. [GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte) calls it when you click **Install** or **Update**, and passes the result to the installation job in [modJob.ts](../../src/lib/job/modJob.ts).
+3. [ModTexturePacks.svelte](../../src/components/texture-packs/ModTexturePacks.svelte) does its own matching with the same rules to build the page. Its **Apply Texture Changes** button starts the `applyTexturePacks` job in [texturePackJob.ts](../../src/lib/job/texturePackJob.ts).
+4. Both jobs call Rust commands through [features.ts](../../src/lib/rpc/features.ts) and [config.ts](../../src/lib/rpc/config.ts):
+
+| Command                             | What it does                                                             |
+| :---------------------------------- | :----------------------------------------------------------------------- |
+| `download_and_extract_texture_pack` | Downloads a pack ZIP and extracts it into the texture library.           |
+| `set_mod_texture_packs`             | Saves the list of enabled packs for one mod in `settings.json`.          |
+| `update_mod_texture_pack_data`      | Rebuilds the mod's `texture_replacements` folder from its enabled packs. |
+
+### Why the mod is decompiled and compiled after a change
+
+The build tools decide what to rebuild by comparing file dates. Copied PNG files keep the date of the pack, and a removed pack leaves no file at all, so the tools would keep the old textures. Before copying, `update_mod_texture_pack_data` therefore:
+
+- deletes the mod's `data/decompiler_out` folder, so the next decompile extracts everything again;
+- refreshes the modification date of every custom level `.jsonc` file under `custom_assets/<game>/levels/`, so the compiler rebuilds those levels.
+
+The apply job also compiles the mod after decompiling. Custom levels and assets ported from another game bake their textures at compile time, so a decompile alone would leave them unchanged.
+
+### Text
+
+New strings were added only to [en-US.json](../../src/assets/translations/en-US.json). The other languages are managed by Crowdin.
+
+## 4. New files created
+
+- [src/components/texture-packs/ModTexturePacks.svelte](../../src/components/texture-packs/ModTexturePacks.svelte): the Texture Packs page of a mod.
+- [docs/img/modTextures/](../img/modTextures/): the screenshots used in this document.
+
+## 5. Overview of changes from the original project
+
+- **Configuration**: [config.rs](../../src-tauri/src/config.rs) stores a `texture_packs` list on each installed mod and provides `get_mod_texture_packs` and `set_mod_texture_packs`. Updating or reinstalling a mod keeps its list. The `set_mod_texture_packs` command is in [commands/config.rs](../../src-tauri/src/commands/config.rs).
+- **Texture commands**: [texture_packs.rs](../../src-tauri/src/commands/features/texture_packs.rs) gains `download_and_extract_texture_pack` and `update_mod_texture_pack_data`. Commands are registered in [main.rs](../../src-tauri/src/main.rs).
+- **Mod installation**: [modJob.ts](../../src/lib/job/modJob.ts) downloads, enables and copies the attached packs during the download step.
+- **Apply job**: [texturePackJob.ts](../../src/lib/job/texturePackJob.ts) has a mod branch (enable, copy, decompile, compile) next to the base game branch. [Job.svelte](../../src/routes/Job.svelte) passes it the mod name and source.
+- **Pack matching**: [texture-packs.ts](../../src/lib/features/texture-packs.ts) gains `findAttachedTexturePacks`.
+- **Mod page**: [GameControlsMod.svelte](../../src/components/games/GameControlsMod.svelte) has a working **Texture Packs** button and looks for attached packs on **Install** and **Update**.
+- **Routing**: [router.ts](../../src/router.ts) sends `/:game_name/mods/:source_name/:mod_name/texture_packs` to the new page. The base game route `/:game_name/texture_packs` still opens [TexturePacks.svelte](../../src/components/texture-packs/TexturePacks.svelte).
+- **Translations**: the `features_modTextures_*` keys were added to [en-US.json](../../src/assets/translations/en-US.json).
