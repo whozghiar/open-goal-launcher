@@ -103,15 +103,108 @@ When the mod source declares no pack for a mod, the page says so and offers the 
 
 ![Empty state: No affiliated texture packs found, with an Import Texture Pack (ZIP) button](../img/modTextures/capture_6.png)
 
+### Linking a pack to a mod (for mod authors)
+
+A mod author links a pack to a mod in the mod source (`index.json`), without any change to the launcher. Packs go in the `texturePacks` section, next to `mods`, and use the same fields as a mod. The mods of the Whozghiar OpenGOAL Mods Hub that ship a custom texture pack (Haven City New Dawn, Peaceful Haven City, Blue Krimzon Guard, Haven City Rebellion) already declare it: their [index.json](https://github.com/whozghiar/jak-project/blob/master-dev/index.json) is a working example.
+
+#### Example
+
+A minimal source with one Jak II mod, `my-mod`, and its texture pack, `my-mod-textures`:
+
+```json
+{
+  "schemaVersion": "1.0.0",
+  "sourceName": "My Mods",
+  "lastUpdated": "2026-10-20T00:00:00Z",
+  "mods": {
+    "my-mod": {
+      "displayName": "My Mod",
+      "description": "A Jak II mod.",
+      "authors": ["your-name"],
+      "tags": ["gameplay"],
+      "supportedGames": ["jak2"],
+      "versions": [
+        {
+          "version": "1.0.0",
+          "publishedDate": "2026-10-20T00:00:00Z",
+          "assets": {
+            "windows": "https://github.com/your-name/my-mod/releases/download/v1.0.0/windows-my-mod-v1.0.0.zip",
+            "linux": "https://github.com/your-name/my-mod/releases/download/v1.0.0/linux-my-mod-v1.0.0.zip"
+          }
+        }
+      ]
+    }
+  },
+  "texturePacks": {
+    "my-mod-textures": {
+      "displayName": "My Mod Textures",
+      "description": "Custom textures for My Mod.",
+      "authors": ["your-name"],
+      "tags": ["jak2", "retexture", "my-mod"],
+      "supportedGames": ["jak2"],
+      "coverArtUrl": "https://raw.githubusercontent.com/your-name/my-mod/main/cover.png",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "publishedDate": "2026-10-20T00:00:00Z",
+          "assets": {
+            "windows": "https://github.com/your-name/my-mod/releases/download/v1.0.0/my-mod-textures-v1.0.0.zip",
+            "linux": "https://github.com/your-name/my-mod/releases/download/v1.0.0/my-mod-textures-v1.0.0.zip"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+A pack requires `displayName`, `description`, `authors`, `tags`, `supportedGames` and `versions`. Each version requires `version`, `publishedDate` and `assets`. `coverArtUrl` is optional: it is the image shown on the pack card.
+
+The ZIP must have `custom_assets/<game>/texture_replacements/` at its root, with the PNG files inside:
+
+```text
+my-mod-textures-v1.0.0.zip
+└── custom_assets/
+    └── jak2/
+        └── texture_replacements/
+            └── ... PNG files
+```
+
+#### Linking rules
+
+The **mod key** is the name used in `mods` (`my-mod`), not its `displayName`. A pack is linked to a mod when at least one rule matches. Case does not matter.
+
+| Rule            | Condition                                                                                                              | In the example                                    |
+| :-------------- | :--------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------ |
+| 1. Same release | One of the pack's links is in the same folder as the mod archive, which means the same GitHub release.                 | Both files are in `.../releases/download/v1.0.0/` |
+| 2. Tag          | The pack's `tags` contain the mod key or `mod:<mod key>`.                                                              | Tag `my-mod`                                      |
+| 3. Name         | The pack key equals the mod key or starts with `<mod key>-` or `<mod key>_`, or the mod key starts with `<pack key>-`. | Key `my-mod-textures`                             |
+
+A pack whose `supportedGames` does not include the mod's game is ignored.
+
+- **Rule 1** ties a pack to a release. During **Install** or **Update**, the launcher compares with the release being installed. The Texture Packs page compares with every version of the mod.
+- **Rule 2** lets one pack serve several mods. The Blue KG-Vehicles pack has the tags `blue-krimzon-guard`, `haven-city-rebellion` and `peaceful-haven-city`, so it is offered for these three mods.
+- **Rule 3** also works the other way round, so avoid short pack keys: a pack named `haven` would match every mod whose key starts with `haven-`.
+
+#### Version and download link
+
+The launcher picks the pack version in this order:
+
+1. the version that has a link in the same release folder as the mod;
+2. otherwise, the version whose `version` equals the mod version;
+3. otherwise, the first version of the list, so put the newest version first.
+
+In that version's `assets`, it takes the link for the current platform (`windows`, `linux` or `macos`), then `all`, then `windows`, then any other. Textures are the same on every system, so a single `all` link is enough.
+
+#### Checking the setup
+
+1. In the launcher, open **Settings > Mods** and add the raw URL of the `index.json`.
+2. Open the mod page and click **Texture Packs**. The pack should be listed with the **Release Affiliated** badge. **No affiliated texture packs found** means that no rule matched: check the mod key, the tags, `supportedGames` and the release folder.
+3. Install or update the mod. The pack is downloaded and compiled with it, and shows as **ACTIVE** on the Texture Packs page.
+
 ### Installing or updating a mod
 
-On a mod page, **Install** and **Update** do more than download the mod. Before the download starts, the launcher looks in the mod source for packs attached to the release you are installing. A pack is attached when one of these is true:
-
-1. Its download link is in the same release folder as the mod archive.
-2. Its tags include the mod name, or `mod:<mod name>`.
-3. Its key equals the mod name, starts with `<mod name>-` or `<mod name>_`, or the mod name starts with `<key>-`.
-
-A pack whose `supportedGames` list does not include the current game is ignored. For the download link, the launcher prefers the one for the current platform, then `all`, then `windows`, then any other.
+On a mod page, **Install** and **Update** do more than download the mod. Before the download starts, the launcher looks in the mod source for the packs linked to the release you are installing, with the [linking rules](#linking-rules) above.
 
 Once the mod archive is downloaded, the launcher does the following for the attached packs:
 
