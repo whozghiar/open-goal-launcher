@@ -1,0 +1,139 @@
+1
+00:00:00,830 --> 00:00:09,230
+Ce court tutoriel présente deux fonctionnalités ajoutées à l'OpenGOAL Launcher avec l'aide de l'IA : les packs de textures pour les mods, et le gestionnaire de sauvegardes.
+
+2
+00:00:09,680 --> 00:00:11,370
+Première partie : les packs de textures des mods.
+
+3
+00:00:11,370 --> 00:00:15,590
+Dans le launcher d'origine, les packs de textures ne s'appliquaient qu'au jeu de base.
+
+4
+00:00:15,590 --> 00:00:19,210
+Les mods s'exécutent depuis leur propre dossier : ils ne les recevaient donc jamais.
+
+5
+00:00:19,660 --> 00:00:21,790
+Désormais, chaque mod a ses propres packs.
+
+6
+00:00:21,790 --> 00:00:24,990
+Ouvrez la page Mods, puis sélectionnez un mod installé.
+
+7
+00:00:25,460 --> 00:00:30,090
+À côté de « Play », le nouveau bouton « Texture Packs » liste les packs disponibles pour ce mod.
+
+8
+00:00:30,540 --> 00:00:33,030
+L'étiquette orange indique le mod que vous modifiez.
+
+9
+00:00:33,480 --> 00:00:39,120
+Chaque carte indique si le pack est actif, lié à la version du mod, et déjà téléchargé.
+
+10
+00:00:39,580 --> 00:00:42,390
+Pour désactiver un pack, cliquez sur « Disable for this mod ».
+
+11
+00:00:42,390 --> 00:00:47,350
+Rien n'est encore modifié : la carte devient orange et le changement est marqué comme en attente.
+
+12
+00:00:47,800 --> 00:00:53,450
+« Apply Texture Changes » copie les textures dans le dossier de ce mod uniquement, puis recompile le mod.
+
+13
+00:00:53,450 --> 00:00:56,300
+Le jeu de base et les autres mods ne sont jamais modifiés.
+
+14
+00:00:56,750 --> 00:00:59,610
+Cliquez à nouveau sur le bouton pour annuler un changement en attente.
+
+15
+00:01:00,070 --> 00:01:06,820
+Quand une version de mod déclare des packs de textures, installer ou mettre à jour le mod les télécharge et les active automatiquement.
+
+16
+00:01:06,820 --> 00:01:09,050
+Vous pouvez aussi importer votre propre fichier ZIP.
+
+17
+00:01:09,500 --> 00:01:11,270
+Deuxième partie : le gestionnaire de sauvegardes.
+
+18
+00:01:11,270 --> 00:01:15,380
+Le jeu de base et chaque mod stockent leurs sauvegardes dans des dossiers séparés.
+
+19
+00:01:15,380 --> 00:01:19,050
+Le Saves Manager les réunit toutes sur un seul écran.
+
+20
+00:01:19,500 --> 00:01:24,830
+Sur la page d'un jeu ou d'un mod, survolez « Advanced », puis choisissez « Open Saves Manager ».
+
+21
+00:01:25,280 --> 00:01:26,570
+Choisissez d'abord le jeu.
+
+22
+00:01:26,570 --> 00:01:30,940
+Puis l'installation : le jeu de base, ou l'un de vos mods installés.
+
+23
+00:01:31,400 --> 00:01:35,800
+Les sauvegardes sont regroupées par dossier de région, comme NTSC-U ou PAL.
+
+24
+00:01:35,800 --> 00:01:38,000
+Cliquez sur « View Slots » pour en ouvrir un.
+
+25
+00:01:38,450 --> 00:01:45,440
+Chaque emplacement affiche la taille du fichier et sa date de modification, avec trois actions : copier, créer une copie de secours et supprimer.
+
+26
+00:01:45,890 --> 00:01:51,240
+« Copy To » envoie une sauvegarde vers une autre installation, par exemple de ce mod vers le jeu de base.
+
+27
+00:01:51,240 --> 00:01:54,270
+Choisissez le dossier de région, puis l'emplacement de destination.
+
+28
+00:01:54,730 --> 00:02:00,580
+Si l'emplacement est déjà occupé, vous êtes averti, et l'ancienne sauvegarde est copiée en secours avant d'être écrasée.
+
+29
+00:02:00,580 --> 00:02:04,900
+Les transferts entre régions différentes sont bloqués, pour éviter de corrompre les sauvegardes.
+
+30
+00:02:05,360 --> 00:02:08,460
+Cochez cette case pour déplacer la sauvegarde au lieu de la copier.
+
+31
+00:02:08,910 --> 00:02:12,630
+Le bouton de copie de secours crée une copie horodatée à côté de la sauvegarde.
+
+32
+00:02:12,630 --> 00:02:16,950
+La suppression demande toujours une confirmation, car le fichier est effacé définitivement.
+
+33
+00:02:17,400 --> 00:02:24,150
+Enfin, « Refresh » recharge les fichiers après une partie, et « Open Folder » ouvre le dossier des sauvegardes dans l'explorateur de fichiers.
+
+34
+00:02:24,600 --> 00:02:29,640
+Et voilà : des packs de textures propres à chaque mod, et un seul endroit pour gérer toutes vos sauvegardes.
+
+35
+00:02:29,640 --> 00:02:30,940
+Merci d'avoir regardé !

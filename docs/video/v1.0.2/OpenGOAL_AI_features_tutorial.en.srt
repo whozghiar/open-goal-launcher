@@ -1,0 +1,140 @@
+1
+00:00:00,830 --> 00:00:09,230
+This short tutorial presents two features added to the OpenGOAL Launcher with AI assistance: texture packs for mods, and the Saves Manager.
+
+2
+00:00:09,680 --> 00:00:11,370
+Part one: mod texture packs.
+
+3
+00:00:11,370 --> 00:00:15,590
+In the original launcher, texture packs only applied to the base game.
+
+4
+00:00:15,590 --> 00:00:19,210
+Mods run from their own folder, so they never received them.
+
+5
+00:00:19,660 --> 00:00:21,790
+Now, each mod has its own packs.
+
+6
+00:00:21,790 --> 00:00:24,990
+Open the Mods page, and select an installed mod.
+
+7
+00:00:25,460 --> 00:00:30,090
+Next to Play, the new Texture Packs button lists the packs available for this mod.
+
+8
+00:00:30,540 --> 00:00:33,030
+The orange tag shows which mod you are editing.
+
+9
+00:00:33,480 --> 00:00:39,120
+Each card tells you whether the pack is active, linked to this mod's release, and already downloaded.
+
+10
+00:00:39,580 --> 00:00:42,390
+To turn a pack off, click Disable for this mod.
+
+11
+00:00:42,390 --> 00:00:47,350
+Nothing is changed yet: the card turns orange, and the change is marked as pending.
+
+12
+00:00:47,800 --> 00:00:53,450
+Apply Texture Changes copies the textures into this mod's folder only, then rebuilds the mod.
+
+13
+00:00:53,450 --> 00:00:56,300
+The base game and other mods are never touched.
+
+14
+00:00:56,750 --> 00:00:59,610
+Click the button again to cancel a pending change.
+
+15
+00:01:00,070 --> 00:01:06,820
+When a mod release declares texture packs, installing or updating the mod downloads and enables them automatically.
+
+16
+00:01:06,820 --> 00:01:09,050
+You can also import your own ZIP file.
+
+17
+00:01:09,500 --> 00:01:11,270
+Part two: the Saves Manager.
+
+18
+00:01:11,270 --> 00:01:15,380
+The base game and each mod store their saves in separate folders.
+
+19
+00:01:15,380 --> 00:01:19,050
+The Saves Manager brings them all together, on one screen.
+
+20
+00:01:19,500 --> 00:01:24,830
+On a game or mod page, hover Advanced, then choose Open Saves Manager.
+
+21
+00:01:25,280 --> 00:01:26,570
+First, pick the game.
+
+22
+00:01:26,570 --> 00:01:30,940
+Then the installation: the vanilla game, or one of your installed mods.
+
+23
+00:01:31,400 --> 00:01:35,800
+Saves are grouped by region folder, such as NTSC-U or PAL.
+
+24
+00:01:35,800 --> 00:01:38,000
+Click View Slots to open one.
+
+25
+00:01:38,450 --> 00:01:45,440
+Each slot shows its file size and last modified date, with three actions: copy, backup, and delete.
+
+26
+00:01:45,890 --> 00:01:51,240
+Copy To sends a save to another installation, for example from this mod to the vanilla game.
+
+27
+00:01:51,240 --> 00:01:54,270
+Choose the region folder, then the destination slot.
+
+28
+00:01:54,730 --> 00:02:00,580
+If the slot is already used, you are warned, and the old save is backed up before being overwritten.
+
+29
+00:02:00,580 --> 00:02:04,900
+Transfers between different regions are blocked, to avoid corrupted saves.
+
+30
+00:02:05,360 --> 00:02:08,460
+Tick this box to move the save instead of copying it.
+
+31
+00:02:08,910 --> 00:02:12,630
+The backup button creates a timestamped copy next to the save.
+
+32
+00:02:12,630 --> 00:02:16,950
+Delete always asks for confirmation, since the file is removed for good.
+
+33
+00:02:17,400 --> 00:02:24,150
+Finally, Refresh reloads the files after playing, and Open Folder shows the save folder in your file explorer.
+
+34
+00:02:24,600 --> 00:02:29,640
+That's it: texture packs for each mod, and one place to manage all your saves.
+
+35
+00:02:29,640 --> 00:02:30,940
+Thanks for watching!
+
