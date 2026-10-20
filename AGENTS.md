@@ -45,6 +45,7 @@ On this Windows development environment, build tools and runtimes are located at
 | **Typecheck**              | `npx yarn typecheck`                           | Runs `svelte-check` across Svelte 5 and TypeScript files.         |
 | **Code Formatting**        | `npx yarn check-format` / `npx yarn format`    | Prettier with Svelte plugin.                                      |
 | **Rust Tests**             | `cd src-tauri && cargo test`                   | Runs Rust backend tests and binding export tests.                 |
+| **Claude Code Skills**     | `npx skills experimental_install`              | Restores `.claude/skills/` from `skills-lock.json`.               |
 
 ---
 
