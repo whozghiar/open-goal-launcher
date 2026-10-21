@@ -72,7 +72,7 @@
 </script>
 
 {#if isLevelEditor}
-  <LevelEditor embedded locale={config?.locale} />
+  <LevelEditor locale={config?.locale} />
 {:else}
   <Router />
 {/if}
