@@ -212,6 +212,17 @@
           >
             {$_("gameControls_button_saveManager")}
           </DropdownItem>
+          {#if activeGame === "jak3"}
+            <DropdownItem
+              onclick={async () => {
+                navigate(`/:game_name/level_edited`, {
+                  params: { game_name: activeGame },
+                });
+              }}
+            >
+              {$_("gameControls_button_editedLevels")}
+            </DropdownItem>
+          {/if}
         </Dropdown>
         <Button
           class="text-gray-200 h-10 w-10 p-0 focus:ring-0 focus:outline-none border-solid border border-[#2a2a2a] rounded bg-[#0b0b0b] hover:bg-[#141414] hover:border-[#3a3a3a] hover:text-white"

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
   import { Router } from "sv-router";
-  import "./router.ts";
+  import { navigate, route } from "./router.ts";
+  import { asJobType } from "$lib/job/jobs";
   import { isInDebugMode } from "$lib/utils/common";
   import { isMinimumVCCRuntimeInstalled, setLocale } from "$lib/rpc/config";
   import { listen } from "@tauri-apps/api/event";
@@ -16,6 +17,7 @@
 
   let revokeSpecificActions = false;
   let toastListener: any = undefined;
+  let playEditedLevelListener: any = undefined;
 
   // Events
   onMount(async () => {
@@ -34,11 +36,31 @@
         toastStore.makeToast(event.payload.toast, event.payload.level);
       },
     );
+
+    // the level editor's Play button: the level is installed and started as one of our jobs
+    if (!isLevelEditor) {
+      playEditedLevelListener = await listen(
+        "level_edited:play",
+        (event: { payload: { levelDir: string; levelName: string } }) => {
+          navigate("/job/:job_type", {
+            params: { job_type: asJobType("playEditedLevel") },
+            search: {
+              levelDir: event.payload.levelDir,
+              levelName: event.payload.levelName,
+              returnTo: route.pathname,
+            },
+          });
+        },
+      );
+    }
   });
 
   onDestroy(() => {
     if (toastListener !== undefined) {
       toastListener();
+    }
+    if (playEditedLevelListener !== undefined) {
+      playEditedLevelListener();
     }
   });
 

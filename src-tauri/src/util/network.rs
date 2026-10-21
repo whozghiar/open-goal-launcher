@@ -4,6 +4,15 @@ use tokio;
 use tokio::io::AsyncWriteExt;
 
 pub async fn download_file(url: &str, destination: &Path) -> Result<()> {
+  download_file_with_progress(url, destination, |_, _| {}).await
+}
+
+/// `on_progress(downloaded, total)`, total being 0 when the server does not tell it
+pub async fn download_file_with_progress(
+  url: &str,
+  destination: &Path,
+  mut on_progress: impl FnMut(u64, u64),
+) -> Result<()> {
   if let Some(parent) = destination.parent() {
     tokio::fs::create_dir_all(parent).await?;
   }
@@ -23,8 +32,12 @@ pub async fn download_file(url: &str, destination: &Path) -> Result<()> {
       )
     })?;
 
+  let total = response.content_length().unwrap_or(0);
+  let mut downloaded = 0;
   while let Some(chunk) = response.chunk().await? {
     file.write_all(&chunk).await?;
+    downloaded += chunk.len() as u64;
+    on_progress(downloaded, total);
   }
 
   Ok(())

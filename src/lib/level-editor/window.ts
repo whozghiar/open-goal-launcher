@@ -1,10 +1,14 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { refreshLevelEditorHost } from "$lib/rpc/features";
 
 export const LEVEL_EDITOR_WINDOW = "level-editor";
 
 // Jak Level Editor (level-editor/, a submodule) runs in a window of its own, the main window's
 // frontend showing it instead of the launcher when the window has this label (App.svelte)
 export async function openLevelEditor() {
+  // what the editor gets from the launcher depends on its folders: the installation folder, the
+  // games installed, ogle-extract downloaded
+  await refreshLevelEditorHost();
   const existing = await WebviewWindow.getByLabel(LEVEL_EDITOR_WINDOW);
   if (existing) {
     await existing.unminimize();

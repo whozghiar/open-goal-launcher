@@ -8,6 +8,8 @@ const JOB_TYPES = [
   "installModLocally",
   "decompileMod",
   "compileMod",
+  "playEditedLevel",
+  "removeEditedLevel",
 ] as const;
 
 export type JobType = (typeof JOB_TYPES)[number];

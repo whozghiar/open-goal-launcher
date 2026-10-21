@@ -13,6 +13,7 @@ import TexturePacks from "./components/texture-packs/TexturePacks.svelte";
 import ModTexturePacks from "./components/texture-packs/ModTexturePacks.svelte";
 // @ts-ignore
 import SaveDataManager from "./components/saves/SaveDataManager.svelte";
+import EditedLevels from "./components/level-edited/EditedLevels.svelte";
 import UpdateLauncher from "./routes/UpdateLauncher.svelte";
 // @ts-ignore
 import Layout from "./layouts/Layout.svelte";
@@ -146,6 +147,7 @@ export const { p, navigate, isActive, route } = createRouter({
       "/": TexturePacks,
     },
     "/saves": SaveDataManager,
+    "/level_edited": EditedLevels,
   },
   "/mods": {
     "/": Mods,

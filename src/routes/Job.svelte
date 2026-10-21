@@ -23,6 +23,10 @@
   import { searchParams } from "sv-router";
   import { toSupportedGame } from "$lib/rpc/SupportedGame";
   import { setupTexturePacks } from "$lib/job/texturePackJob";
+  import {
+    setupPlayEditedLevel,
+    setupRemoveEditedLevel,
+  } from "$lib/job/levelEditedJob";
   import type { AttachedTexturePack } from "$lib/features/texture-packs";
   import { infoLog, warnLog } from "$lib/rpc/logging";
   import { config } from "../state/config.svelte";
@@ -86,6 +90,8 @@
     if (searchParams.has("modVersion")) {
       modVersion = searchParams.get("modVersion")?.toString() ?? undefined;
     }
+    const levelDir = searchParams.get("levelDir")?.toString();
+    const levelName = searchParams.get("levelName")?.toString();
     // - attachedTexturePacks
     let attachedTexturePacks: AttachedTexturePack[] = [];
     if (searchParams.has("attachedTexturePacks")) {
@@ -171,6 +177,20 @@
       case "compileMod":
         if (activeGame && modName && modSourceName) {
           await setupCompileModJob(activeGame, modName, modSourceName);
+        } else {
+          invalidJobDefinition = true;
+        }
+        break;
+      case "playEditedLevel":
+        if (levelDir && levelName) {
+          await setupPlayEditedLevel(levelDir, levelName);
+        } else {
+          invalidJobDefinition = true;
+        }
+        break;
+      case "removeEditedLevel":
+        if (levelName) {
+          await setupRemoveEditedLevel(levelName);
         } else {
           invalidJobDefinition = true;
         }
