@@ -8,6 +8,11 @@
   import { toastStore, type ToastLevel } from "$lib/stores/ToastStore";
   import { systemInfoState } from "./state/SystemInfoState.svelte.ts";
   import { config } from "./state/config.svelte.ts";
+  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+  import LevelEditor from "$level-editor/LevelEditor.svelte";
+  import { LEVEL_EDITOR_WINDOW } from "$lib/level-editor/window";
+
+  const isLevelEditor = getCurrentWebviewWindow().label === LEVEL_EDITOR_WINDOW;
 
   let revokeSpecificActions = false;
   let toastListener: any = undefined;
@@ -66,4 +71,8 @@
   }
 </script>
 
-<Router />
+{#if isLevelEditor}
+  <LevelEditor embedded locale={config?.locale} />
+{:else}
+  <Router />
+{/if}

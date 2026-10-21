@@ -1,0 +1,25 @@
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+export const LEVEL_EDITOR_WINDOW = "level-editor";
+
+// Jak Level Editor (level-editor/, a submodule) runs in a window of its own, the main window's
+// frontend showing it instead of the launcher when the window has this label (App.svelte)
+export async function openLevelEditor() {
+  const existing = await WebviewWindow.getByLabel(LEVEL_EDITOR_WINDOW);
+  if (existing) {
+    await existing.unminimize();
+    await existing.setFocus();
+    return;
+  }
+  new WebviewWindow(LEVEL_EDITOR_WINDOW, {
+    url: "/",
+    title: "Jak Level Editor",
+    width: 1600,
+    height: 900,
+    minWidth: 1100,
+    minHeight: 650,
+    center: true,
+    decorations: false,
+    maximized: true,
+  });
+}

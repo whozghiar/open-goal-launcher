@@ -187,6 +187,7 @@
   "setup_prompt_selectISO": "Select your legitimately obtained ISO File",
   "setup_error_noISO": "Can't continue without an ISO",
   "sidebar_help": "Help",
+  "sidebar_levelEditor": "Level Editor",
   "sidebar_settings": "Settings",
   "splash_button_setInstallFolder_prompt": "Pick an Installation Folder",
   "splash_button_setInstallFolder": "Set Install Folder",

@@ -1,0 +1,4 @@
+[submodule "level-editor"]
+	path = level-editor
+	url = https://github.com/whozghiar/open-goal-level-builder.git
+	branch = rewrite/rust

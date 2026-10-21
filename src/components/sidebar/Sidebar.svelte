@@ -4,6 +4,8 @@
   import logoJak3 from "$assets/images/jak-3.webp";
   import logoMods from "$assets/images/mods.webp";
   import IconCog from "~icons/mdi/cog";
+  import IconLevelEditor from "~icons/mdi/pencil-ruler";
+  import { openLevelEditor } from "$lib/level-editor/window";
   import { Tooltip } from "flowbite-svelte";
   import { _ } from "svelte-i18n";
   import { jobTracker } from "$lib/stores/JobStore";
@@ -119,6 +121,20 @@
       </button>
       <Tooltip triggeredBy="#mods" placement="right" type="dark">
         {$_("settings_tabs_mods")}
+      </Tooltip>
+    </li>
+
+    <li class="relative flex w-full justify-center">
+      <button
+        id="level-editor"
+        class={getNavItemStyle("/level-editor")}
+        onclick={openLevelEditor}
+        {disabled}
+      >
+        <IconLevelEditor class="text-[30px]" />
+      </button>
+      <Tooltip triggeredBy="#level-editor" placement="right" type="dark">
+        {$_("sidebar_levelEditor")}
       </Tooltip>
     </li>
 
