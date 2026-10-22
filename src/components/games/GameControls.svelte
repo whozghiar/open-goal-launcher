@@ -28,6 +28,7 @@
   import type { SupportedGame } from "$lib/rpc/bindings/SupportedGame";
   import { asJobType } from "$lib/job/jobs";
   import { config } from "/src/state/config.svelte";
+  import { LEVEL_EDITOR_AVAILABLE } from "$lib/level-editor/window";
 
   let {
     activeGame,
@@ -212,7 +213,7 @@
           >
             {$_("gameControls_button_saveManager")}
           </DropdownItem>
-          {#if activeGame === "jak3"}
+          {#if activeGame === "jak3" && LEVEL_EDITOR_AVAILABLE}
             <DropdownItem
               onclick={async () => {
                 navigate(`/:game_name/level_edited`, {

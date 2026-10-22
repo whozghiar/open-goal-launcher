@@ -1,7 +1,11 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { platform } from "@tauri-apps/plugin-os";
 import { refreshLevelEditorHost } from "$lib/rpc/features";
 
 export const LEVEL_EDITOR_WINDOW = "level-editor";
+
+// not on macOS for now: whozghiar/jak-project's tooling and ogle-extract have no build for it
+export const LEVEL_EDITOR_AVAILABLE = platform() !== "macos";
 
 // Jak Level Editor (level-editor/, a submodule) runs in a window of its own, the main window's
 // frontend showing it instead of the launcher when the window has this label (App.svelte)

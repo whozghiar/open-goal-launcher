@@ -5,7 +5,10 @@
   import logoMods from "$assets/images/mods.webp";
   import IconCog from "~icons/mdi/cog";
   import IconLevelEditor from "~icons/mdi/pencil-ruler";
-  import { openLevelEditor } from "$lib/level-editor/window";
+  import {
+    LEVEL_EDITOR_AVAILABLE,
+    openLevelEditor,
+  } from "$lib/level-editor/window";
   import { Tooltip } from "flowbite-svelte";
   import { _ } from "svelte-i18n";
   import { jobTracker } from "$lib/stores/JobStore";
@@ -124,19 +127,21 @@
       </Tooltip>
     </li>
 
-    <li class="relative flex w-full justify-center">
-      <button
-        id="level-editor"
-        class={getNavItemStyle("/level-editor")}
-        onclick={openLevelEditor}
-        {disabled}
-      >
-        <IconLevelEditor class="text-[30px]" />
-      </button>
-      <Tooltip triggeredBy="#level-editor" placement="right" type="dark">
-        {$_("sidebar_levelEditor")}
-      </Tooltip>
-    </li>
+    {#if LEVEL_EDITOR_AVAILABLE}
+      <li class="relative flex w-full justify-center">
+        <button
+          id="level-editor"
+          class={getNavItemStyle("/level-editor")}
+          onclick={openLevelEditor}
+          {disabled}
+        >
+          <IconLevelEditor class="text-[30px]" />
+        </button>
+        <Tooltip triggeredBy="#level-editor" placement="right" type="dark">
+          {$_("sidebar_levelEditor")}
+        </Tooltip>
+      </li>
+    {/if}
 
     <li class="mt-auto w-full border-t border-white/5 pt-4">
       <div class="relative flex justify-center">
