@@ -36,9 +36,12 @@ The launcher installs and updates OpenGOAL from the releases of the user's fork
 [whozghiar/jak-project](https://github.com/whozghiar/jak-project) instead of upstream's: they carry
 the level builder's fixes the editor's levels need. Updates come as usual (the header's icon, the
 Versions page, the automatic update), and the editor's game always uses the active version: nothing
-else is downloaded. Inside the launcher, the editor shows no OpenGOAL manager or update button of
-its own (the standalone editor has one): when the active version cannot play its levels, or a newer
-release of the fork is out, it says so and points to the launcher's header and Versions page.
+else is downloaded. The editor runs no game of its own: the standalone editor only exports, and in
+the launcher the launcher plays. When the active version cannot play its levels, the editor says so
+and points to the launcher's header and Versions page.
+
+The Level Editor is not offered on macOS for now: the fork's tooling and `ogle-extract` have no
+build for it.
 
 The editor is its own project ([open-goal-level-builder](https://github.com/whozghiar/open-goal-level-builder)),
 written in Rust and Svelte like the launcher. The launcher only plugs it in: it keeps no copy of
@@ -73,7 +76,9 @@ its code.
    - `ogle-extract` is downloaded the first time from the release of the editor's version, into
      `<install>/jak-level-editor/tools/v<version>/`.
 
-   The preferences are shared with the standalone editor (`%APPDATA%/OpenGOAL/jak-level-editor`).
+   The editor's preferences (its library, its caches) are the launcher's own, in
+   `<launcher's config folder>/jak-level-editor/` (`%APPDATA%/OpenGOAL-Launcher/jak-level-editor`
+   on Windows): the standalone editor keeps its own, the two never share a library.
 
 6. After exporting a level for the game, **Play** in the editor brings the launcher's window to the
    front, which runs a job like a mod's installation, with its steps and its logs:
@@ -87,8 +92,8 @@ its code.
    3. **Install Level**: the level's files are copied into that game's data and registered
       (`game.gp`, `level-info.gc`);
    4. **Compile**: the game is built with the level;
-   5. **Play**: the game starts at the level's continue point, with its own settings and saves
-      (`level_edited/_settings/`).
+   5. **Play**: the game starts at the level's continue point (`gk ... -level <continue point>`),
+      with its own settings and saves (`level_edited/_settings/`).
 
    The first Play with a version takes about ten minutes (decompilation, a full build); the next
    ones only build again what changed. A build short of memory can stop on `bad allocation`: press
@@ -132,12 +137,14 @@ flowchart TD
   ```
 
 - **Backend:** `src-tauri/Cargo.toml` depends on `level-editor/crates/tauri-plugin`; `main.rs`
-  registers it with `.plugin(tauri_plugin_jak_level_editor::init())`. The plugin holds the editor's
-  engine, its one command `call`, its `jle://` protocol and its remote control for AI assistants
-  (port 47821: one editor at a time can hold it, so while the standalone editor runs, the
-  launcher's says in its log that the remote control is unavailable).
+  registers it with `Builder::new().prefs_in_app_config()` (the editor's preferences in the
+  launcher's config folder). The plugin holds the editor's engine, its one command `call`, its
+  `jle://` protocol and its remote control for AI assistants: off unless turned on in the editor's
+  File > Settings (port 47821 of this computer, each request with the token the editor writes into
+  `remote.json` next to its preferences; an MCP server for this editor reads it there through
+  `JLE_PREFS_DIR`).
 - **What the launcher gives the editor** (`Host`, [`level-editor/crates/core/src/host.rs`](../../level-editor/crates/core/src/host.rs)):
-  [`commands/features/level_edited.rs`](../../src-tauri/src/commands/features/level_edited.rs)
+  [`commands/features/level_edited/mod.rs`](../../src-tauri/src/commands/features/level_edited/mod.rs)
   builds it from the settings (`host()`); `main.rs` gives it with `set_host` once the settings are
   loaded, and `openLevelEditor` again each time the editor's window opens (command
   `refresh_level_editor_host`), so a new installation folder, a game installed or a downloaded
@@ -158,7 +165,10 @@ flowchart TD
     (`windows-x64`, `linux-x64`, `macos-x64`, `macos-arm64`; the archive holds `ogle-extract(.exe)`
     and `ogle-extract-data/`), unpacked in a `.part` folder renamed when complete, with its progress
     sent to the editor.
-  - For tests, `JLE_EXTRACTOR_URL` replaces it (a URL, or the path of a local archive).
+  - It and OpenGOAL's archives (`download_version`) are checked before use: `download_release_asset`
+    ([`network.rs`](../../src-tauri/src/util/network.rs)) asks GitHub's API the SHA-256 of the
+    release's asset (its `digest`) and deletes a download that differs, or one GitHub gives none for.
+  - For tests, `JLE_EXTRACTOR_URL` replaces it (the path of a local archive, not checked).
 - **OpenGOAL's releases:** `TOOLING_REPOSITORY` in [`github.ts`](../../src/lib/utils/github.ts)
   (`whozghiar/jak-project`) is the repository `listOfficialReleases` and `getLatestOfficialRelease`
   read, so the Versions page, the header's update icon and the automatic update follow the fork's
@@ -171,46 +181,45 @@ flowchart TD
   X.Y.Z: `tooling_version` ([`config.rs`](../../src-tauri/src/config.rs)) reads the version as
   X.Y.Z for the minimum versions the launcher checks (`does_active_tooling_version_meet_minimum`,
   the tools' arguments); versions are otherwise only compared for equality and sorted by date.
-- **The level builder:** a version can play the editor's levels when it is one of the fork's
-  releases (its tag has the suffix `-whozghiar.N`: the fork's master-dev has the level builder's
-  fixes) and Jak 3 is installed (the disc extracted in `active/jak3/data/iso_data/jak3`); otherwise
-  the editor has no Play button and the job stops with the reason (`runtime.launcher_version`, shown
-  in its Export window and Settings). When a release newer than the active version is out, the
-  editor's Play window and Settings say it (`runtime.launcher_update`), pointing to the header's
-  green icon and the Versions page; the editor reads the fork's releases itself for that
-  (`jle_core::tooling::newer_than`, GitHub asked once an hour at most, nothing said without
-  network).
+- **The versions that play:** a version can play the editor's levels when it is a release of the
+  fork newer than `v0.3.9-whozghiar.1` (its level builder has the fixes the levels need, and its gk
+  starts the game at a continue point: `-level`, branch `fix/jak3-gk-level` of the fork) and Jak 3
+  is installed (the disc extracted in `active/jak3/data/iso_data/jak3`); otherwise the job stops
+  with the reason (`runtime.launcher_version`, shown in the editor's Play and Export windows),
+  pointing to the header's green icon and the Versions page.
 - **The isolated game** `<install>/features/jak3/level_edited/`, like a mod: its own `data/` (the
   decompiled game, the installed levels, the build: `--proj-path`), `_settings/`
   (`gk --config-path`: its settings and saves), `packages/` (a copy of each level installed) and
   `jle-runtime.json` (the version its data was made from, the disc decompiled), run with the
-  programs of the active version (`versions/official/<version>/gk`, `goalc`, `extractor`). When the
-  active version is not the one in `jle-runtime.json`, the next Play makes `data/` again from that
+  programs of the active version (`versions/official/<version>/gk`, `extractor`). When the active
+  version is not the one in `jle-runtime.json`, the next Play makes `data/` again from that
   version's and installs the levels again from `packages/`. Vanilla `active/`, `versions/` and the
-  mods are never changed. This is the editor's code (`jle_core::runtime::launcher_level_edited`,
-  `prepare`, `apply_level`, `remove_level_files`). The standalone editor makes a game of its own
-  with the same code (`<library>/opengoal/`, with the releases it installs itself): it no longer
-  plays in the launcher's, and only reads the disc the launcher extracted.
+  mods are never changed. This is the launcher's code
+  ([`level_edited/game.rs`](../../src-tauri/src/commands/features/level_edited/game.rs),
+  `EditedGame`); the editor gives only the level's installation into a data folder
+  (`jle_core::io::level_package`: its files in its own folders, its lines in marked blocks of
+  `game.gp` and `level-info.gc`, which tell what is installed).
 - **Play:** the runtime's `play` emits `level_edited:play` (the export's folder, the level's name)
   to the main window and brings it to the front; `App.svelte` opens the job `playEditedLevel`
   ([`levelEditedJob.ts`](../../src/lib/job/levelEditedJob.ts)), whose steps call the commands
   `level_edited_prepare_runtime`, `level_edited_decompile`, `level_edited_install_level`,
-  `level_edited_compile` and `level_edited_launch`. The launcher runs the tools with its logs; the
-  rest is the editor's own code (`jle_core::runtime::OpenGoal`, `jle_core::io::level_package`), which
-  its standalone app uses too: the preparation, the installation, the command lines of the
-  decompilation and the build (`extractor --folder --decompile` / `--compile`), and the start at the continue point (`gk ... -- -boot -fakeiso -debug`, then
-  goalc's REPL running `data/goal_src/user/jle/startup-jak3.gc`, stopped once the level is shown).
+  `level_edited_compile` and `level_edited_launch`: the preparation, the decompilation and the build
+  (`extractor --folder --decompile` / `--compile`), the installation, and the start at the continue
+  point (`gk ... -- -boot -fakeiso -debug -level <continue point>`, no REPL).
   The tools' output goes to the job's logs and `extractor-jak3-level_edited.log`, the game's to
   `level_edited/_settings/jle-game.log`. When the main window is closed, the runtime runs the same
   steps itself. The editor can also call `install_level`, `remove_level` and `launch` directly.
   **Remove** is the job `removeEditedLevel` (`level_edited_remove_level`, then prepare, decompile and
   compile; a game started by Play is stopped before any build). The editor's host is given again
   when the active version changes (`set_active_version`).
-- **What to publish:** a release of the fork made with `release-tooling.yml` from master-dev (with
-  the level builder's fixes), version `0.3.X-whozghiar.N` (the suffix makes it a version for the
-  editor's levels); and the editor's release of its version with `ogle-extract-<platform>.zip`.
+- **What to publish:** a release of the fork made with `release-tooling.yml` from master-dev once
+  `fix/jak3-gk-level` is merged, newer than `v0.3.9-whozghiar.1` (`v0.3.9-whozghiar.2` for
+  instance); and the editor's release of its version with `ogle-extract-<platform>.zip`, published
+  (a draft's assets cannot be downloaded).
 - **Permissions:** the capability `jak-level-editor:default` and the `level-editor` window are added
   to `capabilities/main.json`, with the right to create a webview window.
+- **macOS:** `LEVEL_EDITOR_AVAILABLE` ([`window.ts`](../../src/lib/level-editor/window.ts)) hides
+  the sidebar's button and the Edited Levels entry on macOS.
 - **Frontend:** Vite's alias `$level-editor` points to `level-editor/ui`; `App.svelte` mounts
   `<LevelEditor locale={config.locale} />` in the editor's window, as the standalone editor mounts
   it (with its own title bar, since the window has no system frame). The editor has its own
@@ -230,7 +239,8 @@ flowchart TD
 | :------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
 | [`.gitmodules`](../../.gitmodules), `level-editor/`                                                                              | the editor's repository as a submodule                       |
 | [`src/lib/level-editor/window.ts`](../../src/lib/level-editor/window.ts)                                                         | opens (or focuses) the editor's window                       |
-| [`src-tauri/src/commands/features/level_edited.rs`](../../src-tauri/src/commands/features/level_edited.rs)                       | the host, the extractor's download, the isolated game        |
+| [`src-tauri/src/commands/features/level_edited/mod.rs`](../../src-tauri/src/commands/features/level_edited/mod.rs)               | the host, the extractor's download, the commands             |
+| [`src-tauri/src/commands/features/level_edited/game.rs`](../../src-tauri/src/commands/features/level_edited/game.rs)             | the isolated game: prepared, built, started at a level       |
 | [`src/lib/job/levelEditedJob.ts`](../../src/lib/job/levelEditedJob.ts)                                                           | the steps of the jobs `playEditedLevel`, `removeEditedLevel` |
 | [`src/components/level-edited/EditedLevels.svelte`](../../src/components/level-edited/EditedLevels.svelte)                       | the Edited Levels page                                       |
 | [`docs/features_ai/features_level_editor.md`](features_level_editor.md)                                                          | this document                                                |
@@ -240,14 +250,16 @@ flowchart TD
 ## 5. Overview of Changes from the Original Project
 
 - [`src/components/sidebar/Sidebar.svelte`](../../src/components/sidebar/Sidebar.svelte): the
-  **Level Editor** button, above Settings.
+  **Level Editor** button, above Settings (not on macOS).
 - [`src/App.svelte`](../../src/App.svelte): shows the editor, with its own title bar, instead of
   the router in the `level-editor` window; in the main window, opens the Play job on
   `level_edited:play`.
 - [`src-tauri/Cargo.toml`](../../src-tauri/Cargo.toml), [`src-tauri/src/main.rs`](../../src-tauri/src/main.rs):
   the editor's plugin, its host, the `level_edited_*` commands.
 - [`src-tauri/src/util/network.rs`](../../src-tauri/src/util/network.rs): `download_file_with_progress`
-  (`download_file` uses it).
+  (`download_file` uses it), `download_release_asset` (a release's asset checked against its
+  SHA-256); [`src-tauri/src/commands/versions.rs`](../../src-tauri/src/commands/versions.rs):
+  OpenGOAL's archives downloaded with it.
 - [`src/routes/Job.svelte`](../../src/routes/Job.svelte), [`src/lib/job/jobs.ts`](../../src/lib/job/jobs.ts),
   [`src/lib/rpc/features.ts`](../../src/lib/rpc/features.ts): the two jobs and their commands.
 - [`src/lib/utils/github.ts`](../../src/lib/utils/github.ts): OpenGOAL's releases read from the fork
@@ -258,7 +270,7 @@ flowchart TD
   `tooling_version` (a fork's version meets the minimums of its X.Y.Z); `set_active_version` gives
   the editor its host again.
 - [`src/router.ts`](../../src/router.ts), [`src/components/games/GameControls.svelte`](../../src/components/games/GameControls.svelte):
-  the Edited Levels page and its entry in Jak 3's **Advanced** menu.
+  the Edited Levels page and its entry in Jak 3's **Advanced** menu (not on macOS).
 - [`src-tauri/capabilities/main.json`](../../src-tauri/capabilities/main.json): its permission and
   window.
 - [`src-tauri/tauri.conf.json`](../../src-tauri/tauri.conf.json): its resources in the bundle.
@@ -294,10 +306,12 @@ Le launcher installe et met à jour OpenGOAL depuis les releases du fork de l'ut
 elles contiennent les corrections du constructeur de niveaux dont les niveaux de l'éditeur ont
 besoin. Les mises à jour arrivent comme d'habitude (l'icône de l'en-tête, la page Versions, la mise
 à jour automatique), et le jeu de l'éditeur utilise toujours la version active : rien d'autre n'est
-téléchargé. Dans le launcher, l'éditeur n'affiche ni gestionnaire d'OpenGOAL ni bouton de mise à
-jour à lui (l'éditeur autonome en a un) : quand la version active ne peut pas jouer ses niveaux, ou
-qu'une release plus récente du fork est sortie, il le dit et renvoie à l'en-tête et à la page
-Versions du launcher.
+téléchargé. L'éditeur ne lance aucun jeu à lui : l'éditeur autonome ne fait qu'exporter, et dans le
+launcher c'est le launcher qui fait jouer. Quand la version active ne peut pas jouer ses niveaux,
+l'éditeur le dit et renvoie à l'en-tête et à la page Versions du launcher.
+
+Le Level Editor n'est pas proposé sur macOS pour le moment : l'outillage du fork et `ogle-extract`
+n'y sont pas compilés.
 
 L'éditeur est un projet à part ([open-goal-level-builder](https://github.com/whozghiar/open-goal-level-builder)),
 écrit en Rust et Svelte comme le launcher. Le launcher se contente de le brancher : il ne garde
@@ -335,7 +349,10 @@ aucune copie de son code.
    - `ogle-extract` est téléchargé la première fois depuis la release de la version de l'éditeur,
      dans `<install>/jak-level-editor/tools/v<version>/`.
 
-   Les préférences sont partagées avec l'éditeur autonome (`%APPDATA%/OpenGOAL/jak-level-editor`).
+   Les préférences de l'éditeur (sa bibliothèque, ses caches) sont propres au launcher, dans
+   `<dossier de config du launcher>/jak-level-editor/` (`%APPDATA%/OpenGOAL-Launcher/jak-level-editor`
+   sous Windows) : l'éditeur autonome garde les siennes, les deux ne partagent jamais de
+   bibliothèque.
 
 6. Après avoir exporté un niveau pour le jeu, **Jouer** dans l'éditeur ramène la fenêtre du
    launcher au premier plan, qui lance une tâche comme l'installation d'un mod, avec ses étapes et
@@ -350,8 +367,8 @@ aucune copie de son code.
    3. **Installer le niveau** : les fichiers du niveau sont copiés dans les données de ce jeu et
       déclarés (`game.gp`, `level-info.gc`) ;
    4. **Compiler** : le jeu est construit avec le niveau ;
-   5. **Jouer** : le jeu démarre au point de reprise du niveau, avec ses propres réglages et
-      sauvegardes (`level_edited/_settings/`).
+   5. **Jouer** : le jeu démarre au point de reprise du niveau (`gk ... -level <point de reprise>`),
+      avec ses propres réglages et sauvegardes (`level_edited/_settings/`).
 
    Le premier Jouer avec une version prend une dizaine de minutes (décompilation, compilation
    complète) ; les suivants ne recompilent que ce qui a changé. Une compilation à court de mémoire
@@ -395,13 +412,14 @@ flowchart TD
   ```
 
 - **Backend :** `src-tauri/Cargo.toml` dépend de `level-editor/crates/tauri-plugin` ; `main.rs`
-  l'enregistre avec `.plugin(tauri_plugin_jak_level_editor::init())`. Le plugin contient le moteur
-  de l'éditeur, son unique commande `call`, son protocole `jle://` et sa télécommande pour les
-  assistants IA (port 47821 : un seul éditeur à la fois peut l'occuper, donc tant que l'éditeur
-  autonome tourne, celui du launcher indique dans son journal que la télécommande est
-  indisponible).
+  l'enregistre avec `Builder::new().prefs_in_app_config()` (les préférences de l'éditeur dans le
+  dossier de config du launcher). Le plugin contient le moteur de l'éditeur, son unique commande
+  `call`, son protocole `jle://` et sa télécommande pour les assistants IA : désactivée sauf si on
+  l'active dans Fichier > Paramètres de l'éditeur (port 47821 de cet ordinateur, chaque requête
+  avec le jeton que l'éditeur écrit dans `remote.json` à côté de ses préférences ; un serveur MCP
+  pour cet éditeur l'y lit grâce à `JLE_PREFS_DIR`).
 - **Ce que le launcher donne à l'éditeur** (`Host`, [`level-editor/crates/core/src/host.rs`](../../level-editor/crates/core/src/host.rs)) :
-  [`commands/features/level_edited.rs`](../../src-tauri/src/commands/features/level_edited.rs) le
+  [`commands/features/level_edited/mod.rs`](../../src-tauri/src/commands/features/level_edited/mod.rs) le
   construit à partir des réglages (`host()`) ; `main.rs` le donne avec `set_host` une fois les
   réglages chargés, et `openLevelEditor` à nouveau à chaque ouverture de la fenêtre de l'éditeur
   (commande `refresh_level_editor_host`), pour qu'un nouveau dossier d'installation, un jeu
@@ -423,7 +441,11 @@ flowchart TD
     (`windows-x64`, `linux-x64`, `macos-x64`, `macos-arm64` ; l'archive contient
     `ogle-extract(.exe)` et `ogle-extract-data/`), décompressé dans un dossier `.part` renommé une
     fois complet, sa progression envoyée à l'éditeur.
-  - Pour les tests, `JLE_EXTRACTOR_URL` le remplace (une URL, ou le chemin d'une archive locale).
+  - Lui et les archives d'OpenGOAL (`download_version`) sont vérifiés avant usage :
+    `download_release_asset` ([`network.rs`](../../src-tauri/src/util/network.rs)) demande à l'API
+    de GitHub le SHA-256 de l'asset de la release (son `digest`) et supprime un téléchargement qui
+    diffère, ou pour lequel GitHub n'en donne pas.
+  - Pour les tests, `JLE_EXTRACTOR_URL` le remplace (le chemin d'une archive locale, non vérifiée).
 - **Les releases d'OpenGOAL :** `TOOLING_REPOSITORY` dans [`github.ts`](../../src/lib/utils/github.ts)
   (`whozghiar/jak-project`) est le dépôt que lisent `listOfficialReleases` et
   `getLatestOfficialRelease` : la page Versions, l'icône de mise à jour de l'en-tête et la mise à
@@ -436,39 +458,33 @@ flowchart TD
   ([`config.rs`](../../src-tauri/src/config.rs)) lit la version comme X.Y.Z pour les versions
   minimales que vérifie le launcher (`does_active_tooling_version_meet_minimum`, les arguments des
   outils) ; ailleurs les versions ne sont comparées que par égalité et triées par date.
-- **Le constructeur de niveaux :** une version peut jouer les niveaux de l'éditeur quand c'est une
-  des releases du fork (son tag a le suffixe `-whozghiar.N` : le master-dev du fork a les
-  corrections du constructeur de niveaux) et que Jak 3 est installé (le disque extrait dans
-  `active/jak3/data/iso_data/jak3`) ; sinon l'éditeur n'a pas de bouton Jouer et la tâche s'arrête
-  en donnant la raison (`runtime.launcher_version`, affichée dans sa fenêtre Export et ses
-  Paramètres). Quand une release plus récente que la version active est sortie, la fenêtre Jouer et
-  les Paramètres de l'éditeur le disent (`runtime.launcher_update`), en renvoyant à l'icône verte de
-  l'en-tête et à la page Versions ; l'éditeur lit lui-même les releases du fork pour cela
-  (`jle_core::tooling::newer_than`, GitHub interrogé une fois par heure au plus, rien de dit sans
-  réseau).
+- **Les versions qui font jouer :** une version peut jouer les niveaux de l'éditeur quand c'est une
+  release du fork plus récente que `v0.3.9-whozghiar.1` (son constructeur de niveaux a les
+  corrections dont les niveaux ont besoin, et son gk démarre le jeu à un point de reprise :
+  `-level`, branche `fix/jak3-gk-level` du fork) et que Jak 3 est installé (le disque extrait dans
+  `active/jak3/data/iso_data/jak3`) ; sinon la tâche s'arrête en donnant la raison
+  (`runtime.launcher_version`, affichée dans les fenêtres Jouer et Export de l'éditeur), en
+  renvoyant à l'icône verte de l'en-tête et à la page Versions.
 - **Le jeu à part** `<install>/features/jak3/level_edited/`, comme un mod : ses propres `data/` (le
   jeu décompilé, les niveaux installés, la compilation : `--proj-path`), `_settings/`
   (`gk --config-path` : ses réglages et sauvegardes), `packages/` (une copie de chaque niveau
   installé) et `jle-runtime.json` (la version dont viennent ses données, le disque décompilé),
-  lancé avec les programmes de la version active (`versions/official/<version>/gk`, `goalc`,
-  `extractor`). Quand la version active n'est pas celle de `jle-runtime.json`, le Jouer suivant
-  refait `data/` depuis celui de cette version et réinstalle les niveaux depuis `packages/`. Le
-  `active/` du jeu de base, `versions/` et les mods ne sont jamais modifiés. C'est le code de
-  l'éditeur (`jle_core::runtime::launcher_level_edited`, `prepare`, `apply_level`,
-  `remove_level_files`). L'éditeur autonome fait un jeu à lui avec le même code
-  (`<bibliothèque>/opengoal/`, avec les releases qu'il installe lui-même) : il ne joue plus dans
-  celui du launcher, et ne lit que le disque que le launcher a extrait.
+  lancé avec les programmes de la version active (`versions/official/<version>/gk`, `extractor`).
+  Quand la version active n'est pas celle de `jle-runtime.json`, le Jouer suivant refait `data/`
+  depuis celui de cette version et réinstalle les niveaux depuis `packages/`. Le `active/` du jeu de
+  base, `versions/` et les mods ne sont jamais modifiés. C'est le code du launcher
+  ([`level_edited/game.rs`](../../src-tauri/src/commands/features/level_edited/game.rs),
+  `EditedGame`) ; l'éditeur ne fournit que l'installation du niveau dans un dossier de données
+  (`jle_core::io::level_package` : ses fichiers dans ses propres dossiers, ses lignes dans des blocs
+  marqués de `game.gp` et `level-info.gc`, qui disent ce qui est installé).
 - **Jouer :** le `play` du moteur émet `level_edited:play` (le dossier de l'export, le nom du
   niveau) vers la fenêtre principale et la ramène au premier plan ; `App.svelte` ouvre la tâche
   `playEditedLevel` ([`levelEditedJob.ts`](../../src/lib/job/levelEditedJob.ts)), dont les étapes
   appellent les commandes `level_edited_prepare_runtime`, `level_edited_decompile`,
-  `level_edited_install_level`, `level_edited_compile` et `level_edited_launch`. Le launcher lance
-  les outils avec ses journaux ; le reste est le code de l'éditeur lui-même
-  (`jle_core::runtime::OpenGoal`, `jle_core::io::level_package`), que son application autonome
-  utilise aussi : la préparation, l'installation, les lignes de commande de la décompilation et de
-  la compilation (`extractor --folder --decompile` / `--compile`), et le démarrage au point de
-  reprise (`gk ... -- -boot -fakeiso -debug`, puis le REPL de goalc qui exécute
-  `data/goal_src/user/jle/startup-jak3.gc`, arrêté une fois le niveau affiché). La sortie des outils
+  `level_edited_install_level`, `level_edited_compile` et `level_edited_launch` : la préparation,
+  la décompilation et la compilation (`extractor --folder --decompile` / `--compile`),
+  l'installation, et le démarrage au point de reprise
+  (`gk ... -- -boot -fakeiso -debug -level <point de reprise>`, sans REPL). La sortie des outils
   va dans les journaux de la tâche et `extractor-jak3-level_edited.log`, celle du jeu dans
   `level_edited/_settings/jle-game.log`. Quand la fenêtre principale est fermée, le moteur fait
   lui-même les mêmes étapes. L'éditeur peut aussi appeler directement `install_level`,
@@ -477,11 +493,13 @@ flowchart TD
   Jouer est arrêté avant toute compilation). L'hôte de l'éditeur est redonné quand la version
   active change (`set_active_version`).
 - **Ce qu'il faut publier :** une release du fork faite avec `release-tooling.yml` depuis master-dev
-  (avec les corrections du constructeur de niveaux), en version `0.3.X-whozghiar.N` (le suffixe en
-  fait une version pour les niveaux de l'éditeur) ; et la release de l'éditeur de sa version avec
-  `ogle-extract-<plateforme>.zip`.
+  une fois `fix/jak3-gk-level` fusionnée, plus récente que `v0.3.9-whozghiar.1` (`v0.3.9-whozghiar.2`
+  par exemple) ; et la release de l'éditeur de sa version avec `ogle-extract-<plateforme>.zip`,
+  publiée (les fichiers d'un brouillon ne se téléchargent pas).
 - **Permissions :** la capacité `jak-level-editor:default` et la fenêtre `level-editor` sont ajoutées
   à `capabilities/main.json`, avec le droit de créer une fenêtre webview.
+- **macOS :** `LEVEL_EDITOR_AVAILABLE` ([`window.ts`](../../src/lib/level-editor/window.ts)) cache
+  le bouton de la barre latérale et l'entrée Edited Levels sur macOS.
 - **Frontend :** l'alias Vite `$level-editor` pointe vers `level-editor/ui` ; `App.svelte` affiche
   `<LevelEditor locale={config.locale} />` dans la fenêtre de l'éditeur, comme l'éditeur autonome
   le monte (avec sa propre barre de titre, puisque la fenêtre n'a pas de cadre système). L'éditeur
@@ -502,7 +520,8 @@ flowchart TD
 | :------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
 | [`.gitmodules`](../../.gitmodules), `level-editor/`                                                                              | le dépôt de l'éditeur en sous-module                         |
 | [`src/lib/level-editor/window.ts`](../../src/lib/level-editor/window.ts)                                                         | ouvre (ou met au premier plan) la fenêtre de l'éditeur       |
-| [`src-tauri/src/commands/features/level_edited.rs`](../../src-tauri/src/commands/features/level_edited.rs)                       | l'hôte, le téléchargement de l'extracteur, le jeu à part     |
+| [`src-tauri/src/commands/features/level_edited/mod.rs`](../../src-tauri/src/commands/features/level_edited/mod.rs)               | l'hôte, le téléchargement de l'extracteur, les commandes     |
+| [`src-tauri/src/commands/features/level_edited/game.rs`](../../src-tauri/src/commands/features/level_edited/game.rs)             | le jeu à part : préparé, compilé, lancé sur un niveau        |
 | [`src/lib/job/levelEditedJob.ts`](../../src/lib/job/levelEditedJob.ts)                                                           | les étapes des tâches `playEditedLevel`, `removeEditedLevel` |
 | [`src/components/level-edited/EditedLevels.svelte`](../../src/components/level-edited/EditedLevels.svelte)                       | la page Edited Levels                                        |
 | [`docs/features_ai/features_level_editor.md`](features_level_editor.md)                                                          | ce document                                                  |
@@ -512,14 +531,16 @@ flowchart TD
 ## 5. Quels sont les modifications dans les grandes lignes
 
 - [`src/components/sidebar/Sidebar.svelte`](../../src/components/sidebar/Sidebar.svelte) : le bouton
-  **Level Editor**, au-dessus des Paramètres.
+  **Level Editor**, au-dessus des Paramètres (pas sur macOS).
 - [`src/App.svelte`](../../src/App.svelte) : affiche l'éditeur, avec sa propre barre de titre, à la
   place du routeur dans la fenêtre `level-editor` ; dans la fenêtre principale, ouvre la tâche
   Jouer sur `level_edited:play`.
 - [`src-tauri/Cargo.toml`](../../src-tauri/Cargo.toml), [`src-tauri/src/main.rs`](../../src-tauri/src/main.rs) :
   le plugin de l'éditeur, son hôte, les commandes `level_edited_*`.
 - [`src-tauri/src/util/network.rs`](../../src-tauri/src/util/network.rs) : `download_file_with_progress`
-  (`download_file` l'utilise).
+  (`download_file` l'utilise), `download_release_asset` (l'asset d'une release vérifié par son
+  SHA-256) ; [`src-tauri/src/commands/versions.rs`](../../src-tauri/src/commands/versions.rs) : les
+  archives d'OpenGOAL téléchargées avec.
 - [`src/routes/Job.svelte`](../../src/routes/Job.svelte), [`src/lib/job/jobs.ts`](../../src/lib/job/jobs.ts),
   [`src/lib/rpc/features.ts`](../../src/lib/rpc/features.ts) : les deux tâches et leurs commandes.
 - [`src/lib/utils/github.ts`](../../src/lib/utils/github.ts) : les releases d'OpenGOAL lues depuis
@@ -530,7 +551,7 @@ flowchart TD
   `tooling_version` (une version du fork atteint les minimums de son X.Y.Z) ; `set_active_version`
   redonne son hôte à l'éditeur.
 - [`src/router.ts`](../../src/router.ts), [`src/components/games/GameControls.svelte`](../../src/components/games/GameControls.svelte) :
-  la page Edited Levels et son entrée dans le menu **Advanced** de Jak 3.
+  la page Edited Levels et son entrée dans le menu **Advanced** de Jak 3 (pas sur macOS).
 - [`src-tauri/capabilities/main.json`](../../src-tauri/capabilities/main.json) : sa permission et sa
   fenêtre.
 - [`src-tauri/tauri.conf.json`](../../src-tauri/tauri.conf.json) : ses ressources dans le paquet.

@@ -1,10 +1,11 @@
 //! What the launcher gives Jak Level Editor (level-editor/, its plugin): the default library, the
-//! disc already extracted, ogle-extract downloaded from the editor's release, and the game runtime,
-//! the isolated game `<install>/features/jak3/level_edited/` where the edited levels are played
-//! with the programs of the active tooling version (a release of whozghiar/jak-project, whose level
-//! builder has the fixes the levels need). The game's preparation for a version, its command lines
-//! and the level's installation are the editor's (`jle_core::runtime`, `jle_core::io::level_package`):
-//! the launcher runs the steps as one of its jobs.
+//! disc already extracted, ogle-extract downloaded from the editor's release, and the game runtime:
+//! the isolated game (game.rs) where the edited levels are played with the programs of the active
+//! tooling version, a release of whozghiar/jak-project. The level's installation is the editor's
+//! (`jle_core::io::level_package`); the launcher prepares the game, builds it and starts it, as one
+//! of its jobs.
+
+pub mod game;
 
 use std::{
   future::Future,
@@ -19,11 +20,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_jak_level_editor::{
   EDITOR_VERSION, ExtractorProvider, GameRuntime, Host, HostEvent, HostEvents, LevelPackage,
-  PlayOutcome, RuntimeInfo,
-  jle_core::{
-    i18n::tr,
-    runtime::{self, OpenGoal, RuntimeState},
-  },
+  PlayOutcome, RuntimeInfo, jle_core::i18n::tr,
 };
 use tracing::instrument;
 
@@ -32,23 +29,14 @@ use crate::{
   config::LauncherConfig,
   util::{
     file::delete_dir,
-    network::download_file_with_progress,
+    network::download_release_asset,
     process::{create_log_file, watch_process},
     tar::extract_and_delete_archive,
   },
 };
-
-const GAME: &str = "jak3";
+use game::{EditedGame, GAME, RuntimeState, exe, launcher_iso_data, stop_game};
 
 const EXTRACTOR_URL: &str = "https://github.com/whozghiar/open-goal-level-builder/releases/download/v{version}/ogle-extract-{platform}.zip";
-
-fn exe(name: &str) -> String {
-  if cfg!(windows) {
-    format!("{name}.exe")
-  } else {
-    name.to_string()
-  }
-}
 
 fn platform() -> Option<&'static str> {
   match (std::env::consts::OS, std::env::consts::ARCH) {
@@ -60,6 +48,7 @@ fn platform() -> Option<&'static str> {
   }
 }
 
+/// ogle-extract's archive: the editor's release, or a local file for tests (JLE_EXTRACTOR_URL)
 fn extractor_source() -> Option<String> {
   std::env::var("JLE_EXTRACTOR_URL").ok().or_else(|| {
     platform().map(|p| {
@@ -75,11 +64,6 @@ fn extractor_dir(install: &Path) -> PathBuf {
     .join("jak-level-editor")
     .join("tools")
     .join(format!("v{EDITOR_VERSION}"))
-}
-
-/// The isolated game run with the programs of the tooling version `version`
-fn game(install: &Path, version: &str) -> OpenGoal {
-  runtime::launcher_level_edited(install, version, GAME)
 }
 
 /// Calls `progress(done, total)` once per percent (per MB when the total is unknown).
@@ -98,7 +82,8 @@ fn throttled(mut progress: impl FnMut(u64, u64)) -> impl FnMut(u64, u64) {
   }
 }
 
-/// A release's archive (a URL, or a local file for tests) unpacked into `dest`.
+/// A release's archive (checked against GitHub's SHA-256 of it; a local file for tests) unpacked
+/// into `dest`.
 async fn unpack(
   source: &str,
   dest: &Path,
@@ -112,8 +97,8 @@ async fn unpack(
     .with_context(|| format!("No archive name in {source}"))?;
   let archive = dest.join(name);
   std::fs::create_dir_all(dest)?;
-  if source.starts_with("http://") || source.starts_with("https://") {
-    download_file_with_progress(source, &archive, throttled(progress)).await?;
+  if source.starts_with("https://") {
+    download_release_asset(source, &archive, throttled(progress)).await?;
   } else {
     std::fs::copy(source, &archive).with_context(|| format!("Unable to read {source}"))?;
   }
@@ -124,37 +109,26 @@ fn log_line(app: &AppHandle, line: String) {
   let _ = app.emit("log_update", serde_json::json!({ "logs": line }));
 }
 
-/// The editor's runtime reporting to the job's logs.
-fn job_events(app: &AppHandle) -> HostEvents {
-  let app = app.clone();
-  Arc::new(move |event| match event {
-    HostEvent::Log { line } => log_line(&app, line),
-    HostEvent::Step { key, args } => {
-      let mut text = tr(&key).to_string();
-      for arg in args {
-        text = text.replacen("%s", &arg, 1);
-      }
-      log_line(&app, text);
-    }
-    HostEvent::Progress { .. } => {}
-  })
+fn step(events: &HostEvents, key: &str, args: &[&str]) {
+  events(HostEvent::Step {
+    key: key.into(),
+    args: args.iter().map(|a| a.to_string()).collect(),
+  });
 }
 
-/// The isolated game made from its tooling version when it was made from another one (its data
-/// copied again, its levels installed again); it then still has to be decompiled.
-async fn prepare(app: &AppHandle, og: OpenGoal) -> Result<RuntimeState, CommandError> {
-  if let Some(problem) = og.problem(GAME) {
+/// The game made from its tooling version when it was made from another one (its data copied
+/// again, its levels installed again); it then still has to be decompiled.
+async fn prepare(app: &AppHandle, game: EditedGame) -> Result<RuntimeState, CommandError> {
+  if let Some(problem) = game.problem() {
     return Err(CommandError::GameFeatures(tr(problem).into()));
   }
-  if og.stale()
-    && let Some(tooling) = &og.tooling
-  {
+  if game.stale() {
     log_line(
       app,
-      tr("runtime.step.prepare").replacen("%s", &tooling.version, 1),
+      tr("runtime.step.prepare").replacen("%s", &game.version, 1),
     );
   }
-  tauri::async_runtime::spawn_blocking(move || og.prepare())
+  tauri::async_runtime::spawn_blocking(move || game.prepare())
     .await
     .map_err(|e| CommandError::GameFeatures(e.to_string()))?
     .map_err(CommandError::GameFeatures)
@@ -187,27 +161,40 @@ async fn run(app: &AppHandle, command: std::process::Command) -> Result<(), Comm
   ))
 }
 
-async fn decompile(app: &AppHandle, og: OpenGoal) -> Result<(), CommandError> {
-  let mut state = prepare(app, og.clone()).await?;
+/// Prepared, then the disc decompiled into it once per version.
+async fn decompile(app: &AppHandle, game: EditedGame) -> Result<(), CommandError> {
+  let mut state = prepare(app, game.clone()).await?;
   if state.decompiled {
     return Ok(());
   }
-  run(app, og.decompile_command(GAME)).await?;
+  run(app, game.decompile_command()).await?;
   state.decompiled = true;
-  state.write(&og.folder).map_err(CommandError::GameFeatures)
+  state
+    .write(&game.folder)
+    .map_err(CommandError::GameFeatures)
 }
 
-async fn compile(app: &AppHandle, og: &OpenGoal) -> Result<(), CommandError> {
-  runtime::stop_game();
-  run(app, og.compile_command(GAME)).await
+async fn compile(app: &AppHandle, game: &EditedGame) -> Result<(), CommandError> {
+  // the game started before keeps open the files the build writes
+  stop_game();
+  run(app, game.compile_command()).await
 }
 
-fn install_level(og: &OpenGoal, level_dir: &Path) -> Result<(), CommandError> {
+fn install_level(game: &EditedGame, level_dir: &Path) -> Result<(), CommandError> {
   let package = LevelPackage::read(level_dir).map_err(CommandError::GameFeatures)?;
-  if let Some(problem) = og.problem(GAME) {
+  if let Some(problem) = game.problem() {
     return Err(CommandError::GameFeatures(tr(problem).into()));
   }
-  og.apply_level(&package).map_err(CommandError::GameFeatures)
+  game
+    .install_level(&package)
+    .map_err(CommandError::GameFeatures)
+}
+
+async fn launch(game: EditedGame, name: String) -> Result<(), CommandError> {
+  tauri::async_runtime::spawn_blocking(move || game.launch(&name))
+    .await
+    .map_err(|e| CommandError::GameFeatures(e.to_string()))?
+    .map_err(CommandError::GameFeatures)
 }
 
 /// Runs a future of the launcher on its async runtime and waits for it (the editor calls its host
@@ -229,7 +216,7 @@ struct Extractor {
 impl ExtractorProvider for Extractor {
   fn fetch(&self, events: HostEvents) -> Result<PathBuf, String> {
     let dir = extractor_dir(&self.install);
-    let path = dir.join(exe("ogle-extract"));
+    let path = exe(&dir, "ogle-extract");
     if path.is_file() {
       return Ok(path);
     }
@@ -249,10 +236,7 @@ impl ExtractorProvider for Extractor {
     if path.is_file() {
       Ok(path)
     } else {
-      Err(format!(
-        "No {} in the editor's release",
-        exe("ogle-extract")
-      ))
+      Err("No ogle-extract in the editor's release".into())
     }
   }
 }
@@ -267,8 +251,8 @@ struct LevelEdited {
 }
 
 impl LevelEdited {
-  fn game(&self) -> OpenGoal {
-    game(&self.install, &self.version)
+  fn game(&self) -> EditedGame {
+    EditedGame::new(&self.install, &self.version)
   }
 }
 
@@ -280,23 +264,56 @@ impl GameRuntime for LevelEdited {
     {
       return info.clone();
     }
-    let mut info = self.game().info(GAME);
-    info.kind = "launcher".into();
-    info.label = "OpenGOAL Launcher".into();
+    let game = self.game();
+    let problem = game.problem();
+    let info = RuntimeInfo {
+      kind: "launcher".into(),
+      label: "OpenGOAL Launcher".into(),
+      available: problem.is_none(),
+      reason: problem.unwrap_or_default().into(),
+      games: vec![GAME.into()],
+      installed: game.installed(),
+    };
     *kept = Some((Instant::now(), info.clone()));
     info
   }
 
   fn install_level(&self, package: &LevelPackage, events: HostEvents) -> Result<(), String> {
-    self.game().install_level(package, events)
+    let (app, game, dir) = (self.app.clone(), self.game(), package.dir.clone());
+    step(&events, "runtime.step.install", &[&package.manifest.name]);
+    wait(async move {
+      decompile(&app, game.clone()).await?;
+      install_level(&game, &dir)?;
+      step(&events, "runtime.step.compile", &[]);
+      compile(&app, &game).await
+    })
   }
 
-  fn remove_level(&self, game_name: &str, name: &str, events: HostEvents) -> Result<(), String> {
-    self.game().remove_level(game_name, name, events)
+  fn remove_level(&self, _: &str, name: &str, events: HostEvents) -> Result<(), String> {
+    let (app, game, name) = (self.app.clone(), self.game(), name.to_owned());
+    step(&events, "runtime.step.remove", &[&name]);
+    wait(async move {
+      game
+        .remove_level(&name)
+        .map_err(CommandError::GameFeatures)?;
+      decompile(&app, game.clone()).await?;
+      step(&events, "runtime.step.compile", &[]);
+      compile(&app, &game).await
+    })
   }
 
-  fn launch(&self, game_name: &str, name: &str, events: HostEvents) -> Result<(), String> {
-    self.game().launch(game_name, name, events)
+  fn launch(&self, _: &str, name: &str, events: HostEvents) -> Result<(), String> {
+    let (app, game, name) = (self.app.clone(), self.game(), name.to_owned());
+    wait(async move {
+      // made again for the active version, then built, before it starts
+      if game.stale() {
+        decompile(&app, game.clone()).await?;
+        step(&events, "runtime.step.compile", &[]);
+        compile(&app, &game).await?;
+      }
+      step(&events, "runtime.step.launch", &[&name]);
+      launch(game, name).await
+    })
   }
 
   /// The launcher's main window runs it as one of its jobs (job type `playEditedLevel`).
@@ -332,8 +349,8 @@ pub fn host(app: &AppHandle, config: &LauncherConfig) -> Host {
       ..Default::default()
     };
   };
-  let extractor = extractor_dir(&install).join(exe("ogle-extract"));
-  let iso = runtime::launcher_iso_data(&install, GAME);
+  let extractor = exe(&extractor_dir(&install), "ogle-extract");
+  let iso = launcher_iso_data(&install);
   Host {
     name: "launcher".into(),
     default_library: Some(install.join("jak-level-editor")),
@@ -354,9 +371,9 @@ pub fn host(app: &AppHandle, config: &LauncherConfig) -> Host {
 /// The isolated game of the active tooling version.
 async fn active_game(
   config: &tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
-) -> Result<OpenGoal, CommandError> {
+) -> Result<EditedGame, CommandError> {
   let config = config.lock().await;
-  Ok(game(
+  Ok(EditedGame::new(
     &config.install_dir()?,
     config.active_version.as_deref().unwrap_or_default(),
   ))
@@ -392,19 +409,14 @@ pub struct LevelEditedInfo {
 pub async fn level_edited_info(
   config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
 ) -> Result<LevelEditedInfo, CommandError> {
-  let og = active_game(&config).await?;
-  let info = og.info(GAME);
+  let game = active_game(&config).await?;
   Ok(LevelEditedInfo {
-    levels: info.installed,
-    version: RuntimeState::read(&og.folder).version,
-    active_version: og
-      .tooling
-      .as_ref()
-      .map(|t| t.version.clone())
-      .unwrap_or_default(),
-    stale: og.stale(),
-    problem: og.problem(GAME).map(|p| tr(p).to_string()),
-    dir: og.folder,
+    levels: game.installed(),
+    version: RuntimeState::read(&game.folder).version,
+    active_version: game.version.clone(),
+    stale: game.stale(),
+    problem: game.problem().map(|p| tr(p).to_string()),
+    dir: game.folder,
   })
 }
 
@@ -444,7 +456,7 @@ pub async fn level_edited_remove_level(
 ) -> Result<(), CommandError> {
   active_game(&config)
     .await?
-    .remove_level_files(GAME, &level_name)
+    .remove_level(&level_name)
     .map_err(CommandError::GameFeatures)
 }
 
@@ -457,21 +469,14 @@ pub async fn level_edited_compile(
   compile(&app_handle, &active_game(&config).await?).await
 }
 
-/// The game started at the level's continue point (the editor's runtime: gk, then goalc taking Jak
-/// there).
-#[instrument(skip(config, app_handle))]
+/// The game started at the level's continue point (gk -level).
+#[instrument(skip(config))]
 #[tauri::command]
 pub async fn level_edited_launch(
   config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
-  app_handle: AppHandle,
   level_name: String,
 ) -> Result<(), CommandError> {
-  let og = active_game(&config).await?;
-  let events = job_events(&app_handle);
-  tauri::async_runtime::spawn_blocking(move || og.launch(GAME, &level_name, events))
-    .await
-    .map_err(|e| CommandError::GameFeatures(e.to_string()))?
-    .map_err(CommandError::GameFeatures)
+  launch(active_game(&config).await?, level_name).await
 }
 
 #[cfg(test)]
@@ -485,7 +490,8 @@ mod tests {
     let archive = tmp.path().join("ogle-extract-test.zip");
     let mut zip = zip::ZipWriter::new(std::fs::File::create(&archive).unwrap());
     let options = zip::write::SimpleFileOptions::default();
-    zip.start_file(exe("ogle-extract"), options).unwrap();
+    let name = exe(Path::new(""), "ogle-extract");
+    zip.start_file(name.to_string_lossy(), options).unwrap();
     zip.write_all(b"exe").unwrap();
     zip
       .start_file("ogle-extract-data/game.json", options)
@@ -500,7 +506,7 @@ mod tests {
     };
     let path = provider.fetch(Arc::new(|_| {})).unwrap();
     let dir = extractor_dir(&install);
-    assert_eq!(path, dir.join(exe("ogle-extract")));
+    assert_eq!(path, dir.join(&name));
     assert!(dir.join("ogle-extract-data/game.json").is_file());
     assert!(!dir.join("ogle-extract-test.zip").exists());
     assert_eq!(provider.fetch(Arc::new(|_| {})).unwrap(), path);

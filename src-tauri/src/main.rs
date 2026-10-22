@@ -92,7 +92,12 @@ fn main() {
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
-    .plugin(tauri_plugin_jak_level_editor::init())
+    // the Level Editor, its preferences and library apart from the standalone app's
+    .plugin(
+      tauri_plugin_jak_level_editor::Builder::new()
+        .prefs_in_app_config()
+        .build(),
+    )
     .setup(|app| {
       let _ = TAURI_APP.set(app.app_handle().clone());
 
