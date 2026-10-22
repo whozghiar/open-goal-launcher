@@ -30,6 +30,7 @@ glob = "0.3.3"
 reqwest = { version = "0.13", features = ["json"] }
 rev_buf_reader = "0.3.0"
 semver = "1.0.24"
+sha2 = "0.10.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.149"
 strum = { version = "0.28", features = ["derive"] }
