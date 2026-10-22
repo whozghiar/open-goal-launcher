@@ -262,53 +262,6 @@ export async function openREPLForMod(
   });
 }
 
-export interface LevelEditedInfo {
-  dir: string;
-  levels: string[];
-  version: string;
-  activeVersion: string;
-  stale: boolean;
-  problem: string | null;
-}
-
-export async function levelEditedInfo(): Promise<LevelEditedInfo | undefined> {
-  return await invoke_rpc("level_edited_info", {}, () => undefined);
-}
-
-export async function levelEditedPrepareRuntime(): Promise<string | null> {
-  return await invoke_rpc2("level_edited_prepare_runtime");
-}
-
-export async function levelEditedDecompile(): Promise<string | null> {
-  return await invoke_rpc2("level_edited_decompile");
-}
-
-export async function levelEditedInstallLevel(
-  levelDir: string,
-): Promise<string | null> {
-  return await invoke_rpc2("level_edited_install_level", {
-    args: { levelDir },
-  });
-}
-
-export async function levelEditedCompile(): Promise<string | null> {
-  return await invoke_rpc2("level_edited_compile");
-}
-
-export async function levelEditedLaunch(
-  levelName: string,
-): Promise<string | null> {
-  return await invoke_rpc2("level_edited_launch", { args: { levelName } });
-}
-
-export async function levelEditedRemoveLevel(
-  levelName: string,
-): Promise<string | null> {
-  return await invoke_rpc2("level_edited_remove_level", {
-    args: { levelName },
-  });
-}
-
 export async function refreshLevelEditorHost(): Promise<string | null> {
   return await invoke_rpc2("refresh_level_editor_host");
 }

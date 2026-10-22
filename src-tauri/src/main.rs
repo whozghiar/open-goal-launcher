@@ -153,7 +153,7 @@ fn main() {
 
       tauri_plugin_jak_level_editor::set_host(
         app.handle(),
-        commands::features::level_edited::host(app.handle(), &config),
+        commands::features::level_editor::host(&config),
       );
       app.manage(tokio::sync::Mutex::new(config));
       let cache = tokio::sync::Mutex::new(cache::ModCache::default());
@@ -199,14 +199,7 @@ fn main() {
       commands::config::set_hide_gamename,
       commands::config::set_hide_playtime,
       commands::download::download_file,
-      commands::features::level_edited::level_edited_compile,
-      commands::features::level_edited::level_edited_decompile,
-      commands::features::level_edited::level_edited_info,
-      commands::features::level_edited::level_edited_install_level,
-      commands::features::level_edited::level_edited_launch,
-      commands::features::level_edited::level_edited_prepare_runtime,
-      commands::features::level_edited::level_edited_remove_level,
-      commands::features::level_edited::refresh_level_editor_host,
+      commands::features::level_editor::refresh_level_editor_host,
       commands::features::mods::base_game_iso_exists,
       commands::features::mods::compile_for_mod_install,
       commands::features::mods::decompile_for_mod_install,

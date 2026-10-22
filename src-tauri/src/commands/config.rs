@@ -29,21 +29,15 @@ pub async fn set_game_installed(
   Ok(())
 }
 
-#[instrument(skip(config, app_handle))]
+#[instrument(skip(config))]
 #[tauri::command]
 pub async fn set_active_version(
   config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
-  app_handle: tauri::AppHandle,
   version: String,
 ) -> Result<(), CommandError> {
   let mut config_lock = config.lock().await;
   config_lock.set_active_version(Some(version))?;
   config_lock.copy_active_binaries()?;
-  // the Level Editor's game runs the programs of the active version
-  tauri_plugin_jak_level_editor::set_host(
-    &app_handle,
-    super::features::level_edited::host(&app_handle, &config_lock),
-  );
   Ok(())
 }
 
