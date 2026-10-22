@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use super::{CommandError, util::is_avx_supported};
-use crate::config::{LauncherConfig, SupportedGame};
+use crate::config::{LauncherConfig, SupportedGame, tooling_version};
 use semver::Version;
 use tracing::instrument;
 
@@ -29,15 +29,21 @@ pub async fn set_game_installed(
   Ok(())
 }
 
-#[instrument(skip(config))]
+#[instrument(skip(config, app_handle))]
 #[tauri::command]
 pub async fn set_active_version(
   config: tauri::State<'_, tokio::sync::Mutex<LauncherConfig>>,
+  app_handle: tauri::AppHandle,
   version: String,
 ) -> Result<(), CommandError> {
   let mut config_lock = config.lock().await;
   config_lock.set_active_version(Some(version))?;
   config_lock.copy_active_binaries()?;
+  // the Level Editor's game runs the programs of the active version
+  tauri_plugin_jak_level_editor::set_host(
+    &app_handle,
+    super::features::level_edited::host(&app_handle, &config_lock),
+  );
   Ok(())
 }
 
@@ -384,8 +390,7 @@ pub async fn does_active_tooling_version_meet_minimum(
 ) -> Result<bool, CommandError> {
   let config_lock = config.lock().await;
   if let Some(version) = &config_lock.active_version {
-    let tooling_version = Version::parse(version.strip_prefix('v').unwrap_or(version))
-      .unwrap_or_else(|_| Version::new(0, 0, 0));
+    let tooling_version = tooling_version(version).unwrap_or_else(|| Version::new(0, 0, 0));
     let compare_version = Version::new(minimum_major, minimum_minor, minimum_patch);
     Ok(tooling_version >= compare_version)
   } else {

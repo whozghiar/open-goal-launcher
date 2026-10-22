@@ -182,7 +182,7 @@
         }
         break;
       case "playEditedLevel":
-        if (levelDir && levelName) {
+        if (levelName) {
           await setupPlayEditedLevel(levelDir, levelName);
         } else {
           invalidJobDefinition = true;

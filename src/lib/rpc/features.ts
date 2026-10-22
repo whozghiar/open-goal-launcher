@@ -265,6 +265,10 @@ export async function openREPLForMod(
 export interface LevelEditedInfo {
   dir: string;
   levels: string[];
+  version: string;
+  activeVersion: string;
+  stale: boolean;
+  problem: string | null;
 }
 
 export async function levelEditedInfo(): Promise<LevelEditedInfo | undefined> {

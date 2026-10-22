@@ -47,6 +47,19 @@
   </div>
   <h2 class="font-bold">{$_("levelEdited_heading")}</h2>
   <p class="text-sm">{$_("levelEdited_description")}</p>
+  {#if info?.version}
+    <p class="text-sm text-neutral-400">
+      {$_("levelEdited_builtWith", { values: { version: info.version } })}
+      {#if info.stale && info.activeVersion}
+        {$_("levelEdited_rebuiltAtNextPlay", {
+          values: { version: info.activeVersion },
+        })}
+      {/if}
+    </p>
+  {/if}
+  {#if info?.problem}
+    <p class="text-sm text-red-400">{info.problem}</p>
+  {/if}
   {#if !loaded}
     <Spinner color="yellow" size={"12"} />
   {:else if !info || info.levels.length === 0}
@@ -59,8 +72,16 @@
         <p class="grow font-semibold">{level}</p>
         <Button
           class="border-solid rounded bg-[#13294b] hover:bg-[#183763] text-sm text-white font-semibold px-5 py-2"
-          onclick={async () => await levelEditedLaunch(level)}
-          >{$_("levelEdited_play")}</Button
+          onclick={async () => {
+            if (info?.stale) {
+              navigate("/job/:job_type", {
+                params: { job_type: asJobType("playEditedLevel") },
+                search: { levelName: level, returnTo: route.pathname },
+              });
+            } else {
+              await levelEditedLaunch(level);
+            }
+          }}>{$_("levelEdited_play")}</Button
         >
         <Button
           class="border-solid rounded bg-slate-900 hover:bg-slate-800 text-sm text-white font-semibold px-5 py-2"

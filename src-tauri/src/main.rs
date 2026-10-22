@@ -148,7 +148,7 @@ fn main() {
 
       tauri_plugin_jak_level_editor::set_host(
         app.handle(),
-        commands::features::level_edited::host(app.handle(), config.installation_dir.clone()),
+        commands::features::level_edited::host(app.handle(), &config),
       );
       app.manage(tokio::sync::Mutex::new(config));
       let cache = tokio::sync::Mutex::new(cache::ModCache::default());
