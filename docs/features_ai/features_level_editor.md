@@ -36,7 +36,9 @@ The launcher installs and updates OpenGOAL from the releases of the user's fork
 [whozghiar/jak-project](https://github.com/whozghiar/jak-project) instead of upstream's: they carry
 the level builder's fixes the editor's levels need. Updates come as usual (the header's icon, the
 Versions page, the automatic update), and the editor's game always uses the active version: nothing
-else is downloaded.
+else is downloaded. Inside the launcher, the editor shows no OpenGOAL manager or update button of
+its own (the standalone editor has one): when the active version cannot play its levels, or a newer
+release of the fork is out, it says so and points to the launcher's header and Versions page.
 
 The editor is its own project ([open-goal-level-builder](https://github.com/whozghiar/open-goal-level-builder)),
 written in Rust and Svelte like the launcher. The launcher only plugs it in: it keeps no copy of
@@ -163,14 +165,21 @@ flowchart TD
   releases. Its workflow `release-tooling.yml` publishes them tagged `vX.Y.Z` or `vX.Y.Z-suffix`
   (`v0.3.9-whozghiar.1`: upstream's version 0.3.9, the fork's first build of it), with the archives
   named as upstream's (`opengoal-windows-<tag>.zip`, `opengoal-linux-<tag>.tar.gz`). A repository
-  without any release yet means no update, without an error. Such a suffix is not a pre-release of
+  without any release yet means no update, without an error. The Versions page keeps listing the
+  versions installed before that the fork does not publish (upstream's `v0.3.8`), so that one can
+  still be chosen again or removed. Such a suffix is not a pre-release of
   X.Y.Z: `tooling_version` ([`config.rs`](../../src-tauri/src/config.rs)) reads the version as
   X.Y.Z for the minimum versions the launcher checks (`does_active_tooling_version_meet_minimum`,
   the tools' arguments); versions are otherwise only compared for equality and sorted by date.
 - **The level builder:** a version can play the editor's levels when it is one of the fork's
   releases (its tag has the suffix `-whozghiar.N`: the fork's master-dev has the level builder's
   fixes) and Jak 3 is installed (the disc extracted in `active/jak3/data/iso_data/jak3`); otherwise
-  the editor has no Play button and the job stops with the reason.
+  the editor has no Play button and the job stops with the reason (`runtime.launcher_version`, shown
+  in its Export window and Settings). When a release newer than the active version is out, the
+  editor's Play window and Settings say it (`runtime.launcher_update`), pointing to the header's
+  green icon and the Versions page; the editor reads the fork's releases itself for that
+  (`jle_core::tooling::newer_than`, GitHub asked once an hour at most, nothing said without
+  network).
 - **The isolated game** `<install>/features/jak3/level_edited/`, like a mod: its own `data/` (the
   decompiled game, the installed levels, the build: `--proj-path`), `_settings/`
   (`gk --config-path`: its settings and saves), `packages/` (a copy of each level installed) and
@@ -179,8 +188,9 @@ flowchart TD
   active version is not the one in `jle-runtime.json`, the next Play makes `data/` again from that
   version's and installs the levels again from `packages/`. Vanilla `active/`, `versions/` and the
   mods are never changed. This is the editor's code (`jle_core::runtime::launcher_level_edited`,
-  `prepare`, `apply_level`, `remove_level_files`), which the standalone editor uses too when it finds
-  the launcher's settings.
+  `prepare`, `apply_level`, `remove_level_files`). The standalone editor makes a game of its own
+  with the same code (`<library>/opengoal/`, with the releases it installs itself): it no longer
+  plays in the launcher's, and only reads the disc the launcher extracted.
 - **Play:** the runtime's `play` emits `level_edited:play` (the export's folder, the level's name)
   to the main window and brings it to the front; `App.svelte` opens the job `playEditedLevel`
   ([`levelEditedJob.ts`](../../src/lib/job/levelEditedJob.ts)), whose steps call the commands
@@ -242,6 +252,8 @@ flowchart TD
   [`src/lib/rpc/features.ts`](../../src/lib/rpc/features.ts): the two jobs and their commands.
 - [`src/lib/utils/github.ts`](../../src/lib/utils/github.ts): OpenGOAL's releases read from the fork
   (`TOOLING_REPOSITORY`), no error when it has none.
+- [`src/routes/settings/Versions.svelte`](../../src/routes/settings/Versions.svelte): the versions
+  installed stay listed even when the fork does not publish them.
 - [`src-tauri/src/config.rs`](../../src-tauri/src/config.rs), [`src-tauri/src/commands/config.rs`](../../src-tauri/src/commands/config.rs):
   `tooling_version` (a fork's version meets the minimums of its X.Y.Z); `set_active_version` gives
   the editor its host again.
@@ -282,7 +294,10 @@ Le launcher installe et met à jour OpenGOAL depuis les releases du fork de l'ut
 elles contiennent les corrections du constructeur de niveaux dont les niveaux de l'éditeur ont
 besoin. Les mises à jour arrivent comme d'habitude (l'icône de l'en-tête, la page Versions, la mise
 à jour automatique), et le jeu de l'éditeur utilise toujours la version active : rien d'autre n'est
-téléchargé.
+téléchargé. Dans le launcher, l'éditeur n'affiche ni gestionnaire d'OpenGOAL ni bouton de mise à
+jour à lui (l'éditeur autonome en a un) : quand la version active ne peut pas jouer ses niveaux, ou
+qu'une release plus récente du fork est sortie, il le dit et renvoie à l'en-tête et à la page
+Versions du launcher.
 
 L'éditeur est un projet à part ([open-goal-level-builder](https://github.com/whozghiar/open-goal-level-builder)),
 écrit en Rust et Svelte comme le launcher. Le launcher se contente de le brancher : il ne garde
@@ -416,7 +431,8 @@ flowchart TD
   un tag `vX.Y.Z` ou `vX.Y.Z-suffixe` (`v0.3.9-whozghiar.1` : la version 0.3.9 d'origine, la première
   construction du fork), les archives nommées comme celles d'origine (`opengoal-windows-<tag>.zip`,
   `opengoal-linux-<tag>.tar.gz`). Un dépôt encore sans release signifie pas de mise à jour, sans
-  erreur. Un tel suffixe n'est pas une pré-version de X.Y.Z : `tooling_version`
+  erreur. La page Versions continue de lister les versions installées avant que le fork ne publie
+  pas (la `v0.3.8` d'origine), pour pouvoir encore la choisir de nouveau ou la supprimer. Un tel suffixe n'est pas une pré-version de X.Y.Z : `tooling_version`
   ([`config.rs`](../../src-tauri/src/config.rs)) lit la version comme X.Y.Z pour les versions
   minimales que vérifie le launcher (`does_active_tooling_version_meet_minimum`, les arguments des
   outils) ; ailleurs les versions ne sont comparées que par égalité et triées par date.
@@ -424,7 +440,12 @@ flowchart TD
   des releases du fork (son tag a le suffixe `-whozghiar.N` : le master-dev du fork a les
   corrections du constructeur de niveaux) et que Jak 3 est installé (le disque extrait dans
   `active/jak3/data/iso_data/jak3`) ; sinon l'éditeur n'a pas de bouton Jouer et la tâche s'arrête
-  en donnant la raison.
+  en donnant la raison (`runtime.launcher_version`, affichée dans sa fenêtre Export et ses
+  Paramètres). Quand une release plus récente que la version active est sortie, la fenêtre Jouer et
+  les Paramètres de l'éditeur le disent (`runtime.launcher_update`), en renvoyant à l'icône verte de
+  l'en-tête et à la page Versions ; l'éditeur lit lui-même les releases du fork pour cela
+  (`jle_core::tooling::newer_than`, GitHub interrogé une fois par heure au plus, rien de dit sans
+  réseau).
 - **Le jeu à part** `<install>/features/jak3/level_edited/`, comme un mod : ses propres `data/` (le
   jeu décompilé, les niveaux installés, la compilation : `--proj-path`), `_settings/`
   (`gk --config-path` : ses réglages et sauvegardes), `packages/` (une copie de chaque niveau
@@ -434,8 +455,9 @@ flowchart TD
   refait `data/` depuis celui de cette version et réinstalle les niveaux depuis `packages/`. Le
   `active/` du jeu de base, `versions/` et les mods ne sont jamais modifiés. C'est le code de
   l'éditeur (`jle_core::runtime::launcher_level_edited`, `prepare`, `apply_level`,
-  `remove_level_files`), que l'éditeur autonome utilise aussi quand il trouve les réglages du
-  launcher.
+  `remove_level_files`). L'éditeur autonome fait un jeu à lui avec le même code
+  (`<bibliothèque>/opengoal/`, avec les releases qu'il installe lui-même) : il ne joue plus dans
+  celui du launcher, et ne lit que le disque que le launcher a extrait.
 - **Jouer :** le `play` du moteur émet `level_edited:play` (le dossier de l'export, le nom du
   niveau) vers la fenêtre principale et la ramène au premier plan ; `App.svelte` ouvre la tâche
   `playEditedLevel` ([`levelEditedJob.ts`](../../src/lib/job/levelEditedJob.ts)), dont les étapes
@@ -502,6 +524,8 @@ flowchart TD
   [`src/lib/rpc/features.ts`](../../src/lib/rpc/features.ts) : les deux tâches et leurs commandes.
 - [`src/lib/utils/github.ts`](../../src/lib/utils/github.ts) : les releases d'OpenGOAL lues depuis
   le fork (`TOOLING_REPOSITORY`), sans erreur quand il n'en a aucune.
+- [`src/routes/settings/Versions.svelte`](../../src/routes/settings/Versions.svelte) : les versions
+  installées restent listées même quand le fork ne les publie pas.
 - [`src-tauri/src/config.rs`](../../src-tauri/src/config.rs), [`src-tauri/src/commands/config.rs`](../../src-tauri/src/commands/config.rs) :
   `tooling_version` (une version du fork atteint les minimums de son X.Y.Z) ; `set_active_version`
   redonne son hôte à l'éditeur.
