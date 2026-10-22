@@ -423,4 +423,25 @@ mod tests {
     next.remove_level("my-test").unwrap();
     assert!(next.installed().is_empty() && !next.folder.join("packages/my-test").exists());
   }
+
+  // the whole of it on a real installation, the game left running at the level:
+  // JLE_E2E_INSTALL (an installation folder: versions/official/<JLE_E2E_VERSION>/, the disc in
+  // active/jak3), JLE_E2E_LEVEL (an export's folder); cargo test -- --ignored a_level_played
+  #[test]
+  #[ignore]
+  fn a_level_played_in_the_isolated_game() {
+    let var = |k: &str| std::env::var(k).unwrap_or_else(|_| panic!("{k}"));
+    let game = EditedGame::new(Path::new(&var("JLE_E2E_INSTALL")), &var("JLE_E2E_VERSION"));
+    assert_eq!(game.problem(), None);
+    let mut state = game.prepare().unwrap();
+    if !state.decompiled {
+      assert!(game.decompile_command().status().unwrap().success());
+      state.decompiled = true;
+      state.write(&game.folder).unwrap();
+    }
+    let package = LevelPackage::read(Path::new(&var("JLE_E2E_LEVEL"))).unwrap();
+    game.install_level(&package).unwrap();
+    assert!(game.compile_command().status().unwrap().success());
+    game.launch(&package.manifest.name).unwrap();
+  }
 }
