@@ -1606,6 +1606,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1f9e3d69d39e4862ffed03ed071a76f9a13ba1d9109d355b0f0aa6b15e393c4"
 dependencies = [
  "futures-core",
+ "futures-sink",
 ]
 
 [[package]]
@@ -2488,11 +2489,15 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 name = "jak-level-editor-core"
 version = "2.0.0"
 dependencies = [
+ "flate2",
  "glam",
  "image",
+ "reqwest 0.13.5",
  "rerecast",
  "serde",
  "serde_json",
+ "tar",
+ "zip 8.6.0",
 ]
 
 [[package]]
@@ -4111,6 +4116,7 @@ dependencies = [
  "base64 0.23.1",
  "bytes",
  "encoding_rs",
+ "futures-channel",
  "futures-core",
  "futures-util",
  "h2",
