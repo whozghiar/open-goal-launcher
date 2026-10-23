@@ -2,6 +2,3 @@
 	path = .agents/skills
 	url = https://github.com/whozghiar/opengoal-modding-kb.git
 	branch = main
-[submodule "level-editor"]
-	path = level-editor
-	url = https://github.com/whozghiar/jak-level-editor.git

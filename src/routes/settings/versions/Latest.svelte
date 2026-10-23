@@ -1,7 +1,10 @@
 <script lang="ts">
   import { Button, Badge } from "flowbite-svelte";
   import type { ReleaseInfo } from "$lib/utils/github";
-  import { versionState } from "/src/state/VersionState.svelte";
+  import {
+    versionState,
+    type ActiveVersionKey,
+  } from "/src/state/VersionState.svelte";
   import IconArrowUp from "~icons/mdi/arrow-up-circle-outline";
   import IconDeleteForever from "~icons/mdi/delete-forever";
   import IconDownload from "~icons/mdi/download";
@@ -21,12 +24,14 @@
     onRemoveVersion,
     onDownloadVersion,
     isPending,
+    activeKey = "activeToolingVersion",
   }: {
     latest: ReleaseInfo;
     onVersionChange: (version: string) => Promise<void>;
     onRemoveVersion: (version: string) => Promise<void>;
     onDownloadVersion: (version: string, downloadUrl: string) => Promise<void>;
     isPending: boolean;
+    activeKey?: ActiveVersionKey;
   } = $props();
 
   const cleanDate = $derived.by(() => {
@@ -42,7 +47,7 @@
 
   const isActive = $derived.by(() => {
     if (!latest?.version) return false;
-    return latest.version === versionState.activeToolingVersion;
+    return latest.version === versionState[activeKey];
   });
 
   const handleRemove = async () => {
@@ -63,7 +68,7 @@
 
   const handleVersionChange = async () => {
     await onVersionChange(latest.version);
-    versionState.activeToolingVersion = latest.version;
+    versionState[activeKey] = latest.version;
   };
 </script>
 

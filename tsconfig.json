@@ -21,7 +21,6 @@
     "paths": {
       "$lib/*": ["./src/lib/*"],
       "$assets/*": ["./src/assets/*"],
-      "$level-editor/*": ["./level-editor/ui/*"],
       "/src/*": ["./src/*"]
     },
     /**

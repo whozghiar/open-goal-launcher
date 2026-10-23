@@ -11,10 +11,15 @@
   import { isInDebugMode } from "$lib/utils/common";
   import {
     downloadOfficialVersion,
+    listDownloadedLevelEditorVersions,
     listDownloadedVersions,
     removeOldVersions,
   } from "$lib/rpc/versions";
-  import { getLatestOfficialRelease } from "$lib/utils/github";
+  import {
+    getLatestLevelEditorRelease,
+    getLatestOfficialRelease,
+  } from "$lib/utils/github";
+  import { LEVEL_EDITOR_AVAILABLE } from "$lib/level-editor/launch";
   import { _ } from "svelte-i18n";
   import { toastStore } from "$lib/stores/ToastStore";
   import { setActiveVersion } from "$lib/rpc/config";
@@ -65,6 +70,7 @@
     if (route.pathname === "/startup") return;
     checkedToolingUpdate = true;
     checkForToolingUpdate();
+    if (LEVEL_EDITOR_AVAILABLE) checkForLevelEditorUpdate();
   });
 
   async function checkForToolingUpdate() {
@@ -79,6 +85,24 @@
     if (downloadedOfficialVersions.includes(latestVersion)) return;
 
     $UpdateStore.selectedTooling = {
+      updateAvailable: true,
+      versionNumber: latestVersion,
+    };
+  }
+
+  async function checkForLevelEditorUpdate() {
+    versionState.activeLevelEditorVersion = config?.levelEditorVersion;
+    const latestRelease = await getLatestLevelEditorRelease();
+    const latestVersion = latestRelease?.version;
+
+    // a release without the portable build for this system offers nothing to download
+    if (!latestVersion || !latestRelease.downloadUrl) return;
+    if (versionState.activeLevelEditorVersion === latestVersion) return;
+
+    const downloadedVersions = await listDownloadedLevelEditorVersions();
+    if (downloadedVersions.includes(latestVersion)) return;
+
+    $UpdateStore.selectedLevelEditor = {
       updateAvailable: true,
       versionNumber: latestVersion,
     };
@@ -175,6 +199,31 @@
         </Tooltip>
       {/if}
     </div>
+
+    {#if LEVEL_EDITOR_AVAILABLE}
+      <div class="h-6 shrink-0 border-l border-neutral-800"></div>
+
+      <div class="flex items-center gap-2 font-mono text-sm whitespace-nowrap">
+        <span class="text-neutral-400">
+          {$_("header_levelEditorVersionLabel")}
+        </span>
+        <span class="text-neutral-500">
+          {versionState.activeLevelEditorVersion ?? $_("header_toolingNotSet")}
+        </span>
+
+        {#if $UpdateStore.selectedLevelEditor.updateAvailable}
+          <a
+            class="pointer-events-auto text-green-500 hover:text-green-300 animate-pulse relative"
+            href="/settings/level-editor"
+          >
+            <IconDownload />
+          </a>
+          <Tooltip type="auto" trigger="hover">
+            {$_("header_updateAvailable")}
+          </Tooltip>
+        {/if}
+      </div>
+    {/if}
   </div>
 
   <div class="ml-auto flex shrink-0 self-stretch">

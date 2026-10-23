@@ -9,6 +9,7 @@
   import Backgrounds from "./settings/Backgrounds.svelte";
   import { type } from "@tauri-apps/plugin-os"; // TODO: temporary while convertFileSrc is broken on linux
   import { isInDebugMode } from "$lib/utils/common";
+  import { LEVEL_EDITOR_AVAILABLE } from "$lib/level-editor/launch";
 
   let tab = route.params.tab;
 
@@ -42,6 +43,16 @@
     >
       <Versions />
     </TabItem>
+    {#if LEVEL_EDITOR_AVAILABLE}
+      <TabItem
+        {activeClass}
+        {inactiveClass}
+        open={tab == "level-editor"}
+        title={$_("settings_tabs_levelEditor")}
+      >
+        <Versions kind="levelEditor" />
+      </TabItem>
+    {/if}
     <TabItem
       {activeClass}
       {inactiveClass}

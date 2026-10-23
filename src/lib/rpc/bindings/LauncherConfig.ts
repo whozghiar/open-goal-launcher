@@ -11,6 +11,7 @@ export type LauncherConfig = {
   games: { [key in SupportedGame]?: GameConfig };
   installationDir: string | null;
   activeVersion: string | null;
+  levelEditorVersion: string | null;
   locale: string;
   modSources: Array<string>;
   decompilerSettings: DecompilerSettings;

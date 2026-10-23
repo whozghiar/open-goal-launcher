@@ -24,10 +24,6 @@
       "icons/icon.ico"
     ],
     "copyright": "",
-    "resources": {
-      "../level-editor/lang/": "jak-level-editor/lang/",
-      "../level-editor/data/": "jak-level-editor/data/"
-    },
     "category": "Game",
     "shortDescription": "",
     "longDescription": "",

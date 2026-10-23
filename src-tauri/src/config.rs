@@ -200,6 +200,7 @@ pub struct LauncherConfig {
   pub games: HashMap<SupportedGame, GameConfig>,
   pub installation_dir: Option<PathBuf>,
   pub active_version: Option<String>,
+  pub level_editor_version: Option<String>,
   pub locale: String,
   pub mod_sources: Vec<String>,
   pub decompiler_settings: DecompilerSettings,
@@ -278,6 +279,7 @@ impl LauncherConfig {
       games: default_games(),
       installation_dir: None,
       active_version: None,
+      level_editor_version: None,
       locale: "en-US".to_owned(),
       mod_sources: Vec::new(),
       decompiler_settings: DecompilerSettings::default(),
@@ -382,6 +384,12 @@ impl LauncherConfig {
 
   pub fn set_active_version(&mut self, version: Option<String>) -> Result<()> {
     self.active_version = version;
+    self.save_config()?;
+    Ok(())
+  }
+
+  pub fn set_level_editor_version(&mut self, version: Option<String>) -> Result<()> {
+    self.level_editor_version = version;
     self.save_config()?;
     Ok(())
   }

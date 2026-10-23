@@ -16,7 +16,10 @@
     TableHeadCell,
   } from "flowbite-svelte";
   import { _ } from "svelte-i18n";
-  import { versionState } from "/src/state/VersionState.svelte";
+  import {
+    versionState,
+    type ActiveVersionKey,
+  } from "/src/state/VersionState.svelte";
   import { config } from "/src/state/config.svelte";
 
   let locale = $state(config?.locale || "en-US");
@@ -27,12 +30,14 @@
     onRemoveVersion,
     onDownloadVersion,
     isPending,
+    activeKey = "activeToolingVersion",
   }: {
     releaseList: ReleaseInfo[];
     onVersionChange: (version: string) => Promise<void>;
     onRemoveVersion: (version: string) => Promise<void>;
     onDownloadVersion: (version: string, downloadUrl: string) => Promise<void>;
     isPending: boolean;
+    activeKey?: ActiveVersionKey;
   } = $props();
 
   const handleAction = async (release: ReleaseInfo) => {
@@ -68,7 +73,7 @@
       >
         <TableBodyCell class="px-6 py-3">
           <Radio
-            bind:group={versionState.activeToolingVersion}
+            bind:group={versionState[activeKey]}
             value={release.version}
             onchange={() => {
               onVersionChange(release.version);

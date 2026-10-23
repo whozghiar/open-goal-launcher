@@ -92,12 +92,6 @@ fn main() {
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
-    // the Level Editor, its preferences and library apart from the standalone app's
-    .plugin(
-      tauri_plugin_jak_level_editor::Builder::new()
-        .prefs_in_app_config()
-        .build(),
-    )
     .setup(|app| {
       let _ = TAURI_APP.set(app.app_handle().clone());
 
@@ -151,11 +145,8 @@ fn main() {
         }
       }
 
-      tauri_plugin_jak_level_editor::set_host(
-        app.handle(),
-        commands::features::level_editor::host(&config),
-      );
       app.manage(tokio::sync::Mutex::new(config));
+      app.manage(commands::features::level_editor::LevelEditorProcess::default());
       let cache = tokio::sync::Mutex::new(cache::ModCache::default());
       app.manage(cache);
       Ok(())
@@ -199,7 +190,10 @@ fn main() {
       commands::config::set_hide_gamename,
       commands::config::set_hide_playtime,
       commands::download::download_file,
-      commands::features::level_editor::refresh_level_editor_host,
+      commands::features::level_editor::download_level_editor_version,
+      commands::features::level_editor::launch_level_editor,
+      commands::features::level_editor::remove_level_editor_version,
+      commands::features::level_editor::set_level_editor_version,
       commands::features::mods::base_game_iso_exists,
       commands::features::mods::compile_for_mod_install,
       commands::features::mods::decompile_for_mod_install,

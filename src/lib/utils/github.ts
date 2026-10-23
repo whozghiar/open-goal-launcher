@@ -12,6 +12,11 @@ const $format = unwrapFunctionStore(format);
 // level builder's fixes the Level Editor's levels need, with releases named as upstream's
 export const TOOLING_REPOSITORY = "whozghiar/jak-project";
 
+// Jak Level Editor, installed and updated apart from the launcher
+export const LEVEL_EDITOR_REPOSITORY = "whozghiar/jak-level-editor";
+
+type DownloadLink = (githubRelease: GitHubRelease) => string | undefined;
+
 export interface ReleaseInfo {
   version: string;
   date: string | undefined;
@@ -49,8 +54,17 @@ function getDownloadLinkForCurrentPlatform(githubRelease: GitHubRelease) {
   return undefined;
 }
 
+// the editor's portable build, its ogle-extract included; none for macOS
+function getLevelEditorDownloadLink(githubRelease: GitHubRelease) {
+  const plat = platform() === "windows" ? "windows-x64" : "linux-x64";
+  return githubRelease.assets.find(
+    (asset) => asset.name === `jak-level-editor-portable-${plat}.zip`,
+  )?.browser_download_url;
+}
+
 async function parseGithubRelease(
   githubRelease: GitHubRelease,
+  downloadLink: DownloadLink,
 ): Promise<ReleaseInfo> {
   const releaseInfo: ReleaseInfo = {
     version: githubRelease.tag_name,
@@ -59,7 +73,7 @@ async function parseGithubRelease(
         ? undefined
         : githubRelease.published_at,
     githubLink: githubRelease.html_url,
-    downloadUrl: getDownloadLinkForCurrentPlatform(githubRelease),
+    downloadUrl: downloadLink(githubRelease),
     isDownloaded: false,
     pendingAction: false,
     invalid: false,
@@ -84,10 +98,36 @@ async function parseGithubRelease(
 }
 
 export async function listOfficialReleases(): Promise<ReleaseInfo[]> {
+  return listReleases(TOOLING_REPOSITORY, getDownloadLinkForCurrentPlatform);
+}
+
+export async function listLevelEditorReleases(): Promise<ReleaseInfo[]> {
+  return listReleases(LEVEL_EDITOR_REPOSITORY, getLevelEditorDownloadLink);
+}
+
+export async function getLatestOfficialRelease(): Promise<
+  ReleaseInfo | undefined
+> {
+  return getLatestRelease(
+    TOOLING_REPOSITORY,
+    getDownloadLinkForCurrentPlatform,
+  );
+}
+
+export async function getLatestLevelEditorRelease(): Promise<
+  ReleaseInfo | undefined
+> {
+  return getLatestRelease(LEVEL_EDITOR_REPOSITORY, getLevelEditorDownloadLink);
+}
+
+async function listReleases(
+  repository: string,
+  downloadLink: DownloadLink,
+): Promise<ReleaseInfo[]> {
   const nextUrlPattern = /<([\S]+)>; rel="Next"/i;
   let releases = [];
   let urlToHit: string | undefined =
-    `https://api.github.com/repos/${TOOLING_REPOSITORY}/releases?per_page=100`;
+    `https://api.github.com/repos/${repository}/releases?per_page=100`;
 
   while (urlToHit !== undefined) {
     const resp: Response = await fetch(urlToHit);
@@ -103,7 +143,7 @@ export async function listOfficialReleases(): Promise<ReleaseInfo[]> {
 
     const githubReleases: GitHubRelease[] = await resp.json();
     for (const release of githubReleases) {
-      releases.push(await parseGithubRelease(release));
+      releases.push(await parseGithubRelease(release, downloadLink));
     }
 
     const linkHeader = resp.headers.get("link");
@@ -129,11 +169,12 @@ export async function listOfficialReleases(): Promise<ReleaseInfo[]> {
   });
 }
 
-export async function getLatestOfficialRelease(): Promise<
-  ReleaseInfo | undefined
-> {
+async function getLatestRelease(
+  repository: string,
+  downloadLink: DownloadLink,
+): Promise<ReleaseInfo | undefined> {
   const resp = await fetch(
-    `https://api.github.com/repos/${TOOLING_REPOSITORY}/releases/latest`,
+    `https://api.github.com/repos/${repository}/releases/latest`,
   );
   if (resp.status === 429) {
     toastStore.makeToast($format("toasts_githubRateLimit"), "error");
@@ -146,5 +187,5 @@ export async function getLatestOfficialRelease(): Promise<
     return undefined;
   }
   const githubRelease = await resp.json();
-  return await parseGithubRelease(githubRelease);
+  return await parseGithubRelease(githubRelease, downloadLink);
 }

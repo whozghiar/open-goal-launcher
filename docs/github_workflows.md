@@ -29,8 +29,6 @@ The launcher uses workflows for two things:
 | Tests          | `test.yaml`    | Pushes and pull requests on `main` and `master-dev`, `v*` tags, manual run | Runs the interface tests.                                           |
 | Create Release | `release.yaml` | Manual run only                                                            | Bumps the version, builds the installers and publishes the release. |
 
-The jobs that build or check the launcher also download the submodules (`submodules: recursive`), because the Level Editor in `level-editor/` is compiled into the launcher.
-
 ## 3. Build
 
 [build.yaml](../.github/workflows/build.yaml) checks that the launcher compiles into an installable application on each supported system. The same job runs four times in parallel, once per machine:
@@ -85,7 +83,6 @@ Run the same tests on your computer with `npx yarn test`. The Rust tests (`cargo
 The workflow then runs four jobs, one after the other:
 
 1. **Create New Tag** (`create-tag`):
-   - Checks that `level-editor/` is at a tag of [whozghiar/jak-level-editor](https://github.com/whozghiar/jak-level-editor) whose release is published and contains `ogle-extract-windows-x64.zip` and `ogle-extract-linux-x64.zip`, the extractor that launcher users download. If not, the release stops here.
    - Writes the new version into `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`, and into the release history of the Linux app metadata (`resources/metadata/dev.opengoal.OpenGOAL.appdata.xml`).
    - Commits these changes in the name of the person who started the workflow, and tags the commit with the version, for example `v1.0.3`.
 2. **Create Release** (`create-release`): creates a draft release on GitHub, with notes generated from the changes merged since the last release.

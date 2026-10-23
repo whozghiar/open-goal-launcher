@@ -20,11 +20,6 @@ export default defineConfig({
     alias: {
       $lib: fileURLToPath(new URL("./src/lib", import.meta.url)),
       $assets: fileURLToPath(new URL("./src/assets", import.meta.url)),
-      "$level-editor": fileURLToPath(
-        new URL("./level-editor/ui", import.meta.url),
-      ),
     },
-    // the editor (level-editor/, a submodule) uses the launcher's own copies
-    dedupe: ["svelte", "flowbite-svelte", "@tauri-apps/api"],
   },
 });

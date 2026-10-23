@@ -8,7 +8,7 @@
   import {
     LEVEL_EDITOR_AVAILABLE,
     openLevelEditor,
-  } from "$lib/level-editor/window";
+  } from "$lib/level-editor/launch";
   import { Tooltip } from "flowbite-svelte";
   import { _ } from "svelte-i18n";
   import { jobTracker } from "$lib/stores/JobStore";

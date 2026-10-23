@@ -10,6 +10,7 @@ import {
 } from "vitest";
 import { arch, platform } from "@tauri-apps/plugin-os";
 import {
+  getLatestLevelEditorRelease,
   getLatestOfficialRelease,
   listOfficialReleases,
   TOOLING_REPOSITORY,
@@ -351,5 +352,34 @@ describe("the tooling repository", () => {
     expect(await getLatestOfficialRelease()).toBeUndefined();
     expect(await listOfficialReleases()).toEqual([]);
     expect(get(toastStore)).toEqual([]);
+  });
+});
+
+describe("the Level Editor repository", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.resetAllMocks();
+  });
+
+  it("should download the portable build of the editor", async () => {
+    vi.mocked(platform).mockReturnValue("windows");
+    const release = createFakeGithubRelease([
+      "jak-level-editor-mcp-windows-x64.zip",
+      "ogle-extract-windows-x64.zip",
+      "jak-level-editor-portable-linux-x64.zip",
+      "jak-level-editor-portable-windows-x64.zip",
+    ]);
+    release.tag_name = "v1.0.0";
+    (fetch as Mock).mockResolvedValue(createFetchResponse(release));
+    const latest = await getLatestLevelEditorRelease();
+    expect((fetch as Mock).mock.calls[0][0]).toBe(
+      "https://api.github.com/repos/whozghiar/jak-level-editor/releases/latest",
+    );
+    expect(latest?.version).toBe("v1.0.0");
+    expect(
+      latest?.downloadUrl?.endsWith(
+        "jak-level-editor-portable-windows-x64.zip",
+      ),
+    ).toBeTruthy();
   });
 });

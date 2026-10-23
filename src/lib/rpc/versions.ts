@@ -41,6 +41,35 @@ export async function removeOldVersions(): Promise<boolean> {
   return false;
 }
 
+export async function listDownloadedLevelEditorVersions(): Promise<string[]> {
+  return await invoke_rpc(
+    "list_downloaded_versions",
+    { versionFolder: "level-editor" },
+    () => [],
+  );
+}
+
+export async function downloadLevelEditorVersion(
+  version: String,
+  url: String,
+): Promise<boolean> {
+  return await invoke_rpc(
+    "download_level_editor_version",
+    { version, url },
+    () => true,
+  );
+}
+
+export async function removeLevelEditorVersion(
+  version: String,
+): Promise<boolean> {
+  return await invoke_rpc(
+    "remove_level_editor_version",
+    { version },
+    () => true,
+  );
+}
+
 export async function ensureActiveVersionStillExists(): Promise<boolean> {
   return await invoke_rpc("ensure_active_version_still_exists", {});
 }

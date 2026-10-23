@@ -26,7 +26,7 @@ The **OpenGOAL Launcher** is a cross-platform desktop application designed to in
     - `binaries.rs`: Tooling compilation, ISO extraction, and vanilla game launch (`gk`).
     - `features/mods.rs`: Mod installation, archive extraction, CLI argument building, and mod launching.
     - `features/texture_packs.rs`: Texture pack installation and management.
-    - `features/level_editor.rs`: What the launcher gives the Level Editor (the `level-editor/` submodule, a Tauri plugin) and the download of its extractor.
+    - `features/level_editor.rs`: Installs, removes and starts Jak Level Editor, a separate program downloaded per version from its GitHub releases, like the tooling.
     - `game.rs`: Active game detection and save milestone tracking.
     - `saves.rs`: The Saves Manager (listing, copying, moving, backing up and deleting saves).
     - `support.rs`: Support package generation (logs, config, hardware diagnostics).
@@ -94,7 +94,7 @@ When assisting on this repository, the AI must strictly adhere to the following 
 
 ## 5. Documentation Standard
 
-This standard applies to every `.md` file written for this repository: `README.md`, `AGENTS.md` and everything under `docs/`. Files copied from elsewhere stay as they are: `original_project_readme.md`, `schemas/README.md` and the submodules (`.agents/skills/`, `level-editor/`).
+This standard applies to every `.md` file written for this repository: `README.md`, `AGENTS.md` and everything under `docs/`. Files copied from elsewhere stay as they are: `original_project_readme.md`, `schemas/README.md` and the submodule `.agents/skills/`.
 
 ### Writing rules
 

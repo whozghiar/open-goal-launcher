@@ -262,6 +262,7 @@ export async function openREPLForMod(
   });
 }
 
-export async function refreshLevelEditorHost(): Promise<string | null> {
-  return await invoke_rpc2("refresh_level_editor_host");
+// false when the editor started before is still open
+export async function launchLevelEditor(): Promise<boolean> {
+  return await invoke_rpc("launch_level_editor", {}, () => true);
 }

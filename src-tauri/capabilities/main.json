@@ -7,8 +7,7 @@
   ],
   "windows": [
     "main",
-    "splashscreen",
-    "level-editor"
+    "splashscreen"
   ],
   "permissions": [
     "updater:default",
@@ -43,9 +42,6 @@
     "notification:default",
     "os:allow-hostname",
     "core:window:allow-create",
-    "core:webview:allow-create-webview-window",
-    "core:window:allow-toggle-maximize",
-    "jak-level-editor:default",
     "core:window:allow-center",
     "core:window:allow-request-user-attention",
     "core:window:allow-set-resizable",
