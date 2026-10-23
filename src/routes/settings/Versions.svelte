@@ -81,8 +81,10 @@
       ];
     }
 
-    // filter incompatible releases
-    releases = releases.filter((r) => r.downloadUrl !== undefined);
+    // filter incompatible releases; installed versions stay even when the fork does not publish them
+    releases = releases.filter(
+      (r) => r.isDownloaded || r.downloadUrl !== undefined,
+    );
     releases = releases.filter((r) => !r.invalid);
 
     // if no releases are found, early out

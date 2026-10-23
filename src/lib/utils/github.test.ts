@@ -9,9 +9,15 @@ import {
   type Mock,
 } from "vitest";
 import { arch, platform } from "@tauri-apps/plugin-os";
-import { listOfficialReleases } from "./github";
+import {
+  getLatestOfficialRelease,
+  listOfficialReleases,
+  TOOLING_REPOSITORY,
+} from "./github";
 import { init } from "svelte-i18n";
 import { initLocales } from "$lib/i18n/i18n";
+import { toastStore } from "$lib/stores/ToastStore";
+import { get } from "svelte/store";
 
 vi.mock("@tauri-apps/plugin-os");
 global.fetch = vi.fn();
@@ -305,5 +311,45 @@ describe("getLatestOfficialRelease", () => {
     expect(
       releases[0].downloadUrl.endsWith("opengoal-linux-v0.0.1.tar.gz"),
     ).toBeTruthy();
+  });
+});
+
+describe("the tooling repository", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.resetAllMocks();
+  });
+
+  it("should read the releases of the fork", async () => {
+    vi.mocked(platform).mockReturnValue("windows");
+    vi.mocked(arch).mockReturnValue("x86_64");
+    const release = createFakeGithubRelease([
+      "opengoal-windows-v0.3.9-whozghiar.1.zip",
+      "opengoal-linux-v0.3.9-whozghiar.1.tar.gz",
+      "opengoal-lsp-windows-v0.3.9-whozghiar.1.exe",
+    ]);
+    release.tag_name = "v0.3.9-whozghiar.1";
+    (fetch as Mock).mockResolvedValue(createFetchResponse(release));
+    const latest = await getLatestOfficialRelease();
+    expect(TOOLING_REPOSITORY).toBe("whozghiar/jak-project");
+    expect((fetch as Mock).mock.calls[0][0]).toBe(
+      "https://api.github.com/repos/whozghiar/jak-project/releases/latest",
+    );
+    expect(latest?.version).toBe("v0.3.9-whozghiar.1");
+    expect(
+      latest?.downloadUrl?.endsWith("opengoal-windows-v0.3.9-whozghiar.1.zip"),
+    ).toBeTruthy();
+  });
+
+  it("should find no update, without an error, when it has no release", async () => {
+    (fetch as Mock).mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: "Not Found",
+      headers: new Map(),
+    });
+    expect(await getLatestOfficialRelease()).toBeUndefined();
+    expect(await listOfficialReleases()).toEqual([]);
+    expect(get(toastStore)).toEqual([]);
   });
 });

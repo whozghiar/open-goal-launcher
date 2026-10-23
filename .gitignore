@@ -54,8 +54,9 @@ package-lock.json
 *.key.pub
 ~/.tauri/
 
-# Claude Code skills, restored from skills-lock.json
+# the agents' skills (Claude Code's, the others'), restored from skills-lock.json
 .claude/skills/
+.agents/skills/
 
 #docs MP4 video
 docs/video/v1.0.2/*.mp4

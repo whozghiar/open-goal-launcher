@@ -238,6 +238,15 @@ pub struct ExecutableLocation {
   pub executable_path: PathBuf,
 }
 
+/// A tooling version ("v0.3.9", "v0.3.9-whozghiar.1") as X.Y.Z: a fork's suffix numbers its own
+/// builds of that version, it is not a pre-release of it, so it meets the same minimums.
+pub fn tooling_version(version: &str) -> Option<Version> {
+  let mut version = Version::parse(version.strip_prefix('v').unwrap_or(version)).ok()?;
+  version.pre = semver::Prerelease::EMPTY;
+  version.build = semver::BuildMetadata::EMPTY;
+  Some(version)
+}
+
 fn default_version() -> String {
   "3.0".to_owned()
 }
@@ -578,9 +587,7 @@ impl LauncherConfig {
       CommandError::BinaryExecution("No active version set, can't perform operation".to_owned())
     })?;
 
-    let version_str = active_version.strip_prefix('v').unwrap_or(active_version);
-
-    let tooling_version = Version::parse(version_str).unwrap_or_else(|_| Version::new(0, 1, 35));
+    let tooling_version = tooling_version(active_version).unwrap_or_else(|| Version::new(0, 1, 35));
 
     Ok(CommonConfigData {
       install_path: install_path.clone(),
@@ -685,5 +692,18 @@ impl LauncherConfig {
     }
 
     Ok(())
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn a_fork_version_meets_the_minimums_of_its_version() {
+    let fork = tooling_version("v0.3.9-whozghiar.1").unwrap();
+    assert!(fork == Version::new(0, 3, 9) && fork >= Version::new(0, 2, 14));
+    assert_eq!(tooling_version("v0.1.44"), Some(Version::new(0, 1, 44)));
+    assert_eq!(tooling_version("latest"), None);
   }
 }

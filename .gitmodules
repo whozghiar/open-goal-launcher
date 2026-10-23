@@ -1,0 +1,3 @@
+[submodule "level-editor"]
+	path = level-editor
+	url = https://github.com/whozghiar/jak-level-editor.git
