@@ -2,7 +2,7 @@ use tracing::instrument;
 
 use crate::{
   config::LauncherConfig,
-  util::{file::delete_dir, network::download_file, tar::extract_and_delete_archive},
+  util::{file::delete_dir, network::download_release_asset, tar::extract_and_delete_archive},
 };
 
 use super::CommandError;
@@ -40,7 +40,8 @@ pub async fn download_version(
   let download_path = versions_dir.join(format!("{version}.tar.gz"));
 
   delete_dir(&dest_dir)?;
-  download_file(&url, &download_path).await?;
+  // a release of the tooling: its archive checked against GitHub's SHA-256 of it
+  download_release_asset(&url, &download_path, |_, _| {}).await?;
   extract_and_delete_archive(&download_path, &dest_dir, true)?;
   Ok(())
 }

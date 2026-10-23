@@ -27,6 +27,29 @@ jobs:
         with:
           token: ${{ github.token }}
           ref: ${{ github.ref_name }}
+          submodules: recursive
+
+      # the Level Editor (submodule level-editor/) at the tag of a published release of the editor,
+      # with the ogle-extract its users download
+      - name: Check the Level Editor's release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EDITOR_REPO: whozghiar/jak-level-editor
+        run: |
+          sha=$(git -C level-editor rev-parse HEAD)
+          tag=$(gh api "repos/$EDITOR_REPO/tags" --paginate --jq ".[] | select(.commit.sha == \"$sha\") | .name" | head -n1)
+          if [ -z "$tag" ]; then
+            echo "::error::level-editor/ ($sha) is not at a tag of $EDITOR_REPO"
+            exit 1
+          fi
+          assets=$(gh release view "$tag" --repo "$EDITOR_REPO" --json isDraft,assets --jq 'select(.isDraft | not) | .assets[].name') || true
+          for platform in windows-x64 linux-x64; do
+            if ! grep -qx "ogle-extract-$platform.zip" <<< "$assets"; then
+              echo "::error::no published release $tag of $EDITOR_REPO with ogle-extract-$platform.zip"
+              exit 1
+            fi
+          done
+          echo "Level Editor $tag"
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -114,6 +137,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref_name }}
+          submodules: recursive
 
       - name: Setup Node
         uses: actions/setup-node@v7

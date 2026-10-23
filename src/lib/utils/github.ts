@@ -8,6 +8,10 @@ type GitHubRelease =
 
 const $format = unwrapFunctionStore(format);
 
+// the OpenGOAL tooling the launcher installs and updates: this fork of jak-project carries the
+// level builder's fixes the Level Editor's levels need, with releases named as upstream's
+export const TOOLING_REPOSITORY = "whozghiar/jak-project";
+
 export interface ReleaseInfo {
   version: string;
   date: string | undefined;
@@ -83,12 +87,14 @@ export async function listOfficialReleases(): Promise<ReleaseInfo[]> {
   const nextUrlPattern = /<([\S]+)>; rel="Next"/i;
   let releases = [];
   let urlToHit: string | undefined =
-    "https://api.github.com/repos/open-goal/jak-project/releases?per_page=100";
+    `https://api.github.com/repos/${TOOLING_REPOSITORY}/releases?per_page=100`;
 
   while (urlToHit !== undefined) {
     const resp: Response = await fetch(urlToHit);
     if (resp.status === 429) {
       toastStore.makeToast($format("toasts_githubRateLimit"), "error");
+      return [];
+    } else if (resp.status === 404) {
       return [];
     } else if (!resp.ok) {
       toastStore.makeToast(resp.statusText, "error");
@@ -127,10 +133,13 @@ export async function getLatestOfficialRelease(): Promise<
   ReleaseInfo | undefined
 > {
   const resp = await fetch(
-    "https://api.github.com/repos/open-goal/jak-project/releases/latest",
+    `https://api.github.com/repos/${TOOLING_REPOSITORY}/releases/latest`,
   );
   if (resp.status === 429) {
     toastStore.makeToast($format("toasts_githubRateLimit"), "error");
+    return undefined;
+  } else if (resp.status === 404) {
+    // a repository without any release yet: no update
     return undefined;
   } else if (!resp.ok) {
     toastStore.makeToast(resp.statusText, "error");

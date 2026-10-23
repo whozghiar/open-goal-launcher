@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use super::{CommandError, util::is_avx_supported};
-use crate::config::{LauncherConfig, SupportedGame};
+use crate::config::{LauncherConfig, SupportedGame, tooling_version};
 use semver::Version;
 use tracing::instrument;
 
@@ -384,8 +384,7 @@ pub async fn does_active_tooling_version_meet_minimum(
 ) -> Result<bool, CommandError> {
   let config_lock = config.lock().await;
   if let Some(version) = &config_lock.active_version {
-    let tooling_version = Version::parse(version.strip_prefix('v').unwrap_or(version))
-      .unwrap_or_else(|_| Version::new(0, 0, 0));
+    let tooling_version = tooling_version(version).unwrap_or_else(|| Version::new(0, 0, 0));
     let compare_version = Version::new(minimum_major, minimum_minor, minimum_patch);
     Ok(tooling_version >= compare_version)
   } else {

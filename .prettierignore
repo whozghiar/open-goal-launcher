@@ -6,3 +6,4 @@ out/
 .yarn/
 src/assets/translations/
 .agents/skills/
+level-editor/

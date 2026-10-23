@@ -261,3 +261,7 @@ export async function openREPLForMod(
     sourceName,
   });
 }
+
+export async function refreshLevelEditorHost(): Promise<string | null> {
+  return await invoke_rpc2("refresh_level_editor_host");
+}
