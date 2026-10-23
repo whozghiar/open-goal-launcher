@@ -36,16 +36,16 @@ The **OpenGOAL Launcher** is a cross-platform desktop application designed to in
 
 On this Windows development environment, build tools and runtimes are located at the following exact paths:
 
-| Tool                       | Path / Command                                 | Notes                                                             |
-| :------------------------- | :--------------------------------------------- | :---------------------------------------------------------------- |
-| **Rust Toolchain**         | `cargo` / `%USERPROFILE%\.cargo\bin\cargo.exe` | Used for compiling and running tests in `src-tauri`.              |
-| **Node.js Package Runner** | `npx yarn`                                     | Runs workspace scripts without requiring a global Yarn install.   |
-| **Frontend Dev Server**    | `npx yarn dev`                                 | Starts Vite for UI browser testing.                               |
-| **Desktop Dev Server**     | `npx yarn tauri dev`                           | Launches full Tauri application with live reload (Rust + Svelte). |
-| **Typecheck**              | `npx yarn typecheck`                           | Runs `svelte-check` across Svelte 5 and TypeScript files.         |
-| **Code Formatting**        | `npx yarn check-format` / `npx yarn format`    | Prettier with Svelte plugin.                                      |
-| **Rust Tests**             | `cd src-tauri && cargo test`                   | Runs Rust backend tests and binding export tests.                 |
-| **Claude Code Skills**     | `npx skills experimental_install`              | Restores `.claude/skills/` from `skills-lock.json`.               |
+| Tool                       | Path / Command                                                                    | Notes                                                                                             |
+| :------------------------- | :-------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------ |
+| **Rust Toolchain**         | `cargo` / `%USERPROFILE%\.cargo\bin\cargo.exe`                                    | Used for compiling and running tests in `src-tauri`.                                              |
+| **Node.js Package Runner** | `npx yarn`                                                                        | Runs workspace scripts without requiring a global Yarn install.                                   |
+| **Frontend Dev Server**    | `npx yarn dev`                                                                    | Starts Vite for UI browser testing.                                                               |
+| **Desktop Dev Server**     | `npx yarn tauri dev`                                                              | Launches full Tauri application with live reload (Rust + Svelte).                                 |
+| **Typecheck**              | `npx yarn typecheck`                                                              | Runs `svelte-check` across Svelte 5 and TypeScript files.                                         |
+| **Code Formatting**        | `npx yarn check-format` / `npx yarn format`                                       | Prettier with Svelte plugin.                                                                      |
+| **Rust Tests**             | `cd src-tauri && cargo test`                                                      | Runs Rust backend tests and binding export tests.                                                 |
+| **Agent Skills**           | `git submodule update --init --remote .agents/skills` then `npx yarn skills:link` | Fetches the `opengoal-modding-kb` submodule (Remotion included), links it into `.claude/skills/`. |
 
 ---
 

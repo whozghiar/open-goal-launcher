@@ -5,3 +5,4 @@ bundle-test/
 out/
 .yarn/
 src/assets/translations/
+.agents/skills/

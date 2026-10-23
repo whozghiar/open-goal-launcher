@@ -54,7 +54,7 @@ package-lock.json
 *.key.pub
 ~/.tauri/
 
-# Claude Code skills, restored from skills-lock.json
+# Claude Code skills: links to the knowledge base in .agents/skills/, made by `yarn skills:link`
 .claude/skills/
 
 #docs MP4 video

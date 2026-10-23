@@ -19,7 +19,8 @@
     "verify-release-assets": "node ./scripts/verify-release-assets.mjs",
     "mock-mkcert": "mkcert -cert-file ./fixtures/cert.pem -key-file ./fixtures/key.pem localhost",
     "mock-mod-source": "npx http-server --cors -p 8081 -S -C ./fixtures/cert.pem -K ./fixtures/key.pem ./fixtures",
-    "update-rust-bindings": "cd src-tauri && cargo test"
+    "update-rust-bindings": "cd src-tauri && cargo test",
+    "skills:link": "node ./scripts/link-skills.mjs"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.2.3",
