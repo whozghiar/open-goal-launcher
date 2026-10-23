@@ -21,10 +21,11 @@
 
 ## 1. What This Feature Brings
 
-A **Level Editor** button in the sidebar opens **Jak Level Editor**, a level editor for Jak 3, in a
-window of its own. With it you can open any level of the game (read from your own disc), move,
-copy and delete its pieces, place objects, prefabs and whole buildings, paint terrain, see the level
-lit as the game lights it at any hour, generate the paths creatures walk on, and export the result
+A **Level Editor** button in the sidebar opens **Jak Level Editor**, a level editor for the games
+of the series, in a window of its own. It edits Jak 3 today; its **Game** menu lists Jak and Daxter
+and Jak II marked _Work in progress_. With it you can open any level of the game (read from your own
+disc), move, copy and delete its pieces, place objects, prefabs and whole buildings, paint terrain,
+see the level lit as the game lights it at any hour, generate the paths creatures walk on, and export the result
 as a custom level that OpenGOAL builds and plays. An AI assistant can also drive it (MCP server).
 
 The disc the launcher already extracted is the editor's source, and the editor's extractor is
@@ -40,7 +41,7 @@ come as usual (the header's icon, the Versions page, the automatic update).
 The Level Editor is not offered on macOS for now: the fork's tooling and `ogle-extract` have no
 build for it.
 
-The editor is its own project ([open-goal-level-builder](https://github.com/whozghiar/open-goal-level-builder)),
+The editor is its own project ([jak-level-editor](https://github.com/whozghiar/jak-level-editor)),
 written in Rust and Svelte like the launcher. The launcher only plugs it in: it keeps no copy of
 its code.
 
@@ -128,7 +129,7 @@ flowchart TD
 
 - **Downloads:**
   - `ogle-extract`, the one of the editor's version (`EDITOR_VERSION` of the plugin):
-    `https://github.com/whozghiar/open-goal-level-builder/releases/download/v<version>/ogle-extract-<platform>.zip`
+    `https://github.com/whozghiar/jak-level-editor/releases/download/v<version>/ogle-extract-<platform>.zip`
     (`windows-x64`, `linux-x64`, `macos-x64`, `macos-arm64`; the archive holds `ogle-extract(.exe)`
     and `ogle-extract-data/`), unpacked in a `.part` folder renamed when complete, with its progress
     sent to the editor.
@@ -215,7 +216,9 @@ flowchart TD
 ## 1. Qu'est-ce qu'elle apporte
 
 Un bouton **Level Editor** dans la barre latérale ouvre **Jak Level Editor**, un éditeur de niveaux
-pour Jak 3, dans sa propre fenêtre. On peut y ouvrir n'importe quel niveau du jeu (lu depuis son
+pour les jeux de la série, dans sa propre fenêtre. Il édite Jak 3 aujourd'hui ; son menu **Jeu**
+liste Jak and Daxter et Jak II marqués _Travaux en cours_. On peut y ouvrir n'importe quel niveau du
+jeu (lu depuis son
 propre disque), déplacer, copier et supprimer ses éléments, poser des objets, des préfabriqués et
 des bâtiments entiers, peindre du terrain, voir le niveau éclairé comme le jeu l'éclaire à toute
 heure, générer les chemins des créatures, et exporter le résultat comme un niveau personnalisé
@@ -235,7 +238,7 @@ de l'en-tête, la page Versions, la mise à jour automatique).
 Le Level Editor n'est pas proposé sur macOS pour le moment : l'outillage du fork et `ogle-extract`
 n'y sont pas compilés.
 
-L'éditeur est un projet à part ([open-goal-level-builder](https://github.com/whozghiar/open-goal-level-builder)),
+L'éditeur est un projet à part ([jak-level-editor](https://github.com/whozghiar/jak-level-editor)),
 écrit en Rust et Svelte comme le launcher. Le launcher se contente de le brancher : il ne garde
 aucune copie de son code.
 
@@ -329,7 +332,7 @@ flowchart TD
 
 - **Téléchargements :**
   - `ogle-extract`, celui de la version de l'éditeur (`EDITOR_VERSION` du plugin) :
-    `https://github.com/whozghiar/open-goal-level-builder/releases/download/v<version>/ogle-extract-<plateforme>.zip`
+    `https://github.com/whozghiar/jak-level-editor/releases/download/v<version>/ogle-extract-<plateforme>.zip`
     (`windows-x64`, `linux-x64`, `macos-x64`, `macos-arm64` ; l'archive contient
     `ogle-extract(.exe)` et `ogle-extract-data/`), décompressé dans un dossier `.part` renommé une
     fois complet, sa progression envoyée à l'éditeur.

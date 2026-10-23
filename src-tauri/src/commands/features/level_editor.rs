@@ -22,7 +22,7 @@ use crate::{
   util::{file::delete_dir, network::download_release_asset, tar::extract_and_delete_archive},
 };
 
-const EXTRACTOR_URL: &str = "https://github.com/whozghiar/open-goal-level-builder/releases/download/v{version}/ogle-extract-{platform}.zip";
+const EXTRACTOR_URL: &str = "https://github.com/whozghiar/jak-level-editor/releases/download/v{version}/ogle-extract-{platform}.zip";
 
 fn exe(dir: &Path, name: &str) -> PathBuf {
   dir.join(if cfg!(windows) {

@@ -34,7 +34,7 @@ jobs:
       - name: Check the Level Editor's release
         env:
           GH_TOKEN: ${{ github.token }}
-          EDITOR_REPO: whozghiar/open-goal-level-builder
+          EDITOR_REPO: whozghiar/jak-level-editor
         run: |
           sha=$(git -C level-editor rev-parse HEAD)
           tag=$(gh api "repos/$EDITOR_REPO/tags" --paginate --jq ".[] | select(.commit.sha == \"$sha\") | .name" | head -n1)
