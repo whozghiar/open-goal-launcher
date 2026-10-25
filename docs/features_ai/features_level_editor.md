@@ -29,10 +29,11 @@ What the launcher adds:
 - **An alert when a version is out.** A download icon appears next to the editor's version in the header, as it does for the launcher and the tooling.
 - **Versions you control.** **Settings > Level Editor** lists the versions: download one, make it active, go back to an older one, or delete it.
 - **What the launcher already knows.** The editor gets the launcher's language, keeps its preferences in the launcher's folder, and starts its extraction from the discs the launcher already extracted.
-- **OpenGOAL from a fork.** The launcher installs and updates OpenGOAL from the releases of [whozghiar/jak-project](https://github.com/whozghiar/jak-project) instead of the upstream project. These releases carry fixes to the level builder that the editor's levels need.
+
+The games keep the official OpenGOAL tooling, from [open-goal/jak-project](https://github.com/open-goal/jak-project). The levels the editor exports are built in a jak-project with the fork [whozghiar/jak-project](https://github.com/whozghiar/jak-project), which carries the level builder fixes they need; the launcher does not install that fork.
 
 > [!NOTE]
-> The Level Editor is not offered on macOS for now: the fork's tools and the editor have no macOS build.
+> The editor has no macOS build yet. On macOS, the **Level Editor** button shows a message saying that work is in progress and that the editor is coming soon.
 
 ## 2. How the feature works
 
@@ -104,7 +105,7 @@ flowchart TD
   D -->|"Otherwise"| F["Starts versions/level-editor/version/jak-level-editor with the launcher's options"]
 ```
 
-[launch.ts](../../src/lib/level-editor/launch.ts) holds the button's logic and `LEVEL_EDITOR_AVAILABLE`, which hides the editor on macOS.
+[launch.ts](../../src/lib/level-editor/launch.ts) holds the button's logic and `LEVEL_EDITOR_AVAILABLE`, false on macOS: there, the button shows the "coming soon" message, and the header and the settings leave the editor out.
 
 ### Versions and updates
 
@@ -128,15 +129,12 @@ The Rust commands, in [level_editor.rs](../../src-tauri/src/commands/features/le
 
 Run the release workflow of [jak-level-editor](https://github.com/whozghiar/jak-level-editor). Once its release is published, not left as a draft, with the `jak-level-editor-portable-<platform>.zip` files, launchers offer it at their next start. The launcher needs no release of its own.
 
-### OpenGOAL releases from the fork
+### The games' tooling
 
-`TOOLING_REPOSITORY` in [github.ts](../../src/lib/utils/github.ts) is `whozghiar/jak-project`, so the Versions page, the header's update icon and the automatic update follow the fork's releases.
+`TOOLING_REPOSITORY` in [github.ts](../../src/lib/utils/github.ts) is `open-goal/jak-project`: the Versions page and the header's update icon follow the official releases, which have builds for Windows, Linux and macOS.
 
-- The fork's workflow `release-tooling.yml` publishes them with a tag `vX.Y.Z` or `vX.Y.Z-suffix`. For example, `v0.3.9-whozghiar.1` is the fork's first build of upstream version 0.3.9. The archives are named like upstream's: `opengoal-windows-<tag>.zip` and `opengoal-linux-<tag>.tar.gz`.
-- A repository with no release yet means no update, without an error.
-- The Versions page keeps listing versions installed earlier that the fork does not publish, such as upstream's `v0.3.8`, so they can still be chosen again or removed.
-- A suffix does not make a pre-release of X.Y.Z. `tooling_version` in [config.rs](../../src-tauri/src/config.rs) reads the version as X.Y.Z when the launcher checks minimum versions. Elsewhere, versions are only compared for equality and sorted by date.
-- Tooling downloads are checked against GitHub's SHA-256 too ([versions.rs](../../src-tauri/src/commands/versions.rs)).
+- Launcher 1.1 installed builds of the fork instead, tagged `vX.Y.Z-whozghiar.N`. The Versions page keeps listing an installed version that GitHub does not list, so it can still be chosen again or removed, and `tooling_version` in [config.rs](../../src-tauri/src/config.rs) reads such a version as X.Y.Z when the launcher checks minimum versions.
+- Tooling downloads go through `download_release_asset` too ([versions.rs](../../src-tauri/src/commands/versions.rs)). GitHub has a SHA-256 for the assets uploaded since mid-2025 only: an official release older than that is downloaded unchecked, as the launcher always did.
 
 ## 4. New files created
 
@@ -149,13 +147,13 @@ Run the release workflow of [jak-level-editor](https://github.com/whozghiar/jak-
 
 ## 5. Overview of changes from the original project
 
-- **Sidebar**: [Sidebar.svelte](../../src/components/sidebar/Sidebar.svelte) gains the **Level Editor** button, except on macOS.
+- **Sidebar**: [Sidebar.svelte](../../src/components/sidebar/Sidebar.svelte) gains the **Level Editor** button; on macOS, it shows that the editor is coming soon.
 - **Header**: [Header.svelte](../../src/components/header/Header.svelte) shows the editor's version and its update icon.
 - **Settings**: [Settings.svelte](../../src/routes/Settings.svelte) gains the **Level Editor** tab. The Versions page and its two components serve both the tooling and the editor.
-- **Releases**: [github.ts](../../src/lib/utils/github.ts) reads the tooling from the fork and the editor from its own repository, with the same code.
-- **Settings file**: [config.rs](../../src-tauri/src/config.rs) adds `levelEditorVersion`, and `tooling_version` so a fork's version meets the minimums of its X.Y.Z. The TypeScript type [LauncherConfig.ts](../../src/lib/rpc/bindings/LauncherConfig.ts) is regenerated by `ts-rs`.
-- **Backend**: [main.rs](../../src-tauri/src/main.rs) registers the editor's commands. [network.rs](../../src-tauri/src/util/network.rs) adds `download_release_asset`, which checks a release asset against its SHA-256, used for the editor and the tooling.
-- **Versions page**: [Versions.svelte](../../src/routes/settings/Versions.svelte) keeps listing installed versions the fork does not publish.
-- **Translations**: the editor's texts (`sidebar_levelEditor`, `header_levelEditorVersionLabel`, `settings_tabs_levelEditor`, `settings_versions_levelEditor_*`, `toasts_savedLevelEditorVersion`, `toasts_levelEditorAlreadyOpen`) were added to [en-US.json](../../src/assets/translations/en-US.json).
+- **Releases**: [github.ts](../../src/lib/utils/github.ts) reads the editor from its own repository with the tooling's code.
+- **Settings file**: [config.rs](../../src-tauri/src/config.rs) adds `levelEditorVersion`, and `tooling_version` so a fork build installed by launcher 1.1 meets the minimums of its X.Y.Z. The TypeScript type [LauncherConfig.ts](../../src/lib/rpc/bindings/LauncherConfig.ts) is regenerated by `ts-rs`.
+- **Backend**: [main.rs](../../src-tauri/src/main.rs) registers the editor's commands. [network.rs](../../src-tauri/src/util/network.rs) adds `download_release_asset`, which checks a release asset against its SHA-256 when GitHub has one, used for the editor and the tooling.
+- **Versions page**: [Versions.svelte](../../src/routes/settings/Versions.svelte) keeps listing installed versions that GitHub does not list.
+- **Translations**: the editor's texts (`sidebar_levelEditor`, `header_levelEditorVersionLabel`, `settings_tabs_levelEditor`, `settings_versions_levelEditor_*`, `toasts_savedLevelEditorVersion`, `toasts_levelEditorAlreadyOpen`, `toasts_levelEditorComingToMacos`) were added to [en-US.json](../../src/assets/translations/en-US.json).
 
 Earlier builds of this fork compiled the editor into the launcher, as a submodule (`level-editor/`) and a Tauri plugin. Downloading it as a separate program lets it update without a launcher release, and the launcher builds without the editor's code.

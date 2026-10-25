@@ -262,6 +262,7 @@
   "toasts_savedToolingVersion": "Saved tooling version",
   "toasts_savedLevelEditorVersion": "Saved Level Editor version",
   "toasts_levelEditorAlreadyOpen": "The Level Editor is already open",
+  "toasts_levelEditorComingToMacos": "The Level Editor is not available on macOS yet: work is in progress, and it will come soon.",
   "toasts_modSourceUnreachable": "Mod source unreachable",
   "toasts_couldNotRemoveModSource": "Unable to remove mod source",
   "toasts_modSourceDuplicateName": "Mod source has the same display name as one you already have added",

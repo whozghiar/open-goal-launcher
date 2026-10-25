@@ -74,7 +74,7 @@ flowchart TD
 
 ## 5. The OpenGOAL programs
 
-The launcher does not contain the games. It drives three programs from the [OpenGOAL](https://github.com/open-goal/jak-project) project, downloaded from the releases of the fork [whozghiar/jak-project](https://github.com/whozghiar/jak-project):
+The launcher does not contain the games. It drives three programs from the [OpenGOAL](https://github.com/open-goal/jak-project) project, downloaded from that project's releases:
 
 | Program     | What it does                                                                                                                       |
 | :---------- | :--------------------------------------------------------------------------------------------------------------------------------- |

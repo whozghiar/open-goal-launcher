@@ -321,24 +321,25 @@ describe("the tooling repository", () => {
     vi.resetAllMocks();
   });
 
-  it("should read the releases of the fork", async () => {
-    vi.mocked(platform).mockReturnValue("windows");
-    vi.mocked(arch).mockReturnValue("x86_64");
+  it("should read the official releases, macOS included", async () => {
+    vi.mocked(platform).mockReturnValue("macos");
+    vi.mocked(arch).mockReturnValue("aarch64");
     const release = createFakeGithubRelease([
-      "opengoal-windows-v0.3.9-whozghiar.1.zip",
-      "opengoal-linux-v0.3.9-whozghiar.1.tar.gz",
-      "opengoal-lsp-windows-v0.3.9-whozghiar.1.exe",
+      "opengoal-windows-v0.3.9.zip",
+      "opengoal-linux-v0.3.9.tar.gz",
+      "opengoal-macos-arm-v0.3.9.tar.gz",
+      "opengoal-lsp-macos-arm-v0.3.9.bin",
     ]);
-    release.tag_name = "v0.3.9-whozghiar.1";
+    release.tag_name = "v0.3.9";
     (fetch as Mock).mockResolvedValue(createFetchResponse(release));
     const latest = await getLatestOfficialRelease();
-    expect(TOOLING_REPOSITORY).toBe("whozghiar/jak-project");
+    expect(TOOLING_REPOSITORY).toBe("open-goal/jak-project");
     expect((fetch as Mock).mock.calls[0][0]).toBe(
-      "https://api.github.com/repos/whozghiar/jak-project/releases/latest",
+      "https://api.github.com/repos/open-goal/jak-project/releases/latest",
     );
-    expect(latest?.version).toBe("v0.3.9-whozghiar.1");
+    expect(latest?.version).toBe("v0.3.9");
     expect(
-      latest?.downloadUrl?.endsWith("opengoal-windows-v0.3.9-whozghiar.1.zip"),
+      latest?.downloadUrl?.endsWith("opengoal-macos-arm-v0.3.9.tar.gz"),
     ).toBeTruthy();
   });
 

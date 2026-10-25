@@ -78,8 +78,9 @@ fn sha256_hex(path: &Path) -> Result<String> {
 }
 
 /// Downloads an asset of a GitHub release to `destination`, then checks it against the SHA-256
-/// GitHub gives for it (its `digest`): a file that differs, or an asset GitHub gives no digest for,
-/// is deleted and refused.
+/// GitHub gives for it (its `digest`): a file that differs is deleted and refused. GitHub has no
+/// digest for the assets uploaded before mid-2025 (most of open-goal/jak-project's releases): those
+/// are downloaded unchecked, as the launcher always did.
 pub async fn download_release_asset(
   url: &str,
   destination: &Path,
@@ -102,9 +103,12 @@ pub async fn download_release_asset(
     .and_then(|assets| assets.iter().find(|a| a["name"] == name))
     .and_then(|a| a["digest"].as_str())
     .and_then(|d| d.strip_prefix("sha256:"))
-    .map(str::to_ascii_lowercase)
-    .with_context(|| format!("GitHub gives no SHA-256 for {name}: not downloaded"))?;
+    .map(str::to_ascii_lowercase);
   download_file_with_progress(url, destination, on_progress).await?;
+  let Some(expected) = expected else {
+    tracing::warn!("GitHub gives no SHA-256 for {name}: downloaded unchecked");
+    return Ok(());
+  };
   let actual = sha256_hex(destination)?;
   if actual != expected {
     let _ = std::fs::remove_file(destination);
@@ -147,6 +151,22 @@ mod tests {
     let dest = tmp.path().join("lsp.bin");
     download_release_asset(
       "https://github.com/whozghiar/jak-project/releases/download/v0.3.9-whozghiar.1/opengoal-lsp-linux-v0.3.9-whozghiar.1.bin",
+      &dest,
+      |_, _| {},
+    )
+    .await
+    .unwrap();
+    assert!(dest.is_file());
+  }
+
+  // an official release from before GitHub's digests: cargo test -- --ignored without_a_digest
+  #[tokio::test]
+  #[ignore]
+  async fn a_real_release_asset_without_a_digest() {
+    let tmp = tempfile::tempdir().unwrap();
+    let dest = tmp.path().join("lsp.bin");
+    download_release_asset(
+      "https://github.com/open-goal/jak-project/releases/download/v0.2.25/opengoal-lsp-linux-v0.2.25.bin",
       &dest,
       |_, _| {},
     )

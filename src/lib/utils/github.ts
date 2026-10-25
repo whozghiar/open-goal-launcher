@@ -8,9 +8,8 @@ type GitHubRelease =
 
 const $format = unwrapFunctionStore(format);
 
-// the OpenGOAL tooling the launcher installs and updates: this fork of jak-project carries the
-// level builder's fixes the Level Editor's levels need, with releases named as upstream's
-export const TOOLING_REPOSITORY = "whozghiar/jak-project";
+// the OpenGOAL tooling the launcher installs and updates, to play the games
+export const TOOLING_REPOSITORY = "open-goal/jak-project";
 
 // Jak Level Editor, installed and updated apart from the launcher
 export const LEVEL_EDITOR_REPOSITORY = "whozghiar/jak-level-editor";

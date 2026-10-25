@@ -123,7 +123,8 @@
       ];
     }
 
-    // filter incompatible releases; installed versions stay even when the fork does not publish them
+    // filter incompatible releases; installed versions stay even when GitHub does not list them
+    // (a build of the whozghiar/jak-project fork, installed by launcher 1.1)
     releases = releases.filter(
       (r) => r.isDownloaded || r.downloadUrl !== undefined,
     );
