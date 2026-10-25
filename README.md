@@ -32,7 +32,7 @@ Full guide with screenshots: [docs/features_ai/feature_modTextures.md](./docs/fe
 
 ### Level Editor
 
-Jak Level Editor lets you open a level of the game, move and place objects, paint terrain, and export the result as a custom level for OpenGOAL. It works on Jak 3 today. It is not available on macOS for now.
+Jak Level Editor lets you open a level of the game, move and place objects, paint terrain, and export the result as a custom level for OpenGOAL. It works on Jak 3 today. It has no macOS version yet: on macOS, its button says that it is coming soon.
 
 The editor is a separate program that the launcher installs and updates like the OpenGOAL tools: download a version in **Settings > Level Editor**, then open it with the **Level Editor** button in the sidebar. When a newer version is published, a download icon appears next to its version in the header.
 
@@ -118,6 +118,7 @@ If the launcher does not start, the logs are in:
 
 ## 5. More documentation
 
+- [CHANGELOG.md](./CHANGELOG.md): what each version of this launcher changes.
 - [original_project_readme.md](./original_project_readme.md): README of the original project.
 - [docs/features_ai/features_save_data_manager.md](./docs/features_ai/features_save_data_manager.md): Saves Manager.
 - [docs/features_ai/feature_modTextures.md](./docs/features_ai/feature_modTextures.md): Mod Texture Packs.
