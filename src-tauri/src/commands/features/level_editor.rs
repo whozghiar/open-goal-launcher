@@ -2,8 +2,10 @@
 //! updates as it does the tooling: the portable build of each version downloaded from its release
 //! into `<install>/versions/level-editor/<version>/` (checked against GitHub's SHA-256 of it), the
 //! active one in the settings. The launcher starts it with what it knows: its preferences in the
-//! launcher's config folder, its default library (`<install>/jak-level-editor`), the discs already
-//! extracted. The editor runs no game: its exports are files to copy into a jak-project.
+//! launcher's config folder, its default library (`<install>/jak-level-editor`), the games installed
+//! with the active version (`--game-install`): the editor extracts their levels with their own
+//! extractor, and tries a level in them, adding only the level's files next to the game's while it
+//! is tried.
 
 use std::path::{Path, PathBuf};
 
@@ -13,7 +15,7 @@ use tracing::instrument;
 
 use crate::{
   commands::CommandError,
-  config::LauncherConfig,
+  config::{LauncherConfig, SupportedGame},
   util::{
     file::delete_dir, network::download_release_asset, process::create_std_log_file,
     tar::extract_and_delete_archive,
@@ -36,9 +38,27 @@ fn versions_dir(install: &Path) -> PathBuf {
   install.join("versions").join("level-editor")
 }
 
+/// The games installed with the active version (their compiled game matches the active gk, goalc
+/// and extractor): the editor extracts their levels and tries levels in them.
+fn games_to_try(config: &LauncherConfig) -> Vec<&'static str> {
+  [
+    ("jak1", SupportedGame::Jak1),
+    ("jak2", SupportedGame::Jak2),
+    ("jak3", SupportedGame::Jak3),
+  ]
+  .into_iter()
+  .filter(|(_, game)| {
+    config.games.get(game).is_some_and(|g| {
+      g.is_installed && g.version.is_some() && g.version == config.active_version
+    })
+  })
+  .map(|(name, _)| name)
+  .collect()
+}
+
 /// The editor's command line. Its own options go as `--name=value`, which an editor that does not
 /// know them yet skips whole (v1.0.0 would take a separate value for a project to open).
-fn editor_args(locale: &str, install: &Path) -> Vec<String> {
+fn editor_args(locale: &str, install: &Path, installed: &[&str]) -> Vec<String> {
   let mut args = Vec::new();
   if let Some(lang) = locale.split('-').next().filter(|l| !l.is_empty()) {
     args.extend(["--lang".to_owned(), lang.to_owned()]);
@@ -47,16 +67,8 @@ fn editor_args(locale: &str, install: &Path) -> Vec<String> {
     "--default-library={}",
     install.join("jak-level-editor").display()
   ));
-  for game in ["jak1", "jak2", "jak3"] {
-    let disc = install
-      .join("active")
-      .join(game)
-      .join("data")
-      .join("iso_data")
-      .join(game);
-    if disc.is_dir() {
-      args.push(format!("--extract-source={game}={}", disc.display()));
-    }
+  for game in installed {
+    args.push(format!("--game-install={game}={}", install.display()));
   }
   args
 }
@@ -146,7 +158,11 @@ pub async fn launch_level_editor(
   let log_file = create_std_log_file(&app_handle, "level-editor.log".to_owned(), false)?;
 
   let child = std::process::Command::new(exe(&dir, "jak-level-editor"))
-    .args(editor_args(&config.locale, &install))
+    .args(editor_args(
+      &config.locale,
+      &install,
+      &games_to_try(&config),
+    ))
     .env("JLE_PREFS_DIR", prefs)
     .current_dir(&dir)
     .stdout(log_file.try_clone()?)
@@ -183,25 +199,23 @@ mod tests {
   }
 
   #[test]
-  fn the_editor_gets_the_language_the_library_and_the_discs() {
+  fn the_editor_gets_the_language_the_library_and_the_games() {
     let tmp = tempfile::tempdir().unwrap();
     let install = tmp.path();
-    let jak3 = install
-      .join("active")
-      .join("jak3")
-      .join("data")
-      .join("iso_data")
-      .join("jak3");
-    std::fs::create_dir_all(&jak3).unwrap();
 
-    let args = editor_args("fr-FR", install);
+    let args = editor_args("fr-FR", install, &["jak3"]);
     assert_eq!(args[..2], ["--lang", "fr"]);
     assert!(args.contains(&format!(
       "--default-library={}",
       install.join("jak-level-editor").display()
     )));
-    assert!(args.contains(&format!("--extract-source=jak3={}", jak3.display())));
-    assert!(!args.iter().any(|a| a.starts_with("--extract-source=jak2")));
-    assert!(!editor_args("", install).contains(&"--lang".to_owned()));
+    assert!(args.contains(&format!("--game-install=jak3={}", install.display())));
+    assert!(!args.iter().any(|a| a.starts_with("--extract-source")));
+    assert!(!editor_args("", install, &[]).contains(&"--lang".to_owned()));
+    assert!(
+      !editor_args("", install, &[])
+        .iter()
+        .any(|a| a.starts_with("--game-install"))
+    );
   }
 }

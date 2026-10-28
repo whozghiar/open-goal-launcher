@@ -70,12 +70,12 @@ The launcher starts the editor with these settings:
 | Language        | `--lang fr`, from the launcher's language                                                | The editor's texts in that language, when the editor has it (English, French).      |
 | Preferences     | The `JLE_PREFS_DIR` environment variable: `<launcher config>/jak-level-editor`           | The editor keeps its library and caches there, apart from the standalone editor's.  |
 | Default library | `--default-library=<install>/jak-level-editor`                                           | The folder the first-run assistant offers for the library.                          |
-| Discs           | `--extract-source=jak3=<install>/active/jak3/data/iso_data/jak3`, one per installed game | **File > Extract game assets** starts from the disc the launcher already extracted. |
+| Games           | `--game-install=jak3=<install>`, one per game installed with the active version          | **File > Extract game assets** reads the game's levels with its own extractor; **Level > Try in the game** plays a level in it. |
 
 `<launcher config>` is `%APPDATA%/OpenGOAL-Launcher` on Windows. It is the folder the editor's preferences were already in when earlier builds of this fork ran the editor inside the launcher, so the library chosen then is kept.
 
 > [!IMPORTANT]
-> `--default-library` and `--extract-source` need an editor version that knows them, newer than v1.0.0. Older versions skip them whole, because they are written as `--name=value`. With such a version, the first-run assistant offers `Documents/Jak Level Editor` and the extraction asks for the disc.
+> `--default-library` and `--game-install` need an editor version that knows them, newer than v1.0.0. Older versions skip them whole, because they are written as `--name=value`. With such a version, the first-run assistant offers `Documents/Jak Level Editor` and the editor asks for the game's folder in **File > Settings**.
 
 ### One editor at a time
 

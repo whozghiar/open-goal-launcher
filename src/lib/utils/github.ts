@@ -53,7 +53,7 @@ function getDownloadLinkForCurrentPlatform(githubRelease: GitHubRelease) {
   return undefined;
 }
 
-// the editor's portable build, its ogle-extract included; none for macOS
+// the editor's portable build; none for macOS
 function getLevelEditorDownloadLink(githubRelease: GitHubRelease) {
   const plat = platform() === "windows" ? "windows-x64" : "linux-x64";
   return githubRelease.assets.find(
