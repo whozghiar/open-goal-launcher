@@ -70,6 +70,37 @@ export async function removeLevelEditorVersion(
   );
 }
 
+export async function listDownloadedAnimationStudioVersions(): Promise<
+  string[]
+> {
+  return await invoke_rpc(
+    "list_downloaded_versions",
+    { versionFolder: "animation-studio" },
+    () => [],
+  );
+}
+
+export async function downloadAnimationStudioVersion(
+  version: String,
+  url: String,
+): Promise<boolean> {
+  return await invoke_rpc(
+    "download_animation_studio_version",
+    { version, url },
+    () => true,
+  );
+}
+
+export async function removeAnimationStudioVersion(
+  version: String,
+): Promise<boolean> {
+  return await invoke_rpc(
+    "remove_animation_studio_version",
+    { version },
+    () => true,
+  );
+}
+
 export async function ensureActiveVersionStillExists(): Promise<boolean> {
   return await invoke_rpc("ensure_active_version_still_exists", {});
 }

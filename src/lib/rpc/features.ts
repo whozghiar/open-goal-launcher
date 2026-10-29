@@ -266,3 +266,8 @@ export async function openREPLForMod(
 export async function launchLevelEditor(): Promise<boolean> {
   return await invoke_rpc("launch_level_editor", {}, () => true);
 }
+
+// false when the studio started before is still open
+export async function launchAnimationStudio(): Promise<boolean> {
+  return await invoke_rpc("launch_animation_studio", {}, () => true);
+}

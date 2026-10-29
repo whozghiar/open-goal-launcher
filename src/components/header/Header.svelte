@@ -7,24 +7,30 @@
   import IconHelpCircle from "~icons/mdi/help-circle";
   import IconWindowClose from "~icons/mdi/window-close";
   import IconDownload from "~icons/mdi/tray-arrow-down";
-  import { UpdateStore } from "$lib/stores/AppStore";
+  import { UpdateStore, type UpdateKey } from "$lib/stores/AppStore";
   import { isInDebugMode } from "$lib/utils/common";
   import {
     downloadOfficialVersion,
+    listDownloadedAnimationStudioVersions,
     listDownloadedLevelEditorVersions,
     listDownloadedVersions,
     removeOldVersions,
   } from "$lib/rpc/versions";
   import {
+    getLatestAnimationStudioRelease,
     getLatestLevelEditorRelease,
     getLatestOfficialRelease,
+    type ReleaseInfo,
   } from "$lib/utils/github";
   import { LEVEL_EDITOR_AVAILABLE } from "$lib/level-editor/launch";
   import { _ } from "svelte-i18n";
   import { toastStore } from "$lib/stores/ToastStore";
   import { setActiveVersion } from "$lib/rpc/config";
   import { check } from "@tauri-apps/plugin-updater";
-  import { versionState } from "/src/state/VersionState.svelte";
+  import {
+    versionState,
+    type ActiveVersionKey,
+  } from "/src/state/VersionState.svelte";
   import { navigate } from "/src/router";
   import { route } from "../../router";
   import { Tooltip } from "flowbite-svelte";
@@ -70,7 +76,22 @@
     if (route.pathname === "/startup") return;
     checkedToolingUpdate = true;
     checkForToolingUpdate();
-    if (LEVEL_EDITOR_AVAILABLE) checkForLevelEditorUpdate();
+    if (LEVEL_EDITOR_AVAILABLE) {
+      checkForProgramUpdate(
+        "activeLevelEditorVersion",
+        "selectedLevelEditor",
+        config?.levelEditorVersion,
+        getLatestLevelEditorRelease,
+        listDownloadedLevelEditorVersions,
+      );
+    }
+    checkForProgramUpdate(
+      "activeAnimationStudioVersion",
+      "selectedAnimationStudio",
+      config?.animationStudioVersion,
+      getLatestAnimationStudioRelease,
+      listDownloadedAnimationStudioVersions,
+    );
   });
 
   async function checkForToolingUpdate() {
@@ -90,19 +111,26 @@
     };
   }
 
-  async function checkForLevelEditorUpdate() {
-    versionState.activeLevelEditorVersion = config?.levelEditorVersion;
-    const latestRelease = await getLatestLevelEditorRelease();
+  // a program the launcher installs per version: Jak Level Editor, OpenGOAL Animation Studio
+  async function checkForProgramUpdate(
+    activeKey: ActiveVersionKey,
+    updateKey: UpdateKey,
+    active: string | null | undefined,
+    getLatestRelease: () => Promise<ReleaseInfo | undefined>,
+    listDownloaded: () => Promise<string[]>,
+  ) {
+    versionState[activeKey] = active;
+    const latestRelease = await getLatestRelease();
     const latestVersion = latestRelease?.version;
 
     // a release without the portable build for this system offers nothing to download
     if (!latestVersion || !latestRelease.downloadUrl) return;
-    if (versionState.activeLevelEditorVersion === latestVersion) return;
+    if (versionState[activeKey] === latestVersion) return;
 
-    const downloadedVersions = await listDownloadedLevelEditorVersions();
+    const downloadedVersions = await listDownloaded();
     if (downloadedVersions.includes(latestVersion)) return;
 
-    $UpdateStore.selectedLevelEditor = {
+    $UpdateStore[updateKey] = {
       updateAvailable: true,
       versionNumber: latestVersion,
     };
@@ -127,6 +155,34 @@
   }
 </script>
 
+{#snippet programVersion(
+  label: string,
+  version: string | null | undefined,
+  updateAvailable: boolean,
+  settings: string,
+)}
+  <div class="h-6 shrink-0 border-l border-neutral-800"></div>
+
+  <div class="flex items-center gap-1.5 font-mono text-sm whitespace-nowrap">
+    <span class="text-neutral-400">{label}</span>
+    <span class="text-neutral-500">
+      {version ?? $_("header_toolingNotSet")}
+    </span>
+
+    {#if updateAvailable}
+      <a
+        class="pointer-events-auto text-green-500 hover:text-green-300 animate-pulse relative"
+        href={settings}
+      >
+        <IconDownload />
+      </a>
+      <Tooltip type="auto" trigger="hover">
+        {$_("header_updateAvailable")}
+      </Tooltip>
+    {/if}
+  </div>
+{/snippet}
+
 <header
   class="flex shrink-0 h-8 items-center bg-[#101010] pl-2 z-5"
   data-tauri-drag-region
@@ -143,8 +199,8 @@
 
   <div class="mx-2 h-6 shrink-0 border-l border-neutral-800"></div>
 
-  <div class="flex min-w-0 items-center gap-2 pointer-events-none">
-    <div class="flex items-center gap-2 font-mono text-sm whitespace-nowrap">
+  <div class="flex min-w-0 items-center gap-1.5 pointer-events-none">
+    <div class="flex items-center gap-1.5 font-mono text-sm whitespace-nowrap">
       <span class="text-neutral-400">{$_("header_launcherVersionLabel")}</span>
       <span class="text-neutral-500">{launcherVersion}</span>
       {#if launcherUpdateAvailable}
@@ -162,7 +218,7 @@
 
     <div class="h-6 shrink-0 border-l border-neutral-800"></div>
 
-    <div class="flex items-center gap-2 font-mono text-sm whitespace-nowrap">
+    <div class="flex items-center gap-1.5 font-mono text-sm whitespace-nowrap">
       <span class="text-neutral-400">
         {#if versionState.displayModVersion}
           {$_("header_modVersionLabel")}
@@ -201,32 +257,23 @@
     </div>
 
     {#if LEVEL_EDITOR_AVAILABLE}
-      <div class="h-6 shrink-0 border-l border-neutral-800"></div>
-
-      <div class="flex items-center gap-2 font-mono text-sm whitespace-nowrap">
-        <span class="text-neutral-400">
-          {$_("header_levelEditorVersionLabel")}
-        </span>
-        <span class="text-neutral-500">
-          {versionState.activeLevelEditorVersion ?? $_("header_toolingNotSet")}
-        </span>
-
-        {#if $UpdateStore.selectedLevelEditor.updateAvailable}
-          <a
-            class="pointer-events-auto text-green-500 hover:text-green-300 animate-pulse relative"
-            href="/settings/level-editor"
-          >
-            <IconDownload />
-          </a>
-          <Tooltip type="auto" trigger="hover">
-            {$_("header_updateAvailable")}
-          </Tooltip>
-        {/if}
-      </div>
+      {@render programVersion(
+        $_("header_levelEditorVersionLabel"),
+        versionState.activeLevelEditorVersion,
+        $UpdateStore.selectedLevelEditor.updateAvailable,
+        "/settings/level-editor",
+      )}
     {/if}
+    {@render programVersion(
+      $_("header_animationStudioVersionLabel"),
+      versionState.activeAnimationStudioVersion,
+      $UpdateStore.selectedAnimationStudio.updateAvailable,
+      "/settings/animation-studio",
+    )}
   </div>
 
-  <div class="ml-auto flex shrink-0 self-stretch">
+  <!-- above the versions, which a narrow window does not fit -->
+  <div class="relative ml-auto flex shrink-0 self-stretch bg-[#101010]">
     <button
       class="flex h-full w-12 items-center justify-center text-neutral-200 hover:bg-white/10"
       onclick={() => navigate("/help")}

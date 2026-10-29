@@ -56,6 +56,14 @@
     <TabItem
       {activeClass}
       {inactiveClass}
+      open={tab == "animation-studio"}
+      title={$_("settings_tabs_animationStudio")}
+    >
+      <Versions kind="animationStudio" />
+    </TabItem>
+    <TabItem
+      {activeClass}
+      {inactiveClass}
       open={tab == "decompiler"}
       title={$_("settings_tabs_decompiler")}
     >

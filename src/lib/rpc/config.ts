@@ -58,6 +58,12 @@ export async function setLevelEditorVersion(version: String): Promise<boolean> {
   return invoke_rpc("set_level_editor_version", { version }, () => true);
 }
 
+export async function setAnimationStudioVersion(
+  version: String,
+): Promise<boolean> {
+  return invoke_rpc("set_animation_studio_version", { version }, () => true);
+}
+
 export async function localeSpecificFontAvailableForDownload(
   localeId: string,
 ): Promise<Locale | undefined> {

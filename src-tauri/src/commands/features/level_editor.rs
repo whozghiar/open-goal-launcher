@@ -26,7 +26,7 @@ use crate::{
 #[derive(Default)]
 pub struct LevelEditorProcess(tokio::sync::Mutex<Option<std::process::Child>>);
 
-fn exe(dir: &Path, name: &str) -> PathBuf {
+pub(super) fn exe(dir: &Path, name: &str) -> PathBuf {
   dir.join(if cfg!(windows) {
     format!("{name}.exe")
   } else {
@@ -39,8 +39,9 @@ fn versions_dir(install: &Path) -> PathBuf {
 }
 
 /// The games installed with the active version (their compiled game matches the active gk, goalc
-/// and extractor): the editor extracts their levels and tries levels in them.
-fn games_to_try(config: &LauncherConfig) -> Vec<&'static str> {
+/// and extractor): the editor extracts their levels and tries levels in them, the Animation Studio
+/// tries models in them.
+pub(super) fn games_to_try(config: &LauncherConfig) -> Vec<&'static str> {
   [
     ("jak1", SupportedGame::Jak1),
     ("jak2", SupportedGame::Jak2),
@@ -56,17 +57,20 @@ fn games_to_try(config: &LauncherConfig) -> Vec<&'static str> {
   .collect()
 }
 
-/// The editor's command line. Its own options go as `--name=value`, which an editor that does not
-/// know them yet skips whole (v1.0.0 would take a separate value for a project to open).
-fn editor_args(locale: &str, install: &Path, installed: &[&str]) -> Vec<String> {
+/// The command line of the editor or the studio, with its default library. Their own options go as
+/// `--name=value`, which a version that does not know them yet skips whole (the editor's v1.0.0
+/// would take a separate value for a project to open).
+pub(super) fn launch_args(
+  locale: &str,
+  library: &Path,
+  install: &Path,
+  installed: &[&str],
+) -> Vec<String> {
   let mut args = Vec::new();
   if let Some(lang) = locale.split('-').next().filter(|l| !l.is_empty()) {
     args.extend(["--lang".to_owned(), lang.to_owned()]);
   }
-  args.push(format!(
-    "--default-library={}",
-    install.join("jak-level-editor").display()
-  ));
+  args.push(format!("--default-library={}", library.display()));
   for game in installed {
     args.push(format!("--game-install={game}={}", install.display()));
   }
@@ -75,7 +79,7 @@ fn editor_args(locale: &str, install: &Path, installed: &[&str]) -> Vec<String> 
 
 /// A release's archive (checked against GitHub's SHA-256 of it; a local file in the tests) unpacked
 /// into `dest`.
-async fn unpack(source: &str, dest: &Path) -> anyhow::Result<()> {
+pub(super) async fn unpack(source: &str, dest: &Path) -> anyhow::Result<()> {
   let name = source
     .rsplit(['/', '\\'])
     .next()
@@ -158,8 +162,9 @@ pub async fn launch_level_editor(
   let log_file = create_std_log_file(&app_handle, "level-editor.log".to_owned(), false)?;
 
   let child = std::process::Command::new(exe(&dir, "jak-level-editor"))
-    .args(editor_args(
+    .args(launch_args(
       &config.locale,
+      &install.join("jak-level-editor"),
       &install,
       &games_to_try(&config),
     ))
@@ -202,18 +207,16 @@ mod tests {
   fn the_editor_gets_the_language_the_library_and_the_games() {
     let tmp = tempfile::tempdir().unwrap();
     let install = tmp.path();
+    let library = install.join("jak-level-editor");
 
-    let args = editor_args("fr-FR", install, &["jak3"]);
+    let args = launch_args("fr-FR", &library, install, &["jak3"]);
     assert_eq!(args[..2], ["--lang", "fr"]);
-    assert!(args.contains(&format!(
-      "--default-library={}",
-      install.join("jak-level-editor").display()
-    )));
+    assert!(args.contains(&format!("--default-library={}", library.display())));
     assert!(args.contains(&format!("--game-install=jak3={}", install.display())));
     assert!(!args.iter().any(|a| a.starts_with("--extract-source")));
-    assert!(!editor_args("", install, &[]).contains(&"--lang".to_owned()));
+    assert!(!launch_args("", &library, install, &[]).contains(&"--lang".to_owned()));
     assert!(
-      !editor_args("", install, &[])
+      !launch_args("", &library, install, &[])
         .iter()
         .any(|a| a.starts_with("--game-install"))
     );

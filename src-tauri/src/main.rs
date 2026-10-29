@@ -147,6 +147,7 @@ fn main() {
 
       app.manage(tokio::sync::Mutex::new(config));
       app.manage(commands::features::level_editor::LevelEditorProcess::default());
+      app.manage(commands::features::animation_studio::AnimationStudioProcess::default());
       let cache = tokio::sync::Mutex::new(cache::ModCache::default());
       app.manage(cache);
       Ok(())
@@ -190,6 +191,10 @@ fn main() {
       commands::config::set_hide_gamename,
       commands::config::set_hide_playtime,
       commands::download::download_file,
+      commands::features::animation_studio::download_animation_studio_version,
+      commands::features::animation_studio::launch_animation_studio,
+      commands::features::animation_studio::remove_animation_studio_version,
+      commands::features::animation_studio::set_animation_studio_version,
       commands::features::level_editor::download_level_editor_version,
       commands::features::level_editor::launch_level_editor,
       commands::features::level_editor::remove_level_editor_version,

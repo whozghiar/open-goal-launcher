@@ -1,21 +1,29 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import {
+    downloadAnimationStudioVersion,
     downloadLevelEditorVersion,
     downloadOfficialVersion,
+    listDownloadedAnimationStudioVersions,
     listDownloadedLevelEditorVersions,
     listDownloadedVersions,
+    removeAnimationStudioVersion,
     removeLevelEditorVersion,
     removeVersion,
   } from "$lib/rpc/versions";
   import {
+    listAnimationStudioReleases,
     listLevelEditorReleases,
     listOfficialReleases,
     type ReleaseInfo,
   } from "$lib/utils/github";
   import VersionList from "./versions/VersionList.svelte";
   import { UpdateStore } from "$lib/stores/AppStore";
-  import { setActiveVersion, setLevelEditorVersion } from "$lib/rpc/config";
+  import {
+    setActiveVersion,
+    setAnimationStudioVersion,
+    setLevelEditorVersion,
+  } from "$lib/rpc/config";
   import { _ } from "svelte-i18n";
   import { toastStore } from "$lib/stores/ToastStore";
   import { versionState } from "/src/state/VersionState.svelte";
@@ -26,8 +34,11 @@
   import IconRefresh from "~icons/mdi/refresh";
   import { config } from "/src/state/config.svelte";
 
-  // the tooling, or Jak Level Editor: both downloaded per version from their GitHub releases
-  let { kind = "tooling" }: { kind?: "tooling" | "levelEditor" } = $props();
+  // the tooling, Jak Level Editor or OpenGOAL Animation Studio: each downloaded per version from
+  // its GitHub releases
+  let {
+    kind = "tooling",
+  }: { kind?: "tooling" | "levelEditor" | "animationStudio" } = $props();
 
   const sources = {
     tooling: {
@@ -57,6 +68,20 @@
       download: downloadLevelEditorVersion,
       remove: removeLevelEditorVersion,
       setActive: setLevelEditorVersion,
+    },
+    animationStudio: {
+      activeKey: "activeAnimationStudioVersion",
+      updateKey: "selectedAnimationStudio",
+      configured: () => config?.animationStudioVersion,
+      folder: "/versions/animation-studio/",
+      header: "settings_versions_animationStudio_header",
+      description: "settings_versions_animationStudio_description",
+      savedToast: "toasts_savedAnimationStudioVersion",
+      listDownloaded: listDownloadedAnimationStudioVersions,
+      listReleases: listAnimationStudioReleases,
+      download: downloadAnimationStudioVersion,
+      remove: removeAnimationStudioVersion,
+      setActive: setAnimationStudioVersion,
     },
   } as const;
   const source = $derived(sources[kind]);

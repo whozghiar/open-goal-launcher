@@ -12,6 +12,7 @@ export type LauncherConfig = {
   installationDir: string | null;
   activeVersion: string | null;
   levelEditorVersion: string | null;
+  animationStudioVersion: string | null;
   locale: string;
   modSources: Array<string>;
   decompilerSettings: DecompilerSettings;

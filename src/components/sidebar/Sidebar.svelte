@@ -6,6 +6,8 @@
   import IconCog from "~icons/mdi/cog";
   import IconLevelEditor from "~icons/mdi/pencil-ruler";
   import { openLevelEditor } from "$lib/level-editor/launch";
+  import IconAnimationStudio from "~icons/mdi/run";
+  import { openAnimationStudio } from "$lib/animation-studio/launch";
   import { Tooltip } from "flowbite-svelte";
   import { _ } from "svelte-i18n";
   import { jobTracker } from "$lib/stores/JobStore";
@@ -135,6 +137,20 @@
       </button>
       <Tooltip triggeredBy="#level-editor" placement="right" type="dark">
         {$_("sidebar_levelEditor")}
+      </Tooltip>
+    </li>
+
+    <li class="relative flex w-full justify-center">
+      <button
+        id="animation-studio"
+        class={getNavItemStyle("/animation-studio")}
+        onclick={openAnimationStudio}
+        {disabled}
+      >
+        <IconAnimationStudio class="text-[30px]" />
+      </button>
+      <Tooltip triggeredBy="#animation-studio" placement="right" type="dark">
+        {$_("sidebar_animationStudio")}
       </Tooltip>
     </li>
 

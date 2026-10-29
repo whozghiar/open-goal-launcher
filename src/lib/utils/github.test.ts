@@ -10,6 +10,7 @@ import {
 } from "vitest";
 import { arch, platform } from "@tauri-apps/plugin-os";
 import {
+  getLatestAnimationStudioRelease,
   getLatestLevelEditorRelease,
   getLatestOfficialRelease,
   listOfficialReleases,
@@ -383,4 +384,39 @@ describe("the Level Editor repository", () => {
       ),
     ).toBeTruthy();
   });
+});
+
+describe("the Animation Studio repository", () => {
+  const assets = [
+    "opengoal-animation-studio-mcp-windows-x64.zip",
+    "opengoal-animation-studio-portable-linux-x64.zip",
+    "opengoal-animation-studio-portable-macos-universal.zip",
+    "opengoal-animation-studio-portable-windows-x64.zip",
+    "OpenGOAL.Animation.Studio_1.0.0_x64-setup.exe",
+  ];
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.resetAllMocks();
+  });
+
+  it.each([
+    ["windows", "opengoal-animation-studio-portable-windows-x64.zip"],
+    ["linux", "opengoal-animation-studio-portable-linux-x64.zip"],
+    ["macos", "opengoal-animation-studio-portable-macos-universal.zip"],
+  ] as const)(
+    "should download the portable build of the studio on %s",
+    async (plat, asset) => {
+      vi.mocked(platform).mockReturnValue(plat);
+      const release = createFakeGithubRelease(assets);
+      release.tag_name = "v1.0.0";
+      (fetch as Mock).mockResolvedValue(createFetchResponse(release));
+      const latest = await getLatestAnimationStudioRelease();
+      expect((fetch as Mock).mock.calls[0][0]).toBe(
+        "https://api.github.com/repos/whozghiar/open-goal-animation-studio/releases/latest",
+      );
+      expect(latest?.version).toBe("v1.0.0");
+      expect(latest?.downloadUrl?.endsWith(asset)).toBeTruthy();
+    },
+  );
 });

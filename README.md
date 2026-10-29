@@ -38,6 +38,12 @@ The editor is a separate program that the launcher installs and updates like the
 
 Full guide: [docs/features_ai/features_level_editor.md](./docs/features_ai/features_level_editor.md)
 
+### Animation Studio
+
+OpenGOAL Animation Studio plays, makes and checks the animations of the games' characters, and tries a model in the game itself, next to Jak in the game's test level. The launcher installs and updates it like the Level Editor: download a version in **Settings > Animation Studio**, then open it with the **Animation Studio** button in the sidebar. Its version shows in the header. The studio tries models in the games installed with the active tooling, with that tooling's `gk` and `goalc`: in Jak 3 installed with `v0.3.9`, for example, while `v0.3.9` is the active tooling.
+
+Full guide: [docs/features_ai/features_animation_studio.md](./docs/features_ai/features_animation_studio.md)
+
 ## 2. How the launcher works
 
 The launcher has three layers:
@@ -123,5 +129,6 @@ If the launcher does not start, the logs are in:
 - [docs/features_ai/features_save_data_manager.md](./docs/features_ai/features_save_data_manager.md): Saves Manager.
 - [docs/features_ai/feature_modTextures.md](./docs/features_ai/feature_modTextures.md): Mod Texture Packs.
 - [docs/features_ai/features_level_editor.md](./docs/features_ai/features_level_editor.md): Level Editor.
+- [docs/features_ai/features_animation_studio.md](./docs/features_ai/features_animation_studio.md): Animation Studio.
 - [docs/project_technologies.md](./docs/project_technologies.md): the technical stack.
 - [docs/github_workflows.md](./docs/github_workflows.md): the CI/CD workflows.

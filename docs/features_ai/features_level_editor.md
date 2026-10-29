@@ -51,26 +51,27 @@ The games keep the official OpenGOAL tooling, from [open-goal/jak-project](https
 
 When the launcher starts, it compares the editor's latest release with the active version. If the latest one is newer and not downloaded yet, a pulsing download icon appears next to **Level Editor** in the header. Click it to open **Settings > Level Editor**, then download the new version: it becomes the active one.
 
-Nothing is installed without a click. The launcher handles its three components the same way:
+Nothing is installed without a click. The launcher handles its four components the same way:
 
-| Component    | Where the alert shows                   | What installs the update                                                  |
-| :----------- | :-------------------------------------- | :------------------------------------------------------------------------ |
-| Launcher     | Icon next to the launcher's version     | The update page: one click downloads, installs and restarts the launcher. |
-| Tooling      | Icon next to the tooling's version      | **Settings > Versions**: download the version, it becomes active.         |
-| Level Editor | Icon next to the Level Editor's version | **Settings > Level Editor**: download the version, it becomes active.     |
+| Component        | Where the alert shows                       | What installs the update                                                     |
+| :--------------- | :------------------------------------------ | :--------------------------------------------------------------------------- |
+| Launcher         | Icon next to the launcher's version         | The update page: one click downloads, installs and restarts the launcher.    |
+| Tooling          | Icon next to the tooling's version          | **Settings > Versions**: download the version, it becomes active.            |
+| Level Editor     | Icon next to the Level Editor's version     | **Settings > Level Editor**: download the version, it becomes active.        |
+| Animation Studio | Icon next to the Animation Studio's version | **Settings > Animation Studio** ([its guide](features_animation_studio.md)). |
 
-All three checks run once, when the launcher starts. Older versions stay on disk until you delete them, so you can make one active again from the list.
+All four checks run once, when the launcher starts. Older versions stay on disk until you delete them, so you can make one active again from the list.
 
 ### What the launcher gives the editor
 
 The launcher starts the editor with these settings:
 
-| What            | How                                                                                      | Effect                                                                              |
-| :-------------- | :--------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
-| Language        | `--lang fr`, from the launcher's language                                                | The editor's texts in that language, when the editor has it (English, French).      |
-| Preferences     | The `JLE_PREFS_DIR` environment variable: `<launcher config>/jak-level-editor`           | The editor keeps its library and caches there, apart from the standalone editor's.  |
-| Default library | `--default-library=<install>/jak-level-editor`                                           | The folder the first-run assistant offers for the library.                          |
-| Games           | `--game-install=jak3=<install>`, one per game installed with the active version          | **File > Extract game assets** reads the game's levels with its own extractor; **Level > Try in the game** plays a level in it. |
+| What            | How                                                                             | Effect                                                                                                                          |
+| :-------------- | :------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------ |
+| Language        | `--lang fr`, from the launcher's language                                       | The editor's texts in that language, when the editor has it (English, French).                                                  |
+| Preferences     | The `JLE_PREFS_DIR` environment variable: `<launcher config>/jak-level-editor`  | The editor keeps its library and caches there, apart from the standalone editor's.                                              |
+| Default library | `--default-library=<install>/jak-level-editor`                                  | The folder the first-run assistant offers for the library.                                                                      |
+| Games           | `--game-install=jak3=<install>`, one per game installed with the active version | **File > Extract game assets** reads the game's levels with its own extractor; **Level > Try in the game** plays a level in it. |
 
 `<launcher config>` is `%APPDATA%/OpenGOAL-Launcher` on Windows. It is the folder the editor's preferences were already in when earlier builds of this fork ran the editor inside the launcher, so the library chosen then is kept.
 
@@ -112,7 +113,7 @@ flowchart TD
 The editor reuses the tooling's version code, with its own repository and files:
 
 - [github.ts](../../src/lib/utils/github.ts): `LEVEL_EDITOR_REPOSITORY` is `whozghiar/jak-level-editor`. `listLevelEditorReleases` and `getLatestLevelEditorRelease` share their code with the tooling's functions and pick the asset `jak-level-editor-portable-windows-x64.zip` or `jak-level-editor-portable-linux-x64.zip`.
-- [Header.svelte](../../src/components/header/Header.svelte): `checkForLevelEditorUpdate`, next to `checkForToolingUpdate`, sets `selectedLevelEditor` in `UpdateStore` ([AppStore.ts](../../src/lib/stores/AppStore.ts)).
+- [Header.svelte](../../src/components/header/Header.svelte): `checkForProgramUpdate`, next to `checkForToolingUpdate`, sets `selectedLevelEditor` in `UpdateStore` ([AppStore.ts](../../src/lib/stores/AppStore.ts)); it checks the Animation Studio the same way.
 - [Versions.svelte](../../src/routes/settings/Versions.svelte): one page for both. `kind="levelEditor"` picks the editor's commands, folder and texts. [Latest.svelte](../../src/routes/settings/versions/Latest.svelte) and [VersionList.svelte](../../src/routes/settings/versions/VersionList.svelte) take the active version to show through `activeKey`, from [VersionState.svelte.ts](../../src/state/VersionState.svelte.ts).
 
 The Rust commands, in [level_editor.rs](../../src-tauri/src/commands/features/level_editor.rs) except the first:

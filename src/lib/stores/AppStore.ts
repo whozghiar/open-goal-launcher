@@ -9,6 +9,7 @@ interface AvailableUpdate {
 interface UpdateState {
   selectedTooling: AvailableUpdate;
   selectedLevelEditor: AvailableUpdate;
+  selectedAnimationStudio: AvailableUpdate;
 }
 
 export type UpdateKey = keyof UpdateState;
@@ -19,6 +20,10 @@ export const UpdateStore = writable<UpdateState>({
     versionNumber: undefined,
   },
   selectedLevelEditor: {
+    updateAvailable: false,
+    versionNumber: undefined,
+  },
+  selectedAnimationStudio: {
     updateAvailable: false,
     versionNumber: undefined,
   },
