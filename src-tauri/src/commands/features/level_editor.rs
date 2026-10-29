@@ -1,16 +1,15 @@
 //! Jak Level Editor (whozghiar/jak-level-editor), a program of its own the launcher installs and
 //! updates as it does the tooling: the portable build of each version downloaded from its release
 //! into `<install>/versions/level-editor/<version>/` (checked against GitHub's SHA-256 of it), the
-//! active one in the settings. The launcher starts it with what it knows: its preferences in the
-//! launcher's config folder, its default library (`<install>/jak-level-editor`), the games installed
-//! with the active version (`--game-install`): the editor extracts their levels with their own
-//! extractor, and tries a level in them, adding only the level's files next to the game's while it
-//! is tried.
+//! active one in the settings. The launcher starts it with what it knows: its default library
+//! (`<install>/jak-level-editor`), the games installed with the active version (`--game-install`):
+//! the editor extracts their levels with their own extractor, and tries a level in them, adding only
+//! the level's files next to the game's while it is tried. The editor keeps its preferences in its
+//! own folder (OpenGOAL/level-editor), whoever starts it.
 
 use std::path::{Path, PathBuf};
 
 use anyhow::Context;
-use tauri::Manager;
 use tracing::instrument;
 
 use crate::{
@@ -157,8 +156,6 @@ pub async fn launch_level_editor(
     .as_deref()
     .ok_or_else(|| CommandError::Configuration("No Level Editor version is active".to_owned()))?;
   let dir = versions_dir(&install).join(version);
-  // the preferences (library, caches) the editor had when the launcher hosted it
-  let prefs = app_handle.path().app_config_dir()?.join("jak-level-editor");
   let log_file = create_std_log_file(&app_handle, "level-editor.log".to_owned(), false)?;
 
   let child = std::process::Command::new(exe(&dir, "jak-level-editor"))
@@ -168,7 +165,6 @@ pub async fn launch_level_editor(
       &install,
       &games_to_try(&config),
     ))
-    .env("JLE_PREFS_DIR", prefs)
     .current_dir(&dir)
     .stdout(log_file.try_clone()?)
     .stderr(log_file)

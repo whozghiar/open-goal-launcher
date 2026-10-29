@@ -28,7 +28,7 @@ What the launcher adds:
 - **Updates without a launcher release.** The editor is a program of its own, downloaded from the editor's releases. A new editor version reaches users as soon as it is published.
 - **An alert when a version is out.** A download icon appears next to the editor's version in the header, as it does for the launcher and the tooling.
 - **Versions you control.** **Settings > Level Editor** lists the versions: download one, make it active, go back to an older one, or delete it.
-- **What the launcher already knows.** The editor gets the launcher's language, keeps its preferences in the launcher's folder, and starts its extraction from the discs the launcher already extracted.
+- **What the launcher already knows.** The editor gets the launcher's language and starts its extraction from the discs the launcher already extracted. It keeps the same preferences whether you open it from the launcher or on its own.
 
 The games keep the official OpenGOAL tooling, from [open-goal/jak-project](https://github.com/open-goal/jak-project). The levels the editor exports are built in a jak-project with the fork [whozghiar/jak-project](https://github.com/whozghiar/jak-project), which carries the level builder fixes they need; the launcher does not install that fork.
 
@@ -66,14 +66,14 @@ All four checks run once, when the launcher starts. Older versions stay on disk 
 
 The launcher starts the editor with these settings:
 
-| What            | How                                                                             | Effect                                                                                                                          |
-| :-------------- | :------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------ |
-| Language        | `--lang fr`, from the launcher's language                                       | The editor's texts in that language, when the editor has it (English, French).                                                  |
-| Preferences     | The `JLE_PREFS_DIR` environment variable: `<launcher config>/jak-level-editor`  | The editor keeps its library and caches there, apart from the standalone editor's.                                              |
-| Default library | `--default-library=<install>/jak-level-editor`                                  | The folder the first-run assistant offers for the library.                                                                      |
-| Games           | `--game-install=jak3=<install>`, one per game installed with the active version | **File > Extract game assets** reads the game's levels with its own extractor; **Level > Try in the game** plays a level in it. |
+| What            | How                                                                                 | Effect                                                                                                                          |
+| :-------------- | :---------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| Language        | `--lang fr`, from the launcher's language                                           | The editor's texts in that language, when the editor has it (English, French).                                                  |
+| Preferences     | Nothing: the editor keeps them in its own folder, `%APPDATA%/OpenGOAL/level-editor` | The same library, language and recent projects as when you open the editor on its own.                                          |
+| Default library | `--default-library=<install>/jak-level-editor`                                      | The folder the first-run assistant offers for the library.                                                                      |
+| Games           | `--game-install=jak3=<install>`, one per game installed with the active version     | **File > Extract game assets** reads the game's levels with its own extractor; **Level > Try in the game** plays a level in it. |
 
-`<launcher config>` is `%APPDATA%/OpenGOAL-Launcher` on Windows. It is the folder the editor's preferences were already in when earlier builds of this fork ran the editor inside the launcher, so the library chosen then is kept.
+Earlier, the launcher gave the editor its own preferences folder, `%APPDATA%/OpenGOAL-Launcher/jak-level-editor` (the `JLE_PREFS_DIR` environment variable). The first time an editor newer than v1.1.0 starts, it moves the newest of its earlier folders into `%APPDATA%/OpenGOAL/level-editor` and deletes the others: `%APPDATA%/OpenGOAL/jak-level-editor` (the editor on its own), `%APPDATA%/OpenGOAL-Launcher/jak-level-editor` and `%APPDATA%/OpenGOAL/open-goal-level-editor` (the C++ editor). Versions up to v1.1.0 still keep theirs in `%APPDATA%/OpenGOAL/jak-level-editor`.
 
 > [!IMPORTANT]
 > `--default-library` and `--game-install` need an editor version that knows them, newer than v1.0.0. Older versions skip them whole, because they are written as `--name=value`. With such a version, the first-run assistant offers `Documents/Jak Level Editor` and the editor asks for the game's folder in **File > Settings**.
@@ -92,7 +92,7 @@ The editor's output goes to `level-editor.log`, in the launcher's log folder.
 | :------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
 | `<install>/versions/level-editor/<version>/` | One downloaded version: `jak-level-editor(.exe)`, `lang/` and `data/` (and `ogle-extract`, the extractor of the versions before v1.1.0). |
 | `settings.json`, field `levelEditorVersion`  | The active version.                                                                                                                      |
-| `<launcher config>/jak-level-editor/`        | The editor's preferences and caches.                                                                                                     |
+| `%APPDATA%/OpenGOAL/level-editor/`           | The editor's preferences and caches, the same whoever starts it.                                                                         |
 | `<install>/jak-level-editor/`                | The default library: extracted levels, projects, exports.                                                                                |
 
 ### From the button to the editor
