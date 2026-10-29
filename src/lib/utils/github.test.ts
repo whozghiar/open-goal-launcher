@@ -363,26 +363,44 @@ describe("the Level Editor repository", () => {
     vi.resetAllMocks();
   });
 
-  it("should download the portable build of the editor", async () => {
-    vi.mocked(platform).mockReturnValue("windows");
+  it.each([
+    ["windows", "jak-level-editor-portable-windows-x64.zip"],
+    ["linux", "jak-level-editor-portable-linux-x64.zip"],
+    ["macos", "jak-level-editor-portable-macos-universal.zip"],
+  ] as const)(
+    "should download the portable build of the editor on %s",
+    async (plat, asset) => {
+      vi.mocked(platform).mockReturnValue(plat);
+      const release = createFakeGithubRelease([
+        "jak-level-editor-mcp-windows-x64.zip",
+        "jak-level-editor-mcp-macos-universal.zip",
+        "jak-level-editor-portable-linux-x64.zip",
+        "jak-level-editor-portable-macos-universal.zip",
+        "jak-level-editor-portable-windows-x64.zip",
+        "Jak.Level.Editor_1.1.0_universal.dmg",
+      ]);
+      release.tag_name = "v1.1.0";
+      (fetch as Mock).mockResolvedValue(createFetchResponse(release));
+      const latest = await getLatestLevelEditorRelease();
+      expect((fetch as Mock).mock.calls[0][0]).toBe(
+        "https://api.github.com/repos/whozghiar/jak-level-editor/releases/latest",
+      );
+      expect(latest?.version).toBe("v1.1.0");
+      expect(latest?.downloadUrl?.endsWith(asset)).toBeTruthy();
+    },
+  );
+
+  it("should offer nothing on macOS from a release without its build", async () => {
+    vi.mocked(platform).mockReturnValue("macos");
     const release = createFakeGithubRelease([
-      "jak-level-editor-mcp-windows-x64.zip",
-      "ogle-extract-windows-x64.zip",
       "jak-level-editor-portable-linux-x64.zip",
       "jak-level-editor-portable-windows-x64.zip",
     ]);
-    release.tag_name = "v1.0.0";
+    release.tag_name = "v1.0.1";
     (fetch as Mock).mockResolvedValue(createFetchResponse(release));
     const latest = await getLatestLevelEditorRelease();
-    expect((fetch as Mock).mock.calls[0][0]).toBe(
-      "https://api.github.com/repos/whozghiar/jak-level-editor/releases/latest",
-    );
-    expect(latest?.version).toBe("v1.0.0");
-    expect(
-      latest?.downloadUrl?.endsWith(
-        "jak-level-editor-portable-windows-x64.zip",
-      ),
-    ).toBeTruthy();
+    expect(latest?.version).toBe("v1.0.1");
+    expect(latest?.downloadUrl).toBeUndefined();
   });
 });
 

@@ -33,7 +33,7 @@ What the launcher adds:
 The games keep the official OpenGOAL tooling, from [open-goal/jak-project](https://github.com/open-goal/jak-project). The levels the editor exports are built in a jak-project with the fork [whozghiar/jak-project](https://github.com/whozghiar/jak-project), which carries the level builder fixes they need; the launcher does not install that fork.
 
 > [!NOTE]
-> The editor has no macOS build yet. On macOS, the **Level Editor** button shows a message saying that work is in progress and that the editor is coming soon.
+> The editor has a build for Windows, Linux and macOS (one for both Apple Silicon and Intel Macs) since its version v1.1.0. On macOS, **Settings > Level Editor** lists only the versions that have one: v1.1.0 and later.
 
 ## 2. How the feature works
 
@@ -44,7 +44,7 @@ The games keep the official OpenGOAL tooling, from [open-goal/jak-project](https
    ![Sidebar of the launcher with the Level Editor button and its tooltip](../img/level_editor/capture_1.png)
 
 2. No version is installed yet, so the launcher opens **Settings > Level Editor**, the list of the editor's releases.
-3. Click **Download** on the latest version. The launcher downloads the editor's portable build for your system (about 10 MB, with its extractor and translations), checks it, unpacks it and makes it the active version.
+3. Click **Download** on the latest version. The launcher downloads the editor's portable build for your system (8 MB on Windows, 15 MB on macOS, with its translations and data), checks it, unpacks it and makes it the active version.
 4. Click **Level Editor** again. The editor opens in its own window.
 
 ### Updating the editor
@@ -88,12 +88,12 @@ The editor's output goes to `level-editor.log`, in the launcher's log folder.
 
 ### Files on disk
 
-| Location                                     | Content                                                                                |
-| :------------------------------------------- | :------------------------------------------------------------------------------------- |
-| `<install>/versions/level-editor/<version>/` | One downloaded version: `jak-level-editor(.exe)`, `ogle-extract`, `lang/` and `data/`. |
-| `settings.json`, field `levelEditorVersion`  | The active version.                                                                    |
-| `<launcher config>/jak-level-editor/`        | The editor's preferences and caches.                                                   |
-| `<install>/jak-level-editor/`                | The default library: extracted levels, projects, exports.                              |
+| Location                                     | Content                                                                                                                                  |
+| :------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
+| `<install>/versions/level-editor/<version>/` | One downloaded version: `jak-level-editor(.exe)`, `lang/` and `data/` (and `ogle-extract`, the extractor of the versions before v1.1.0). |
+| `settings.json`, field `levelEditorVersion`  | The active version.                                                                                                                      |
+| `<launcher config>/jak-level-editor/`        | The editor's preferences and caches.                                                                                                     |
+| `<install>/jak-level-editor/`                | The default library: extracted levels, projects, exports.                                                                                |
 
 ### From the button to the editor
 
@@ -106,13 +106,13 @@ flowchart TD
   D -->|"Otherwise"| F["Starts versions/level-editor/version/jak-level-editor with the launcher's options"]
 ```
 
-[launch.ts](../../src/lib/level-editor/launch.ts) holds the button's logic and `LEVEL_EDITOR_AVAILABLE`, false on macOS: there, the button shows the "coming soon" message, and the header and the settings leave the editor out.
+[launch.ts](../../src/lib/level-editor/launch.ts) holds the button's logic. The button, the header and the settings show the editor on every system.
 
 ### Versions and updates
 
 The editor reuses the tooling's version code, with its own repository and files:
 
-- [github.ts](../../src/lib/utils/github.ts): `LEVEL_EDITOR_REPOSITORY` is `whozghiar/jak-level-editor`. `listLevelEditorReleases` and `getLatestLevelEditorRelease` share their code with the tooling's functions and pick the asset `jak-level-editor-portable-windows-x64.zip` or `jak-level-editor-portable-linux-x64.zip`.
+- [github.ts](../../src/lib/utils/github.ts): `LEVEL_EDITOR_REPOSITORY` is `whozghiar/jak-level-editor`. `listLevelEditorReleases` and `getLatestLevelEditorRelease` share their code with the tooling's functions and pick the asset `jak-level-editor-portable-<platform>.zip` (`portableDownloadLink`, shared with the Animation Studio), where `<platform>` is `windows-x64`, `linux-x64` or `macos-universal`.
 - [Header.svelte](../../src/components/header/Header.svelte): `checkForProgramUpdate`, next to `checkForToolingUpdate`, sets `selectedLevelEditor` in `UpdateStore` ([AppStore.ts](../../src/lib/stores/AppStore.ts)); it checks the Animation Studio the same way.
 - [Versions.svelte](../../src/routes/settings/Versions.svelte): one page for both. `kind="levelEditor"` picks the editor's commands, folder and texts. [Latest.svelte](../../src/routes/settings/versions/Latest.svelte) and [VersionList.svelte](../../src/routes/settings/versions/VersionList.svelte) take the active version to show through `activeKey`, from [VersionState.svelte.ts](../../src/state/VersionState.svelte.ts).
 
@@ -148,13 +148,13 @@ Run the release workflow of [jak-level-editor](https://github.com/whozghiar/jak-
 
 ## 5. Overview of changes from the original project
 
-- **Sidebar**: [Sidebar.svelte](../../src/components/sidebar/Sidebar.svelte) gains the **Level Editor** button; on macOS, it shows that the editor is coming soon.
+- **Sidebar**: [Sidebar.svelte](../../src/components/sidebar/Sidebar.svelte) gains the **Level Editor** button.
 - **Header**: [Header.svelte](../../src/components/header/Header.svelte) shows the editor's version and its update icon.
 - **Settings**: [Settings.svelte](../../src/routes/Settings.svelte) gains the **Level Editor** tab. The Versions page and its two components serve both the tooling and the editor.
 - **Releases**: [github.ts](../../src/lib/utils/github.ts) reads the editor from its own repository with the tooling's code.
 - **Settings file**: [config.rs](../../src-tauri/src/config.rs) adds `levelEditorVersion`, and `tooling_version` so a fork build installed by launcher 1.1 meets the minimums of its X.Y.Z. The TypeScript type [LauncherConfig.ts](../../src/lib/rpc/bindings/LauncherConfig.ts) is regenerated by `ts-rs`.
 - **Backend**: [main.rs](../../src-tauri/src/main.rs) registers the editor's commands. [network.rs](../../src-tauri/src/util/network.rs) adds `download_release_asset`, which checks a release asset against its SHA-256 when GitHub has one, used for the editor and the tooling.
 - **Versions page**: [Versions.svelte](../../src/routes/settings/Versions.svelte) keeps listing installed versions that GitHub does not list.
-- **Translations**: the editor's texts (`sidebar_levelEditor`, `header_levelEditorVersionLabel`, `settings_tabs_levelEditor`, `settings_versions_levelEditor_*`, `toasts_savedLevelEditorVersion`, `toasts_levelEditorAlreadyOpen`, `toasts_levelEditorComingToMacos`) were added to [en-US.json](../../src/assets/translations/en-US.json).
+- **Translations**: the editor's texts (`sidebar_levelEditor`, `header_levelEditorVersionLabel`, `settings_tabs_levelEditor`, `settings_versions_levelEditor_*`, `toasts_savedLevelEditorVersion`, `toasts_levelEditorAlreadyOpen`) were added to [en-US.json](../../src/assets/translations/en-US.json).
 
 Earlier builds of this fork compiled the editor into the launcher, as a submodule (`level-editor/`) and a Tauri plugin. Downloading it as a separate program lets it update without a launcher release, and the launcher builds without the editor's code.

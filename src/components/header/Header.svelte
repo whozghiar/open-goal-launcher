@@ -22,7 +22,6 @@
     getLatestOfficialRelease,
     type ReleaseInfo,
   } from "$lib/utils/github";
-  import { LEVEL_EDITOR_AVAILABLE } from "$lib/level-editor/launch";
   import { _ } from "svelte-i18n";
   import { toastStore } from "$lib/stores/ToastStore";
   import { setActiveVersion } from "$lib/rpc/config";
@@ -76,15 +75,13 @@
     if (route.pathname === "/startup") return;
     checkedToolingUpdate = true;
     checkForToolingUpdate();
-    if (LEVEL_EDITOR_AVAILABLE) {
-      checkForProgramUpdate(
-        "activeLevelEditorVersion",
-        "selectedLevelEditor",
-        config?.levelEditorVersion,
-        getLatestLevelEditorRelease,
-        listDownloadedLevelEditorVersions,
-      );
-    }
+    checkForProgramUpdate(
+      "activeLevelEditorVersion",
+      "selectedLevelEditor",
+      config?.levelEditorVersion,
+      getLatestLevelEditorRelease,
+      listDownloadedLevelEditorVersions,
+    );
     checkForProgramUpdate(
       "activeAnimationStudioVersion",
       "selectedAnimationStudio",
@@ -256,14 +253,12 @@
       {/if}
     </div>
 
-    {#if LEVEL_EDITOR_AVAILABLE}
-      {@render programVersion(
-        $_("header_levelEditorVersionLabel"),
-        versionState.activeLevelEditorVersion,
-        $UpdateStore.selectedLevelEditor.updateAvailable,
-        "/settings/level-editor",
-      )}
-    {/if}
+    {@render programVersion(
+      $_("header_levelEditorVersionLabel"),
+      versionState.activeLevelEditorVersion,
+      $UpdateStore.selectedLevelEditor.updateAvailable,
+      "/settings/level-editor",
+    )}
     {@render programVersion(
       $_("header_animationStudioVersionLabel"),
       versionState.activeAnimationStudioVersion,

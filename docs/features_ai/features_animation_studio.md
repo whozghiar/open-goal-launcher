@@ -97,13 +97,13 @@ flowchart TD
   D -->|"Otherwise"| F["Starts versions/animation-studio/version/opengoal-animation-studio with the launcher's options"]
 ```
 
-[launch.ts](../../src/lib/animation-studio/launch.ts) holds the button's logic. Unlike the Level Editor, the studio has builds for Windows, Linux and macOS, so the button, the header and the settings show it on every system.
+[launch.ts](../../src/lib/animation-studio/launch.ts) holds the button's logic. Like the Level Editor, the studio has builds for Windows, Linux and macOS, so the button, the header and the settings show it on every system.
 
 ### Versions and updates
 
 The studio reuses the code of the tooling and the Level Editor:
 
-- [github.ts](../../src/lib/utils/github.ts): `ANIMATION_STUDIO_REPOSITORY` is `whozghiar/open-goal-animation-studio`. `listAnimationStudioReleases` and `getLatestAnimationStudioRelease` pick the asset `opengoal-animation-studio-portable-<platform>.zip`, where `<platform>` is `windows-x64`, `linux-x64` or `macos-universal` (one build for both kinds of Mac).
+- [github.ts](../../src/lib/utils/github.ts): `ANIMATION_STUDIO_REPOSITORY` is `whozghiar/open-goal-animation-studio`. `listAnimationStudioReleases` and `getLatestAnimationStudioRelease` pick, with the Level Editor's `portableDownloadLink`, the asset `opengoal-animation-studio-portable-<platform>.zip`, where `<platform>` is `windows-x64`, `linux-x64` or `macos-universal` (one build for both kinds of Mac).
 - [Header.svelte](../../src/components/header/Header.svelte): `checkForProgramUpdate` checks the Level Editor and the studio, and the snippet `programVersion` shows each one's version and update icon.
 - [Versions.svelte](../../src/routes/settings/Versions.svelte): `kind="animationStudio"` picks the studio's commands, folder and texts.
 

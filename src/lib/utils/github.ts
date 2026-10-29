@@ -57,25 +57,19 @@ function getDownloadLinkForCurrentPlatform(githubRelease: GitHubRelease) {
   return undefined;
 }
 
-// the editor's portable build; none for macOS
-function getLevelEditorDownloadLink(githubRelease: GitHubRelease) {
-  const plat = platform() === "windows" ? "windows-x64" : "linux-x64";
-  return githubRelease.assets.find(
-    (asset) => asset.name === `jak-level-editor-portable-${plat}.zip`,
-  )?.browser_download_url;
-}
-
-// the studio's portable build; one for both kinds of Mac
-function getAnimationStudioDownloadLink(githubRelease: GitHubRelease) {
+// the portable build of Jak Level Editor or OpenGOAL Animation Studio for this system: one for
+// both kinds of Mac
+function portableDownloadLink(program: string): DownloadLink {
   const plat =
     platform() === "windows"
       ? "windows-x64"
       : platform() === "macos"
         ? "macos-universal"
         : "linux-x64";
-  return githubRelease.assets.find(
-    (asset) => asset.name === `opengoal-animation-studio-portable-${plat}.zip`,
-  )?.browser_download_url;
+  return (githubRelease) =>
+    githubRelease.assets.find(
+      (asset) => asset.name === `${program}-portable-${plat}.zip`,
+    )?.browser_download_url;
 }
 
 async function parseGithubRelease(
@@ -118,7 +112,10 @@ export async function listOfficialReleases(): Promise<ReleaseInfo[]> {
 }
 
 export async function listLevelEditorReleases(): Promise<ReleaseInfo[]> {
-  return listReleases(LEVEL_EDITOR_REPOSITORY, getLevelEditorDownloadLink);
+  return listReleases(
+    LEVEL_EDITOR_REPOSITORY,
+    portableDownloadLink("jak-level-editor"),
+  );
 }
 
 export async function getLatestOfficialRelease(): Promise<
@@ -133,13 +130,16 @@ export async function getLatestOfficialRelease(): Promise<
 export async function getLatestLevelEditorRelease(): Promise<
   ReleaseInfo | undefined
 > {
-  return getLatestRelease(LEVEL_EDITOR_REPOSITORY, getLevelEditorDownloadLink);
+  return getLatestRelease(
+    LEVEL_EDITOR_REPOSITORY,
+    portableDownloadLink("jak-level-editor"),
+  );
 }
 
 export async function listAnimationStudioReleases(): Promise<ReleaseInfo[]> {
   return listReleases(
     ANIMATION_STUDIO_REPOSITORY,
-    getAnimationStudioDownloadLink,
+    portableDownloadLink("opengoal-animation-studio"),
   );
 }
 
@@ -148,7 +148,7 @@ export async function getLatestAnimationStudioRelease(): Promise<
 > {
   return getLatestRelease(
     ANIMATION_STUDIO_REPOSITORY,
-    getAnimationStudioDownloadLink,
+    portableDownloadLink("opengoal-animation-studio"),
   );
 }
 
