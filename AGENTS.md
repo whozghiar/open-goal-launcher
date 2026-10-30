@@ -27,7 +27,7 @@ The **OpenGOAL Launcher** is a cross-platform desktop application designed to in
     - `features/mods.rs`: Mod installation, archive extraction, CLI argument building, and mod launching.
     - `features/texture_packs.rs`: Texture pack installation and management.
     - `features/level_editor.rs`: Installs, removes and starts Jak Level Editor, a separate program downloaded per version from its GitHub releases, like the tooling.
-    - `features/animation_studio.rs`: The same for OpenGOAL Animation Studio, which tries models in the games installed with the active tooling only (`--game-install`, `--tooling-version`).
+    - `features/animation_studio.rs`: The same for Jak Animation Studio, which tries models in the games installed with the active tooling only (`--game-install`, `--tooling-version`).
     - `game.rs`: Active game detection and save milestone tracking.
     - `saves.rs`: The Saves Manager (listing, copying, moving, backing up and deleting saves).
     - `support.rs`: Support package generation (logs, config, hardware diagnostics).

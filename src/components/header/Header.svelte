@@ -108,7 +108,7 @@
     };
   }
 
-  // a program the launcher installs per version: Jak Level Editor, OpenGOAL Animation Studio
+  // a program the launcher installs per version: Jak Level Editor, Jak Animation Studio
   async function checkForProgramUpdate(
     activeKey: ActiveVersionKey,
     updateKey: UpdateKey,

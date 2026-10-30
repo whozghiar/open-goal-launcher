@@ -406,10 +406,10 @@ describe("the Level Editor repository", () => {
 
 describe("the Animation Studio repository", () => {
   const assets = [
-    "opengoal-animation-studio-mcp-windows-x64.zip",
-    "opengoal-animation-studio-portable-linux-x64.zip",
-    "opengoal-animation-studio-portable-macos-universal.zip",
-    "opengoal-animation-studio-portable-windows-x64.zip",
+    "jak-animation-studio-mcp-windows-x64.zip",
+    "jak-animation-studio-portable-linux-x64.zip",
+    "jak-animation-studio-portable-macos-universal.zip",
+    "jak-animation-studio-portable-windows-x64.zip",
     "OpenGOAL.Animation.Studio_1.0.0_x64-setup.exe",
   ];
 
@@ -419,9 +419,9 @@ describe("the Animation Studio repository", () => {
   });
 
   it.each([
-    ["windows", "opengoal-animation-studio-portable-windows-x64.zip"],
-    ["linux", "opengoal-animation-studio-portable-linux-x64.zip"],
-    ["macos", "opengoal-animation-studio-portable-macos-universal.zip"],
+    ["windows", "jak-animation-studio-portable-windows-x64.zip"],
+    ["linux", "jak-animation-studio-portable-linux-x64.zip"],
+    ["macos", "jak-animation-studio-portable-macos-universal.zip"],
   ] as const)(
     "should download the portable build of the studio on %s",
     async (plat, asset) => {
@@ -431,7 +431,7 @@ describe("the Animation Studio repository", () => {
       (fetch as Mock).mockResolvedValue(createFetchResponse(release));
       const latest = await getLatestAnimationStudioRelease();
       expect((fetch as Mock).mock.calls[0][0]).toBe(
-        "https://api.github.com/repos/whozghiar/open-goal-animation-studio/releases/latest",
+        "https://api.github.com/repos/whozghiar/jak-animation-studio/releases/latest",
       );
       expect(latest?.version).toBe("v1.0.0");
       expect(latest?.downloadUrl?.endsWith(asset)).toBeTruthy();

@@ -168,7 +168,7 @@
   "settings_versions_levelEditor_header": "Configure your active Level Editor version",
   "settings_versions_levelEditor_description": "Versions of Jak Level Editor from the `jak-level-editor` GitHub repository. The active one opens with the Level Editor button.",
   "settings_versions_animationStudio_header": "Configure your active Animation Studio version",
-  "settings_versions_animationStudio_description": "Versions of OpenGOAL Animation Studio from the `open-goal-animation-studio` GitHub repository. The active one opens with the Animation Studio button, and tries models in the games installed with the active tooling.",
+  "settings_versions_animationStudio_description": "Versions of Jak Animation Studio from the `jak-animation-studio` GitHub repository. The active one opens with the Animation Studio button, and tries models in the games installed with the active tooling.",
   "settings_versions_table_header_changes": "Changes",
   "settings_versions_table_header_date": "Date",
   "settings_versions_table_header_version": "Version",

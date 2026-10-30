@@ -6,7 +6,7 @@ import { config } from "/src/state/config.svelte";
 
 const $format = unwrapFunctionStore(format);
 
-// OpenGOAL Animation Studio is a program of its own, downloaded per version like Jak Level Editor:
+// Jak Animation Studio is a program of its own, downloaded per version like Jak Level Editor:
 // without an active version, its page of the settings offers them
 export async function openAnimationStudio() {
   if (!config?.animationStudioVersion) {

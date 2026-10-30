@@ -1,4 +1,4 @@
-//! OpenGOAL Animation Studio (whozghiar/open-goal-animation-studio), a program of its own the
+//! Jak Animation Studio (whozghiar/jak-animation-studio), a program of its own the
 //! launcher installs, updates and starts as it does Jak Level Editor: the portable build of each
 //! version in `<install>/versions/animation-studio/<version>/`, the active one in the settings. The
 //! studio gets the launcher's language, its default creations folder (`<install>/animation-studio`),
@@ -102,7 +102,7 @@ pub async fn launch_animation_studio(
   let dir = versions_dir(&install).join(version);
   let log_file = create_std_log_file(&app_handle, "animation-studio.log".to_owned(), false)?;
 
-  let child = std::process::Command::new(exe(&dir, "opengoal-animation-studio"))
+  let child = std::process::Command::new(exe(&dir, "jak-animation-studio"))
     .args(studio_args(&config, &install))
     .current_dir(&dir)
     .stdout(log_file.try_clone()?)

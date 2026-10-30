@@ -1,6 +1,6 @@
 # Animation Studio
 
-The **Animation Studio** button in the sidebar starts OpenGOAL Animation Studio, a program that plays, makes and checks the animations of the Jak games' characters. The launcher installs, updates and starts it the way it does Jak Level Editor, and the studio tries models in the games with the launcher's own OpenGOAL tools. This page explains what the launcher does for the studio, and what changed in the launcher to make that possible.
+The **Animation Studio** button in the sidebar starts Jak Animation Studio, a program that plays, makes and checks the animations of the Jak games' characters. The launcher installs, updates and starts it the way it does Jak Level Editor, and the studio tries models in the games with the launcher's own OpenGOAL tools. This page explains what the launcher does for the studio, and what changed in the launcher to make that possible.
 
 ## Contents
 
@@ -12,7 +12,7 @@ The **Animation Studio** button in the sidebar starts OpenGOAL Animation Studio,
 
 ## 1. What this feature brings
 
-OpenGOAL Animation Studio is a separate project, [open-goal-animation-studio](https://github.com/whozghiar/open-goal-animation-studio), written in Rust and Svelte like the launcher. It works on the `.glb` models of the games' entities (Babak, Haven Citizen, Jak...). With it you can:
+Jak Animation Studio is a separate project, [jak-animation-studio](https://github.com/whozghiar/jak-animation-studio), written in Rust and Svelte like the launcher. It works on the `.glb` models of the games' entities (Babak, Haven Citizen, Jak...). With it you can:
 
 - play every animation of a model, and check it against what OpenGOAL's `build-actor` accepts;
 - make a new animation from a video or a motion capture file, or key it by hand;
@@ -59,7 +59,7 @@ The launcher starts the studio with these options:
 For example, with the launcher installed in `D:\OpenGOAL`, the tooling `v0.3.9` active, Jak 3 installed with `v0.3.9` and Jak II with `v0.3.9-whozghiar.1`, the launcher runs:
 
 ```text
-D:\OpenGOAL\versions\animation-studio\v0.1.0\opengoal-animation-studio.exe --lang en
+D:\OpenGOAL\versions\animation-studio\v0.1.0\jak-animation-studio.exe --lang en
   "--default-library=D:\OpenGOAL\animation-studio" "--game-install=jak3=D:\OpenGOAL"
   --tooling-version=v0.3.9
 ```
@@ -79,12 +79,12 @@ The studio keeps its settings in its own folder (`%APPDATA%/OpenGOAL/animation-s
 
 ### Files on disk
 
-| Location                                         | Content                                                                                                              |
-| :----------------------------------------------- | :------------------------------------------------------------------------------------------------------------------- |
-| `<install>/versions/animation-studio/<version>/` | One downloaded version: `opengoal-animation-studio(.exe)` and its MCP server, `opengoal-animation-studio-mcp(.exe)`. |
-| `settings.json`, field `animationStudioVersion`  | The active version.                                                                                                  |
-| `<install>/animation-studio/`                    | The default creations folder.                                                                                        |
-| `<install>/active/bin/`                          | The active tooling's `gk`, `goalc` and `extractor`, which the try in the game runs.                                  |
+| Location                                         | Content                                                                                                    |
+| :----------------------------------------------- | :--------------------------------------------------------------------------------------------------------- |
+| `<install>/versions/animation-studio/<version>/` | One downloaded version: `jak-animation-studio(.exe)` and its MCP server, `jak-animation-studio-mcp(.exe)`. |
+| `settings.json`, field `animationStudioVersion`  | The active version.                                                                                        |
+| `<install>/animation-studio/`                    | The default creations folder.                                                                              |
+| `<install>/active/bin/`                          | The active tooling's `gk`, `goalc` and `extractor`, which the try in the game runs.                        |
 
 ### From the button to the studio
 
@@ -94,7 +94,7 @@ flowchart TD
   B -->|"No active version"| C["Settings > Animation Studio"]
   B -->|"Active version"| D["Rust command launch_animation_studio"]
   D -->|"Already open"| E["Toast: already open"]
-  D -->|"Otherwise"| F["Starts versions/animation-studio/version/opengoal-animation-studio with the launcher's options"]
+  D -->|"Otherwise"| F["Starts versions/animation-studio/version/jak-animation-studio with the launcher's options"]
 ```
 
 [launch.ts](../../src/lib/animation-studio/launch.ts) holds the button's logic. Like the Level Editor, the studio has builds for Windows, Linux and macOS, so the button, the header and the settings show it on every system.
@@ -103,7 +103,7 @@ flowchart TD
 
 The studio reuses the code of the tooling and the Level Editor:
 
-- [github.ts](../../src/lib/utils/github.ts): `ANIMATION_STUDIO_REPOSITORY` is `whozghiar/open-goal-animation-studio`. `listAnimationStudioReleases` and `getLatestAnimationStudioRelease` pick, with the Level Editor's `portableDownloadLink`, the asset `opengoal-animation-studio-portable-<platform>.zip`, where `<platform>` is `windows-x64`, `linux-x64` or `macos-universal` (one build for both kinds of Mac).
+- [github.ts](../../src/lib/utils/github.ts): `ANIMATION_STUDIO_REPOSITORY` is `whozghiar/jak-animation-studio`. `listAnimationStudioReleases` and `getLatestAnimationStudioRelease` pick, with the Level Editor's `portableDownloadLink`, the asset `jak-animation-studio-portable-<platform>.zip`, where `<platform>` is `windows-x64`, `linux-x64` or `macos-universal` (one build for both kinds of Mac).
 - [Header.svelte](../../src/components/header/Header.svelte): `checkForProgramUpdate` checks the Level Editor and the studio, and the snippet `programVersion` shows each one's version and update icon.
 - [Versions.svelte](../../src/routes/settings/Versions.svelte): `kind="animationStudio"` picks the studio's commands, folder and texts.
 
@@ -121,7 +121,7 @@ They share with the Level Editor's commands, in [level_editor.rs](../../src-taur
 
 ### Publishing a new studio version
 
-Run the release workflow of [open-goal-animation-studio](https://github.com/whozghiar/open-goal-animation-studio). Once its release is published, not left as a draft, with the `opengoal-animation-studio-portable-<platform>.zip` files, launchers offer it at their next start. Until the studio's first release, **Settings > Animation Studio** says "No releases could be retrieved from GitHub!".
+Run the release workflow of [jak-animation-studio](https://github.com/whozghiar/jak-animation-studio). Once its release is published, not left as a draft, with the `jak-animation-studio-portable-<platform>.zip` files, launchers offer it at their next start. Until the studio's first release, **Settings > Animation Studio** says "No releases could be retrieved from GitHub!".
 
 ## 4. New files created
 

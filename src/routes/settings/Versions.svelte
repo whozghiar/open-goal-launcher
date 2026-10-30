@@ -34,7 +34,7 @@
   import IconRefresh from "~icons/mdi/refresh";
   import { config } from "/src/state/config.svelte";
 
-  // the tooling, Jak Level Editor or OpenGOAL Animation Studio: each downloaded per version from
+  // the tooling, Jak Level Editor or Jak Animation Studio: each downloaded per version from
   // its GitHub releases
   let {
     kind = "tooling",

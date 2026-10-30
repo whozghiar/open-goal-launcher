@@ -14,9 +14,8 @@ export const TOOLING_REPOSITORY = "open-goal/jak-project";
 // Jak Level Editor, installed and updated apart from the launcher
 export const LEVEL_EDITOR_REPOSITORY = "whozghiar/jak-level-editor";
 
-// OpenGOAL Animation Studio, installed and updated the same way
-export const ANIMATION_STUDIO_REPOSITORY =
-  "whozghiar/open-goal-animation-studio";
+// Jak Animation Studio, installed and updated the same way
+export const ANIMATION_STUDIO_REPOSITORY = "whozghiar/jak-animation-studio";
 
 type DownloadLink = (githubRelease: GitHubRelease) => string | undefined;
 
@@ -57,7 +56,7 @@ function getDownloadLinkForCurrentPlatform(githubRelease: GitHubRelease) {
   return undefined;
 }
 
-// the portable build of Jak Level Editor or OpenGOAL Animation Studio for this system: one for
+// the portable build of Jak Level Editor or Jak Animation Studio for this system: one for
 // both kinds of Mac
 function portableDownloadLink(program: string): DownloadLink {
   const plat =
@@ -139,7 +138,7 @@ export async function getLatestLevelEditorRelease(): Promise<
 export async function listAnimationStudioReleases(): Promise<ReleaseInfo[]> {
   return listReleases(
     ANIMATION_STUDIO_REPOSITORY,
-    portableDownloadLink("opengoal-animation-studio"),
+    portableDownloadLink("jak-animation-studio"),
   );
 }
 
@@ -148,7 +147,7 @@ export async function getLatestAnimationStudioRelease(): Promise<
 > {
   return getLatestRelease(
     ANIMATION_STUDIO_REPOSITORY,
-    portableDownloadLink("opengoal-animation-studio"),
+    portableDownloadLink("jak-animation-studio"),
   );
 }
 
