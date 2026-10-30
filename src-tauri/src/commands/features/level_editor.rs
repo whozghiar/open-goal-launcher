@@ -48,9 +48,10 @@ pub(super) fn games_to_try(config: &LauncherConfig) -> Vec<&'static str> {
   ]
   .into_iter()
   .filter(|(_, game)| {
-    config.games.get(game).is_some_and(|g| {
-      g.is_installed && g.version.is_some() && g.version == config.active_version
-    })
+    config
+      .games
+      .get(game)
+      .is_some_and(|g| g.is_installed && g.version.is_some() && g.version == config.active_version)
   })
   .map(|(name, _)| name)
   .collect()
