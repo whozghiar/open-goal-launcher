@@ -124,7 +124,7 @@ If the launcher does not start, the logs are in:
 
 ## 5. More documentation
 
-- [CHANGELOG.md](./CHANGELOG.md): what each version of this launcher changes.
+- [Releases](https://github.com/whozghiar/open-goal-launcher/releases): what each version of this launcher changes.
 - [original_project_readme.md](./original_project_readme.md): README of the original project.
 - [docs/features_ai/features_save_data_manager.md](./docs/features_ai/features_save_data_manager.md): Saves Manager.
 - [docs/features_ai/feature_modTextures.md](./docs/features_ai/feature_modTextures.md): Mod Texture Packs.
