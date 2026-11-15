@@ -1,43 +1,43 @@
 {
-  "version": "1.1.2",
+  "version": "1.2.0",
   "notes": "{\"changes\":[]}",
-  "pub_date": "2026-10-25T00:14:33.567Z",
+  "pub_date": "2026-11-15T18:48:08.818Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUEhYWVl1RWxZdjdMYXdHQkpZMjloR29Qc0F5cnZPUksrNUh6bEpsK1RtWnJnUXdzaW5sU0FUbGh2a3RNdHMrT0Y0ekhtRk9rektEMjJsT3VUd3pkUndVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyODg2ODAzCWZpbGU6T3BlbkdPQUwtTGF1bmNoZXIuYXBwLnRhci5negpTRSttZStlSy9rQ0ZPek5QMENYc3NCSHpMREhONXFFU2ZGa0dHVEl3clJEUW1vR0Rvc29JdHg2S2daVTQyT2NiQlBNTmNuTnNzdkZYVzQyRm1HWUlBdz09Cg==",
-      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/673643354"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUFB3cEx6OHF0UW9peTd2MG1LejJlOXdpZy9rNEVDYXJBMjdPZXRycHA1b09MRXBiZFJqNDRIc0FWT3d4bk1abEc0SlkyMkZCMXlmVHhHZXE4VUZERFFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NzY3ODAxCWZpbGU6T3BlbkdPQUwtTGF1bmNoZXIuYXBwLnRhci5negpUWGYzQW1HaVJTSzhDWnBjbWRnUE0ycldISE03c0R6TzB6RUNwdzZ3d25qWk1iTlRrSi94N0x1dTFtbDVTamZ5cE5aUzdmbUUzMXRPRm13QVBBVlpDZz09Cg==",
+      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/751952148"
     },
     "darwin-aarch64-app": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUEhYWVl1RWxZdjdMYXdHQkpZMjloR29Qc0F5cnZPUksrNUh6bEpsK1RtWnJnUXdzaW5sU0FUbGh2a3RNdHMrT0Y0ekhtRk9rektEMjJsT3VUd3pkUndVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyODg2ODAzCWZpbGU6T3BlbkdPQUwtTGF1bmNoZXIuYXBwLnRhci5negpTRSttZStlSy9rQ0ZPek5QMENYc3NCSHpMREhONXFFU2ZGa0dHVEl3clJEUW1vR0Rvc29JdHg2S2daVTQyT2NiQlBNTmNuTnNzdkZYVzQyRm1HWUlBdz09Cg==",
-      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/673643354"
-    },
-    "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUEIvMUtvTHpFZVdSazhVSldaa0tDbFhOVHNuWkhNR1J2MzZiRlliWDZiS251eU9WWTdvRVdoTEpxRTdBeUpMdFFaU3lQZ2xqcEVxMW5GSERjQVVFWmdnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyODg2ODE3CWZpbGU6T3BlbkdPQUwtTGF1bmNoZXJfMS4xLjJfeDY0X2VuLVVTLm1zaS56aXAKRjRtajVQTDc2a0RNTzVBclVJVHJULzVjTzJEVGZFbGZ0RGNrcU4xUE1icjh4Qy83NGtXVGZIZTJmYlVjeUlqbXVISUdqYnBwTnFqTWVMZTlaeDlWQVE9PQo=",
-      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/673643814"
-    },
-    "windows-x86_64-msi": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUEx0Nm5Mbm1jd29ybFgrMDFiNU1lRmttOWtIQk1NZkIrVkNHbTRHUFZWTVlPL01lT0dRUzZvaVFzdmdDRS9GR0hXYURXVWdlbHdjamxDczRnbUg0c0FNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyODg2ODE3CWZpbGU6T3BlbkdPQUwtTGF1bmNoZXJfMS4xLjJfeDY0X2VuLVVTLm1zaQpKcXBROTF4akFBUExSUUZQMEs2dFptS3Q5U1pPQWJ6aFdsYTdlY3IvRXlJSVZzVXlDTEJ2L3hPczdWM2pmVnZ2cGh3K0RXcW14TWVoVVlHME5WR1NDQT09Cg==",
-      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/673643765"
-    },
-    "linux-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUEVtN2R6VmV1blN0cklxU3NBd01IUkh3RkhpdjFWUDZmZmc5ZnZCZE1YSG1PSHMvN0k3REc0TVlCRTV1elloM3A2Sk9JVHgxRTg3YkpzRG1sQ05Rc1FjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyODg3MDkwCWZpbGU6T3BlbkdPQUwtTGF1bmNoZXJfMS4xLjJfYW1kNjQuQXBwSW1hZ2UudGFyLmd6Ci9oZXliYVVmaGlwODlhRFdVa20xYVlCQ2oyZ09KZUw2U05xREpTcldadzY0S1JpNk1WUnFkYS9oL0FNelFOQmxUalZhRFQ1Y1BITlA4TWlMVDZHNkRnPT0K",
-      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/673652717"
-    },
-    "linux-x86_64-appimage": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUERpdkNNTzdWcGxyUGdraDJlMEJ4WFVKRkNaa0FwdXpRekNvbFpQbGJOb2MxTUxhV2Z5VUVmdUxLWDdtNEhSemphQTdNNng5YlY5aVY2cG1XSkt5dFFJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyODg3MDkwCWZpbGU6T3BlbkdPQUwtTGF1bmNoZXJfMS4xLjJfYW1kNjQuQXBwSW1hZ2UKZjVpa05yZ3g4Nmgvak5XaWRlYXp0b2lJblg5dEtCN3NyNExZU3NTS0d3VmdBRTJYVjBWYml2WXByTmtKNUhtOEs5cmtEcHJXSW1mb3hsbGpHUFZ4REE9PQo=",
-      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/673652575"
-    },
-    "linux-x86_64-deb": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUExlMzJhNkZqRWJONzcxak94NGlISEJnWGU2M1dteGZLS2RCOFFkVDdQOWo5UnR6UjhVZUVya2ptdnRieFpkeHMvb3J2UmV1OWNUdmV3VHJlUk02eEFBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyODg3MDkwCWZpbGU6T3BlbkdPQUwtTGF1bmNoZXJfMS4xLjJfYW1kNjQuZGViClAxTTZVQ2lZVkJ4VmNzc3U5ajhuM3dENzgyVEpZN2gxNDVlSW0zRTdQNXE5anlQS1NmaG5GQTVsZjJyRmQzQ25DWWh5MmtOUXNuaDk2cGNqNzA1RkFRPT0K",
-      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/673652516"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUFB3cEx6OHF0UW9peTd2MG1LejJlOXdpZy9rNEVDYXJBMjdPZXRycHA1b09MRXBiZFJqNDRIc0FWT3d4bk1abEc0SlkyMkZCMXlmVHhHZXE4VUZERFFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NzY3ODAxCWZpbGU6T3BlbkdPQUwtTGF1bmNoZXIuYXBwLnRhci5negpUWGYzQW1HaVJTSzhDWnBjbWRnUE0ycldISE03c0R6TzB6RUNwdzZ3d25qWk1iTlRrSi94N0x1dTFtbDVTamZ5cE5aUzdmbUUzMXRPRm13QVBBVlpDZz09Cg==",
+      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/751952148"
     },
     "darwin-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUEdzRGZUZFFiTEp3QW5YblBialE1dGlmSWprM1dxR09wM1hSV1N3R0xLYkFjVURVMjdKMUpmVEQ4ell5dXl0UjZCaUxMY2JQSDQrMkRjcXY5Z1NmY2dnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyODg3MjY5CWZpbGU6T3BlbkdPQUwtTGF1bmNoZXIuYXBwLnRhci5negp5aVA5OXdOVEt3SUpMWjFsbmRzcTd2d0dORTNBZWdlYTNSNHVvWXBwZXZPVmNGVmErOGhQcEwxcGl5Z2V4Ni80TVN1aGhsdEx6VE1lYlhBeWt0b2tDUT09Cg==",
-      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/673658189"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUExpNDErWDd2M3ZRRm9OZDNieFlsQjlNYVFSM1YvSDkwNmVkcVJOSURqK2tiNGlEMHpiUVVNVkYvZVlaRXpOdG5pcVErVkc0UzZxZnpIU0Q4bFlINUEwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NzY4MzY3CWZpbGU6T3BlbkdPQUwtTGF1bmNoZXIuYXBwLnRhci5negpsVlQ4TW9RbmNGZ0hoSFpMaU9jTE5hbjhjSDljVzJxZXQ1a01XK1FpRjRYUGNja3FybzI2QnFqV0krSEk2SFVJblRtbFlFclozSnZhOTBxN2ZucDVEZz09Cg==",
+      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/751979742"
     },
     "darwin-x86_64-app": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUEdzRGZUZFFiTEp3QW5YblBialE1dGlmSWprM1dxR09wM1hSV1N3R0xLYkFjVURVMjdKMUpmVEQ4ell5dXl0UjZCaUxMY2JQSDQrMkRjcXY5Z1NmY2dnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyODg3MjY5CWZpbGU6T3BlbkdPQUwtTGF1bmNoZXIuYXBwLnRhci5negp5aVA5OXdOVEt3SUpMWjFsbmRzcTd2d0dORTNBZWdlYTNSNHVvWXBwZXZPVmNGVmErOGhQcEwxcGl5Z2V4Ni80TVN1aGhsdEx6VE1lYlhBeWt0b2tDUT09Cg==",
-      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/673658189"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUExpNDErWDd2M3ZRRm9OZDNieFlsQjlNYVFSM1YvSDkwNmVkcVJOSURqK2tiNGlEMHpiUVVNVkYvZVlaRXpOdG5pcVErVkc0UzZxZnpIU0Q4bFlINUEwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NzY4MzY3CWZpbGU6T3BlbkdPQUwtTGF1bmNoZXIuYXBwLnRhci5negpsVlQ4TW9RbmNGZ0hoSFpMaU9jTE5hbjhjSDljVzJxZXQ1a01XK1FpRjRYUGNja3FybzI2QnFqV0krSEk2SFVJblRtbFlFclozSnZhOTBxN2ZucDVEZz09Cg==",
+      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/751979742"
+    },
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUEl2WWFNSEdIK1poTmdSNTE5cEc1ZFBJRVJmUUhoaFcra3krSGZaSGIvaFNSWjlZVm5TVzZTVjZiY1hEWFdiWTh5QkVZTStRaC9FTDZsMUUwZjJhTVFnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NzY4NDMyCWZpbGU6T3BlbkdPQUwtTGF1bmNoZXJfMS4yLjBfeDY0X2VuLVVTLm1zaS56aXAKQjZ6dWlvSmVtbW1EK0wzaVFCZGYyM1ViNWpoV3VhR3U1c2RpMmw4N0hDVS85RXV4MGh4QlFjVitHN3JSMm5LSjNwUHlweG1TMHYrRGc0QklpWnk2REE9PQo=",
+      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/751982607"
+    },
+    "windows-x86_64-msi": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUE9IMVpSdzBUL2NHQ0xsWGE2SFBrUUIxMndXU0t1R1pmTEt5ZVQvTHZaVGpjOWwzRlhHTURxT0Q5OUFkS0JDblk0T0dDV1hCWmdzZUY4L2tBMmQxTGdVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NzY4NDMyCWZpbGU6T3BlbkdPQUwtTGF1bmNoZXJfMS4yLjBfeDY0X2VuLVVTLm1zaQpLL2p5S3dBODZXTEExVC91eW1BcVZnQmVVRWZqK1JwbHNxTnU3eFdtTmJXWTlmNUsySFhGSUd2bEk4bUpOaGhqcGxVTFFFZUcwbCtxM2NFdi9oRzhDUT09Cg==",
+      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/751982531"
+    },
+    "linux-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUE5pU1dtMXFZT1JWSVcwcGd0TXFlampqSElFcVE4SjFzMUN1aVdGMzc4Tk1XNFNoT05VVGN2WENOd005aC9tMVlQV0NFcTBLd1gxQWcrbUpwakorNmdrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NzY4NDc2CWZpbGU6T3BlbkdPQUwtTGF1bmNoZXJfMS4yLjBfYW1kNjQuQXBwSW1hZ2UudGFyLmd6CjhYTWo4OEFndXBndkxpOWhPZE54WTZOTTc4ajc5NC9RRFd1YThpSkMxa09ieWsyUjloT3FudkVoODhiOVI1ZTY2aWQzQ1V4K1FPWlpNNWU4bDZBYkRBPT0K",
+      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/751984494"
+    },
+    "linux-x86_64-appimage": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUEl6ZTN2VzBPVGhJRklSL0xTK1VlVS9rQkZ0Ujk2OWN4OG9UZDUxOFdrTTFzSzZ0S1p6YVhESmh5MDZwZjYvK3JrNit0NDhIcE9kaUlEMm5pNURlWFE4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NzY4NDc2CWZpbGU6T3BlbkdPQUwtTGF1bmNoZXJfMS4yLjBfYW1kNjQuQXBwSW1hZ2UKNXUxdHlnTy9EVncvOE1mcERiR2tiWTVpcStrNzhxMTEydFBRS2NHVU4yVVRJT2JkOWlHaVVjaWRlcUxwdmdxUXdIU1Iwa3AvVEt5OW1pK2N1dTZvQnc9PQo=",
+      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/751984362"
+    },
+    "linux-x86_64-deb": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTN1VLTm1xRGZaUEE1dGFjakJoY2crbVdRTi9HdkFzVllCRi9VeVlaMVF6QU4rN0dIQWpPREhyaUt6Y2cwdGNXR0RTeXhxMk9wM2IwekpjR0lQWHZNQ08vY1RlQTJPOWdNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NzY4NDc1CWZpbGU6T3BlbkdPQUwtTGF1bmNoZXJfMS4yLjBfYW1kNjQuZGViCncrazdqcGVXS1d5M1hlbFQ5VCtHQUhwWWxBQk1vb0IyVG1BVGxqRDRTV2gxRGh4MU5mNnFZZjRjOFdzQTNnQlJTMHFGU0hUYytFMlBQZS9laFBoeEJnPT0K",
+      "url": "https://api.github.com/repos/whozghiar/open-goal-launcher/releases/assets/751984265"
     }
   }
 }
