@@ -53,7 +53,8 @@ jobs:
           cargo update -p opengoal-launcher
           cd ..
           echo "new_tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
-          echo -e "---\nVersion: $NEW_VERSION\nDate: $(date +'%Y-%m-%d')\n---" > resources/metadata/news.yaml
+          # one YAML document: a closing "---" starts an empty second one, which appstreamcli refuses
+          echo -e "---\nVersion: $NEW_VERSION\nDate: $(date +'%Y-%m-%d')" > resources/metadata/news.yaml
           appstreamcli news-to-metainfo resources/metadata/news.yaml resources/metadata/dev.opengoal.OpenGOAL.appdata.xml
           rm resources/metadata/news.yaml || true
 
